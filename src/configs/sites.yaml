@@ -1,0 +1,27 @@
+mdcomputers:
+  name: "MDComputers"
+  base_url: "https://mdcomputers.in"
+  search_url: "/index.php?route=product/search&search={query}"
+  currency: "INR"
+  enabled: true
+
+primeabgb:
+  name: "PrimeABGB"
+  base_url: "https://www.primeabgb.com"
+  search_url: "/?s={query}&post_type=product"
+  currency: "INR"
+  enabled: true
+
+vedant:
+  name: "Vedant Computers"
+  base_url: "https://www.vedantcomputers.com"
+  search_url: "/index.php?route=product/search&search={query}"
+  currency: "INR"
+  enabled: true
+
+pcstudio:
+  name: "PC Studio"
+  base_url: "https://www.pcstudio.in"
+  search_url: "/?s={query}&post_type=product"
+  currency: "INR"
+  enabled: true

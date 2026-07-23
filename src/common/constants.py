@@ -1,0 +1,24 @@
+"""
+Shared constants used throughout the project.
+"""
+
+from configs.settings import (
+    DEFAULT_HEADERS,
+    LOG_LEVEL,
+    LOG_FILE,
+    MAX_RETRIES,
+    REQUEST_TIMEOUT,
+    RETRY_BACKOFF,
+)
+
+HEADERS = DEFAULT_HEADERS
+
+TIMEOUT = REQUEST_TIMEOUT
+
+RETRIES = MAX_RETRIES
+
+BACKOFF_FACTOR = RETRY_BACKOFF
+
+DEFAULT_LOG_LEVEL = LOG_LEVEL
+
+DEFAULT_LOG_FILE = LOG_FILE
