@@ -1,13 +1,14 @@
+from scrapers.http_client import HttpClient
 from scrapers.sites.mdcomputers import MDComputersScraper
 
 
 def main():
 
-    scraper = MDComputersScraper()
+    with HttpClient() as client:
 
-    html = scraper.search("RTX 5070")
+        scraper = MDComputersScraper(client)
 
-    print(html[:1000])
+        scraper.scrape_search("graphics-card")
 
 
 if __name__ == "__main__":

@@ -1,38 +1,30 @@
-"""
-MDComputers scraper.
-"""
-
-from urllib.parse import quote_plus
-
-from configs.config import Config
-from models.base import BaseScraper
+from scrapers.base_scraper import BaseScraper
+from scrapers.sites.mdcomputers_parser import MDComputersParser
 
 
 class MDComputersScraper(BaseScraper):
 
-    def __init__(self):
-        super().__init__()
+    BASE_URL = "https://mdcomputers.in"
 
-        self.config = Config.site("mdcomputers")
+    def __init__(self, client):
+        super().__init__(client)
+        self.parser = MDComputersParser()
 
-        self.base_url = self.config["base_url"]
+    def scrape_search(self, path: str):
 
-        self.search_url = self.config["search_url"]
-
-        self.name = self.config["name"]
-
-    def search(self, query: str):
-
-        url = (
-            self.base_url
-            + self.search_url.format(
-                query=quote_plus(query)
-            )
+        response = self.client.get(
+            f"{self.BASE_URL}/catalog/{path}"
         )
 
-        response = self.downloader.get(url)
+        # Temporary: save the raw HTML
+        with open("mdcomputers.html", "w", encoding="utf-8") as f:
+            f.write(response.text)
 
-        return response.text
+        return self.parser.parse_search(response.text)
 
-    def scrape_product(self, url: str):
-        raise NotImplementedError
+    def scrape_product(self, path: str):
+        response = self.client.get(
+            f"{self.BASE_URL}/{path}"
+        )
+
+        return self.parser.parse_product(response.text)

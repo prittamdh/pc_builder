@@ -9,8 +9,6 @@ from pydantic import BaseModel, ConfigDict, HttpUrl
 
 
 class SearchResult(BaseModel):
-    """Represents a single product from a search page."""
-
     model_config = ConfigDict(
         frozen=True,
         extra="ignore",
@@ -21,9 +19,10 @@ class SearchResult(BaseModel):
     url: HttpUrl
 
     price: Decimal
+    mrp: Decimal | None = None
 
-    image: Optional[HttpUrl] = None
+    image: HttpUrl | None = None
 
     currency: str = "INR"
 
-    in_stock: Optional[bool] = None
+    in_stock: bool | None = None

@@ -4,7 +4,7 @@ Base class for all scrapers.
 
 from abc import ABC, abstractmethod
 
-from scrapers.downloader import Downloader
+from scrapers.http_client import Downloader
 
 
 class BaseScraper(ABC):
