@@ -2,14 +2,26 @@ from curl_cffi import requests
 
 
 class HttpClient:
-    def __init__(self):
+
+    def __init__(
+        self,
+        impersonate: str = "chrome",
+        timeout: int = 30,
+    ):
+        self.impersonate = impersonate
+        self.timeout = timeout
+
         self.session = requests.Session()
 
-    def get(self, url: str):
+    def get(self, url: str, **kwargs):
+
         response = self.session.get(
             url,
-            impersonate="chrome",
-            timeout=30,
+            impersonate=kwargs.get("impersonate", self.impersonate),
+            timeout=kwargs.get("timeout", self.timeout),
+            headers=kwargs.get("headers"),
+            cookies=kwargs.get("cookies"),
+            allow_redirects=kwargs.get("allow_redirects", True),
         )
 
         response.raise_for_status()

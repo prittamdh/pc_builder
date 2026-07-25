@@ -9,9 +9,11 @@ class BaseScraper(ABC):
         self.client = client
 
     @abstractmethod
-    def scrape_search(self, *args, **kwargs):
+    def scrape_search(self, query: str):
+        """Scrape search results for a query."""
         raise NotImplementedError
 
     @abstractmethod
-    def scrape_product(self, *args, **kwargs):
+    def scrape_product(self, url: str):
+        """Scrape a product page."""
         raise NotImplementedError

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scrapers.sites.mdcomputers_parser import MDComputersParser
+from scrapers.mdcomputers.parser import MDComputersParser
 
 html = Path("mdcomputers.html").read_text(encoding="utf-8")
 

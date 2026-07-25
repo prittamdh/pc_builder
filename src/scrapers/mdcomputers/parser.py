@@ -12,30 +12,43 @@ class MDComputersParser(BaseParser):
     def _parse_price(text: str) -> Decimal:
         return Decimal(
             text.replace("₹", "")
-                .replace(",", "")
-                .strip()
+            .replace(",", "")
+            .strip()
         )
 
     def parse_search(self, html: str) -> list[SearchResult]:
         soup = BeautifulSoup(html, "lxml")
 
-        cards = soup.select("div.product-grid-item")
+        cfg = self.search_config
 
-        results: list[SearchResult] = []
+        cards = soup.select(cfg["product_card"])
+
+        results = []
 
         for card in cards:
-            title = card.select_one("h3.product-entities-title a")
+
+            title = card.select_one(cfg["title"])
+
+            if title is None:
+                continue
 
             name = title.get_text(strip=True)
-            url = title["href"]
 
-            image = card.select_one("img")["src"]
+            url = title.get(cfg["url_attribute"])
 
-            price = self._parse_price(
-                card.select_one("span.ins").get_text(strip=True)
+            image_element = card.select_one(cfg["image"])
+            image = (
+                image_element.get(cfg["image_attribute"])
+                if image_element
+                else None
             )
 
-            mrp_element = card.select_one("span.del")
+            price = self._parse_price(
+                card.select_one(cfg["price"]).get_text(strip=True)
+            )
+
+            mrp_element = card.select_one(cfg["mrp"])
+
             mrp = (
                 self._parse_price(mrp_element.get_text(strip=True))
                 if mrp_element
@@ -44,12 +57,12 @@ class MDComputersParser(BaseParser):
 
             results.append(
                 SearchResult(
-                    seller="MDComputers",
+                    seller=self.store.display_name,
                     name=name,
                     url=url,
+                    image=image,
                     price=price,
                     mrp=mrp,
-                    image=image,
                 )
             )
 

@@ -1,0 +1,1392 @@
+.cwginstock-subscribe-form .row {
+    margin-left: -15px;
+    margin-right: -15px
+}
+
+.cwginstock-subscribe-form .col-lg-1,
+.cwginstock-subscribe-form .col-lg-10,
+.cwginstock-subscribe-form .col-lg-11,
+.cwginstock-subscribe-form .col-lg-12,
+.cwginstock-subscribe-form .col-lg-2,
+.cwginstock-subscribe-form .col-lg-3,
+.cwginstock-subscribe-form .col-lg-4,
+.cwginstock-subscribe-form .col-lg-5,
+.cwginstock-subscribe-form .col-lg-6,
+.cwginstock-subscribe-form .col-lg-7,
+.cwginstock-subscribe-form .col-lg-8,
+.cwginstock-subscribe-form .col-lg-9,
+.cwginstock-subscribe-form .col-md-1,
+.cwginstock-subscribe-form .col-md-10,
+.cwginstock-subscribe-form .col-md-11,
+.cwginstock-subscribe-form .col-md-12,
+.cwginstock-subscribe-form .col-md-2,
+.cwginstock-subscribe-form .col-md-3,
+.cwginstock-subscribe-form .col-md-4,
+.cwginstock-subscribe-form .col-md-5,
+.cwginstock-subscribe-form .col-md-6,
+.cwginstock-subscribe-form .col-md-7,
+.cwginstock-subscribe-form .col-md-8,
+.cwginstock-subscribe-form .col-md-9,
+.cwginstock-subscribe-form .col-sm-1,
+.cwginstock-subscribe-form .col-sm-10,
+.cwginstock-subscribe-form .col-sm-11,
+.cwginstock-subscribe-form .col-sm-12,
+.cwginstock-subscribe-form .col-sm-2,
+.cwginstock-subscribe-form .col-sm-3,
+.cwginstock-subscribe-form .col-sm-4,
+.cwginstock-subscribe-form .col-sm-5,
+.cwginstock-subscribe-form .col-sm-6,
+.cwginstock-subscribe-form .col-sm-7,
+.cwginstock-subscribe-form .col-sm-8,
+.cwginstock-subscribe-form .col-sm-9,
+.cwginstock-subscribe-form .col-xs-1,
+.cwginstock-subscribe-form .col-xs-10,
+.cwginstock-subscribe-form .col-xs-11,
+.cwginstock-subscribe-form .col-xs-12,
+.cwginstock-subscribe-form .col-xs-2,
+.cwginstock-subscribe-form .col-xs-3,
+.cwginstock-subscribe-form .col-xs-4,
+.cwginstock-subscribe-form .col-xs-5,
+.cwginstock-subscribe-form .col-xs-6,
+.cwginstock-subscribe-form .col-xs-7,
+.cwginstock-subscribe-form .col-xs-8,
+.cwginstock-subscribe-form .col-xs-9 {
+    position: relative;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px
+}
+
+.cwginstock-subscribe-form .col-xs-1,
+.cwginstock-subscribe-form .col-xs-10,
+.cwginstock-subscribe-form .col-xs-11,
+.cwginstock-subscribe-form .col-xs-12,
+.cwginstock-subscribe-form .col-xs-2,
+.cwginstock-subscribe-form .col-xs-3,
+.cwginstock-subscribe-form .col-xs-4,
+.cwginstock-subscribe-form .col-xs-5,
+.cwginstock-subscribe-form .col-xs-6,
+.cwginstock-subscribe-form .col-xs-7,
+.cwginstock-subscribe-form .col-xs-8,
+.cwginstock-subscribe-form .col-xs-9 {
+    float: left
+}
+
+.cwginstock-subscribe-form .col-xs-12 {
+    width: 100%
+}
+
+.cwginstock-subscribe-form .col-xs-11 {
+    width: 91.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-10 {
+    width: 83.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-9 {
+    width: 75%
+}
+
+.cwginstock-subscribe-form .col-xs-8 {
+    width: 66.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-7 {
+    width: 58.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-6 {
+    width: 50%
+}
+
+.cwginstock-subscribe-form .col-xs-5 {
+    width: 41.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-4 {
+    width: 33.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-3 {
+    width: 25%
+}
+
+.cwginstock-subscribe-form .col-xs-2 {
+    width: 16.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-1 {
+    width: 8.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-12 {
+    right: 100%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-11 {
+    right: 91.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-10 {
+    right: 83.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-9 {
+    right: 75%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-8 {
+    right: 66.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-7 {
+    right: 58.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-6 {
+    right: 50%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-5 {
+    right: 41.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-4 {
+    right: 33.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-3 {
+    right: 25%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-2 {
+    right: 16.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-1 {
+    right: 8.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-pull-0 {
+    right: auto
+}
+
+.cwginstock-subscribe-form .col-xs-push-12 {
+    left: 100%
+}
+
+.cwginstock-subscribe-form .col-xs-push-11 {
+    left: 91.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-push-10 {
+    left: 83.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-push-9 {
+    left: 75%
+}
+
+.cwginstock-subscribe-form .col-xs-push-8 {
+    left: 66.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-push-7 {
+    left: 58.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-push-6 {
+    left: 50%
+}
+
+.cwginstock-subscribe-form .col-xs-push-5 {
+    left: 41.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-push-4 {
+    left: 33.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-push-3 {
+    left: 25%
+}
+
+.cwginstock-subscribe-form .col-xs-push-2 {
+    left: 16.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-push-1 {
+    left: 8.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-push-0 {
+    left: auto
+}
+
+.cwginstock-subscribe-form .col-xs-offset-12 {
+    margin-left: 100%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-11 {
+    margin-left: 91.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-10 {
+    margin-left: 83.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-9 {
+    margin-left: 75%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-8 {
+    margin-left: 66.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-7 {
+    margin-left: 58.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-6 {
+    margin-left: 50%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-5 {
+    margin-left: 41.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-4 {
+    margin-left: 33.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-3 {
+    margin-left: 25%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-2 {
+    margin-left: 16.66666667%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-1 {
+    margin-left: 8.33333333%
+}
+
+.cwginstock-subscribe-form .col-xs-offset-0 {
+    margin-left: 0
+}
+
+@media (min-width:768px) {
+
+    .cwginstock-subscribe-form .col-sm-1,
+    .cwginstock-subscribe-form .col-sm-10,
+    .cwginstock-subscribe-form .col-sm-11,
+    .cwginstock-subscribe-form .col-sm-12,
+    .cwginstock-subscribe-form .col-sm-2,
+    .cwginstock-subscribe-form .col-sm-3,
+    .cwginstock-subscribe-form .col-sm-4,
+    .cwginstock-subscribe-form .col-sm-5,
+    .cwginstock-subscribe-form .col-sm-6,
+    .cwginstock-subscribe-form .col-sm-7,
+    .cwginstock-subscribe-form .col-sm-8,
+    .cwginstock-subscribe-form .col-sm-9 {
+        float: left
+    }
+
+    .cwginstock-subscribe-form .col-sm-12 {
+        width: 100%
+    }
+
+    .cwginstock-subscribe-form .col-sm-11 {
+        width: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-10 {
+        width: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-9 {
+        width: 75%
+    }
+
+    .cwginstock-subscribe-form .col-sm-8 {
+        width: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-7 {
+        width: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-6 {
+        width: 50%
+    }
+
+    .cwginstock-subscribe-form .col-sm-5 {
+        width: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-4 {
+        width: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-3 {
+        width: 25%
+    }
+
+    .cwginstock-subscribe-form .col-sm-2 {
+        width: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-1 {
+        width: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-12 {
+        right: 100%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-11 {
+        right: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-10 {
+        right: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-9 {
+        right: 75%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-8 {
+        right: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-7 {
+        right: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-6 {
+        right: 50%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-5 {
+        right: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-4 {
+        right: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-3 {
+        right: 25%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-2 {
+        right: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-1 {
+        right: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-pull-0 {
+        right: auto
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-12 {
+        left: 100%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-11 {
+        left: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-10 {
+        left: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-9 {
+        left: 75%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-8 {
+        left: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-7 {
+        left: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-6 {
+        left: 50%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-5 {
+        left: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-4 {
+        left: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-3 {
+        left: 25%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-2 {
+        left: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-1 {
+        left: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-push-0 {
+        left: auto
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-12 {
+        margin-left: 100%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-11 {
+        margin-left: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-10 {
+        margin-left: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-9 {
+        margin-left: 75%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-8 {
+        margin-left: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-7 {
+        margin-left: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-6 {
+        margin-left: 50%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-5 {
+        margin-left: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-4 {
+        margin-left: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-3 {
+        margin-left: 25%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-2 {
+        margin-left: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-1 {
+        margin-left: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-sm-offset-0 {
+        margin-left: 0
+    }
+}
+
+@media (min-width:992px) {
+
+    .cwginstock-subscribe-form .col-md-1,
+    .cwginstock-subscribe-form .col-md-10,
+    .cwginstock-subscribe-form .col-md-11,
+    .cwginstock-subscribe-form .col-md-12,
+    .cwginstock-subscribe-form .col-md-2,
+    .cwginstock-subscribe-form .col-md-3,
+    .cwginstock-subscribe-form .col-md-4,
+    .cwginstock-subscribe-form .col-md-5,
+    .cwginstock-subscribe-form .col-md-6,
+    .cwginstock-subscribe-form .col-md-7,
+    .cwginstock-subscribe-form .col-md-8,
+    .cwginstock-subscribe-form .col-md-9 {
+        float: left
+    }
+
+    .cwginstock-subscribe-form .col-md-12 {
+        width: 100%
+    }
+
+    .cwginstock-subscribe-form .col-md-11 {
+        width: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-10 {
+        width: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-9 {
+        width: 75%
+    }
+
+    .cwginstock-subscribe-form .col-md-8 {
+        width: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-7 {
+        width: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-6 {
+        width: 50%
+    }
+
+    .cwginstock-subscribe-form .col-md-5 {
+        width: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-4 {
+        width: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-3 {
+        width: 25%
+    }
+
+    .cwginstock-subscribe-form .col-md-2 {
+        width: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-1 {
+        width: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-12 {
+        right: 100%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-11 {
+        right: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-10 {
+        right: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-9 {
+        right: 75%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-8 {
+        right: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-7 {
+        right: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-6 {
+        right: 50%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-5 {
+        right: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-4 {
+        right: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-3 {
+        right: 25%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-2 {
+        right: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-1 {
+        right: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-pull-0 {
+        right: auto
+    }
+
+    .cwginstock-subscribe-form .col-md-push-12 {
+        left: 100%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-11 {
+        left: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-10 {
+        left: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-9 {
+        left: 75%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-8 {
+        left: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-7 {
+        left: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-6 {
+        left: 50%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-5 {
+        left: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-4 {
+        left: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-3 {
+        left: 25%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-2 {
+        left: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-1 {
+        left: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-push-0 {
+        left: auto
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-12 {
+        margin-left: 100%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-11 {
+        margin-left: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-10 {
+        margin-left: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-9 {
+        margin-left: 75%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-8 {
+        margin-left: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-7 {
+        margin-left: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-6 {
+        margin-left: 50%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-5 {
+        margin-left: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-4 {
+        margin-left: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-3 {
+        margin-left: 25%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-2 {
+        margin-left: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-1 {
+        margin-left: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-md-offset-0 {
+        margin-left: 0
+    }
+}
+
+@media (min-width:1200px) {
+
+    .cwginstock-subscribe-form .col-lg-1,
+    .cwginstock-subscribe-form .col-lg-10,
+    .cwginstock-subscribe-form .col-lg-11,
+    .cwginstock-subscribe-form .col-lg-12,
+    .cwginstock-subscribe-form .col-lg-2,
+    .cwginstock-subscribe-form .col-lg-3,
+    .cwginstock-subscribe-form .col-lg-4,
+    .cwginstock-subscribe-form .col-lg-5,
+    .cwginstock-subscribe-form .col-lg-6,
+    .cwginstock-subscribe-form .col-lg-7,
+    .cwginstock-subscribe-form .col-lg-8,
+    .cwginstock-subscribe-form .col-lg-9 {
+        float: left
+    }
+
+    .cwginstock-subscribe-form .col-lg-12 {
+        width: 100%
+    }
+
+    .cwginstock-subscribe-form .col-lg-11 {
+        width: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-10 {
+        width: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-9 {
+        width: 75%
+    }
+
+    .cwginstock-subscribe-form .col-lg-8 {
+        width: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-7 {
+        width: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-6 {
+        width: 50%
+    }
+
+    .cwginstock-subscribe-form .col-lg-5 {
+        width: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-4 {
+        width: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-3 {
+        width: 25%
+    }
+
+    .cwginstock-subscribe-form .col-lg-2 {
+        width: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-1 {
+        width: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-12 {
+        right: 100%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-11 {
+        right: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-10 {
+        right: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-9 {
+        right: 75%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-8 {
+        right: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-7 {
+        right: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-6 {
+        right: 50%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-5 {
+        right: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-4 {
+        right: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-3 {
+        right: 25%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-2 {
+        right: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-1 {
+        right: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-pull-0 {
+        right: auto
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-12 {
+        left: 100%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-11 {
+        left: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-10 {
+        left: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-9 {
+        left: 75%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-8 {
+        left: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-7 {
+        left: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-6 {
+        left: 50%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-5 {
+        left: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-4 {
+        left: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-3 {
+        left: 25%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-2 {
+        left: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-1 {
+        left: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-push-0 {
+        left: auto
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-12 {
+        margin-left: 100%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-11 {
+        margin-left: 91.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-10 {
+        margin-left: 83.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-9 {
+        margin-left: 75%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-8 {
+        margin-left: 66.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-7 {
+        margin-left: 58.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-6 {
+        margin-left: 50%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-5 {
+        margin-left: 41.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-4 {
+        margin-left: 33.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-3 {
+        margin-left: 25%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-2 {
+        margin-left: 16.66666667%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-1 {
+        margin-left: 8.33333333%
+    }
+
+    .cwginstock-subscribe-form .col-lg-offset-0 {
+        margin-left: 0
+    }
+}
+
+.cwginstock-subscribe-form .clearfix:after,
+.cwginstock-subscribe-form .clearfix:before,
+.cwginstock-subscribe-form .container-fluid:after,
+.cwginstock-subscribe-form .container-fluid:before,
+.cwginstock-subscribe-form .container:after,
+.cwginstock-subscribe-form .container:before,
+.cwginstock-subscribe-form .row:after,
+.cwginstock-subscribe-form .row:before {
+    content: " ";
+    display: table
+}
+
+.cwginstock-subscribe-form .clearfix:after,
+.cwginstock-subscribe-form .container-fluid:after,
+.cwginstock-subscribe-form .container:after,
+.cwginstock-subscribe-form .row:after {
+    clear: both
+}
+
+.cwginstock-subscribe-form .center-block {
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+.cwginstock-subscribe-form .pull-right {
+    float: right !important
+}
+
+.cwginstock-subscribe-form .pull-left {
+    float: left !important
+}
+
+.cwginstock-subscribe-form .hide {
+    display: none !important
+}
+
+.cwginstock-subscribe-form .show {
+    display: block !important
+}
+
+.cwginstock-subscribe-form .invisible {
+    visibility: hidden
+}
+
+.cwginstock-subscribe-form .text-hide {
+    font: 0/0 a;
+    color: transparent;
+    text-shadow: none;
+    background-color: transparent;
+    border: 0
+}
+
+.cwginstock-subscribe-form .panel-heading>.dropdown .dropdown-toggle,
+.cwginstock-subscribe-form .panel-title,
+.cwginstock-subscribe-form .panel-title>.small,
+.cwginstock-subscribe-form .panel-title>.small>a,
+.cwginstock-subscribe-form .panel-title>a,
+.cwginstock-subscribe-form .panel-title>small,
+.cwginstock-subscribe-form .panel-title>small>a {
+    color: inherit
+}
+
+.cwginstock-subscribe-form .hidden {
+    display: none !important
+}
+
+.cwginstock-subscribe-form .affix {
+    position: fixed
+}
+
+.cwginstock-subscribe-form .panel {
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05)
+}
+
+.cwginstock-subscribe-form .panel-title,
+.cwginstock-subscribe-form .panel>.list-group,
+.cwginstock-subscribe-form .panel>.panel-collapse>.list-group,
+.cwginstock-subscribe-form .panel>.panel-collapse>.table,
+.cwginstock-subscribe-form .panel>.table,
+.cwginstock-subscribe-form .panel>.table-responsive>.table {
+    margin-bottom: 0
+}
+
+.cwginstock-subscribe-form .panel-body {
+    padding: 15px
+}
+
+.cwginstock-subscribe-form .panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-right-radius: 3px;
+    border-top-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel-title {
+    margin-top: 0;
+    font-size: 16px
+}
+
+.cwginstock-subscribe-form .panel-footer {
+    padding: 10px 15px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.list-group .list-group-item,
+.cwginstock-subscribe-form .panel>.panel-collapse>.list-group .list-group-item {
+    border-width: 1px 0;
+    border-radius: 0
+}
+
+.cwginstock-subscribe-form .panel-group .panel-heading,
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr:first-child>td,
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr:first-child>th,
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr:last-child>td,
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr:last-child>th,
+.cwginstock-subscribe-form .panel>.table-bordered>tfoot>tr:last-child>td,
+.cwginstock-subscribe-form .panel>.table-bordered>tfoot>tr:last-child>th,
+.cwginstock-subscribe-form .panel>.table-bordered>thead>tr:first-child>td,
+.cwginstock-subscribe-form .panel>.table-bordered>thead>tr:first-child>th,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr:first-child>td,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr:first-child>th,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr:last-child>td,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr:last-child>th,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tfoot>tr:last-child>td,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tfoot>tr:last-child>th,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>thead>tr:first-child>td,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>thead>tr:first-child>th {
+    border-bottom: 0
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tbody:last-child>tr:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tfoot:last-child>tr:last-child {
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.list-group:first-child .list-group-item:first-child,
+.cwginstock-subscribe-form .panel>.panel-collapse>.list-group:first-child .list-group-item:first-child {
+    border-top: 0;
+    border-top-right-radius: 3px;
+    border-top-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.list-group:last-child .list-group-item:last-child,
+.cwginstock-subscribe-form .panel>.panel-collapse>.list-group:last-child .list-group-item:last-child {
+    border-bottom: 0;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.panel-heading+.panel-collapse>.list-group .list-group-item:first-child {
+    border-top-right-radius: 0;
+    border-top-left-radius: 0
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child>tbody:first-child>tr:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child>thead:first-child>tr:first-child {
+    border-top-right-radius: 3px;
+    border-top-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .list-group+.panel-footer,
+.cwginstock-subscribe-form .panel-heading+.list-group .list-group-item:first-child {
+    border-top-width: 0
+}
+
+.cwginstock-subscribe-form .panel>.panel-collapse>.table caption,
+.cwginstock-subscribe-form .panel>.table caption,
+.cwginstock-subscribe-form .panel>.table-responsive>.table caption {
+    padding-left: 15px;
+    padding-right: 15px
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child>tbody:first-child>tr:first-child td:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child>tbody:first-child>tr:first-child th:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child>thead:first-child>tr:first-child td:first-child,
+.cwginstock-subscribe-form .panel>.table:first-child>thead:first-child>tr:first-child th:first-child {
+    border-top-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>tbody:first-child>tr:first-child th:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:first-child>.table:first-child>thead:first-child>tr:first-child th:last-child,
+.cwginstock-subscribe-form .panel>.table:first-child>tbody:first-child>tr:first-child td:last-child,
+.cwginstock-subscribe-form .panel>.table:first-child>tbody:first-child>tr:first-child th:last-child,
+.cwginstock-subscribe-form .panel>.table:first-child>thead:first-child>tr:first-child td:last-child,
+.cwginstock-subscribe-form .panel>.table:first-child>thead:first-child>tr:first-child th:last-child {
+    border-top-right-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:first-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tbody:last-child>tr:last-child td:first-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tbody:last-child>tr:last-child th:first-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tfoot:last-child>tr:last-child td:first-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tfoot:last-child>tr:last-child th:first-child {
+    border-bottom-left-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tbody:last-child>tr:last-child th:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive:last-child>.table:last-child>tfoot:last-child>tr:last-child th:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tbody:last-child>tr:last-child td:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tbody:last-child>tr:last-child th:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tfoot:last-child>tr:last-child td:last-child,
+.cwginstock-subscribe-form .panel>.table:last-child>tfoot:last-child>tr:last-child th:last-child {
+    border-bottom-right-radius: 3px
+}
+
+.cwginstock-subscribe-form .panel>.panel-body+.table,
+.cwginstock-subscribe-form .panel>.panel-body+.table-responsive,
+.cwginstock-subscribe-form .panel>.table+.panel-body,
+.cwginstock-subscribe-form .panel>.table-responsive+.panel-body {
+    border-top: 1px solid #ddd
+}
+
+.cwginstock-subscribe-form .panel>.table>tbody:first-child>tr:first-child td,
+.cwginstock-subscribe-form .panel>.table>tbody:first-child>tr:first-child th {
+    border-top: 0
+}
+
+.cwginstock-subscribe-form .panel>.table-bordered,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered {
+    border: 0
+}
+
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr>td:first-child,
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr>th:first-child,
+.cwginstock-subscribe-form .panel>.table-bordered>tfoot>tr>td:first-child,
+.cwginstock-subscribe-form .panel>.table-bordered>tfoot>tr>th:first-child,
+.cwginstock-subscribe-form .panel>.table-bordered>thead>tr>td:first-child,
+.cwginstock-subscribe-form .panel>.table-bordered>thead>tr>th:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr>td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr>th:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tfoot>tr>td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tfoot>tr>th:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>thead>tr>td:first-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>thead>tr>th:first-child {
+    border-left: 0
+}
+
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr>td:last-child,
+.cwginstock-subscribe-form .panel>.table-bordered>tbody>tr>th:last-child,
+.cwginstock-subscribe-form .panel>.table-bordered>tfoot>tr>td:last-child,
+.cwginstock-subscribe-form .panel>.table-bordered>tfoot>tr>th:last-child,
+.cwginstock-subscribe-form .panel>.table-bordered>thead>tr>td:last-child,
+.cwginstock-subscribe-form .panel>.table-bordered>thead>tr>th:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr>td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tbody>tr>th:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tfoot>tr>td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>tfoot>tr>th:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>thead>tr>td:last-child,
+.cwginstock-subscribe-form .panel>.table-responsive>.table-bordered>thead>tr>th:last-child {
+    border-right: 0
+}
+
+.cwginstock-subscribe-form .panel>.table-responsive {
+    border: 0;
+    margin-bottom: 0
+}
+
+.cwginstock-subscribe-form .panel-group {
+    margin-bottom: 20px
+}
+
+.cwginstock-subscribe-form .panel-group .panel {
+    margin-bottom: 0;
+    border-radius: 4px
+}
+
+.cwginstock-subscribe-form .panel-group .panel+.panel {
+    margin-top: 5px
+}
+
+.cwginstock-subscribe-form .panel-group .panel-heading+.panel-collapse>.list-group,
+.cwginstock-subscribe-form .panel-group .panel-heading+.panel-collapse>.panel-body {
+    border-top: 1px solid #ddd
+}
+
+.cwginstock-subscribe-form .panel-group .panel-footer {
+    border-top: 0
+}
+
+.cwginstock-subscribe-form .panel-group .panel-footer+.panel-collapse .panel-body {
+    border-bottom: 1px solid #ddd
+}
+
+.cwginstock-subscribe-form .panel-default {
+    border-color: #ddd
+}
+
+.cwginstock-subscribe-form .panel-default>.panel-heading {
+    color: #333;
+    background-color: #f5f5f5;
+    border-color: #ddd
+}
+
+.cwginstock-subscribe-form .panel-default>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #ddd
+}
+
+.cwginstock-subscribe-form .panel-default>.panel-heading .badge {
+    color: #f5f5f5;
+    background-color: #333
+}
+
+.cwginstock-subscribe-form .panel-default>.panel-footer+.panel-collapse>.panel-body {
+    border-bottom-color: #ddd
+}
+
+.cwginstock-subscribe-form .panel-primary {
+    border-color: #337ab7
+}
+
+.cwginstock-subscribe-form .panel-primary>.panel-heading {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #337ab7
+}
+
+.cwginstock-subscribe-form .panel-primary>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #337ab7
+}
+
+.cwginstock-subscribe-form .panel-primary>.panel-heading .badge {
+    color: #337ab7;
+    background-color: #fff
+}
+
+.cwginstock-subscribe-form .panel-primary>.panel-footer+.panel-collapse>.panel-body {
+    border-bottom-color: #337ab7
+}
+
+.cwginstock-subscribe-form .panel-success {
+    border-color: #d6e9c6
+}
+
+.cwginstock-subscribe-form .panel-success>.panel-heading {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6
+}
+
+.cwginstock-subscribe-form .panel-success>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #d6e9c6
+}
+
+.cwginstock-subscribe-form .panel-success>.panel-heading .badge {
+    color: #dff0d8;
+    background-color: #3c763d
+}
+
+.cwginstock-subscribe-form .panel-success>.panel-footer+.panel-collapse>.panel-body {
+    border-bottom-color: #d6e9c6
+}
+
+.cwginstock-subscribe-form .panel-info {
+    border-color: #bce8f1
+}
+
+.cwginstock-subscribe-form .panel-info>.panel-heading {
+    color: #31708f;
+    background-color: #d9edf7;
+    border-color: #bce8f1
+}
+
+.cwginstock-subscribe-form .panel-info>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #bce8f1
+}
+
+.cwginstock-subscribe-form .panel-info>.panel-heading .badge {
+    color: #d9edf7;
+    background-color: #31708f
+}
+
+.cwginstock-subscribe-form .panel-info>.panel-footer+.panel-collapse>.panel-body {
+    border-bottom-color: #bce8f1
+}
+
+.cwginstock-subscribe-form .panel-warning {
+    border-color: #faebcc
+}
+
+.cwginstock-subscribe-form .panel-warning>.panel-heading {
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+    border-color: #faebcc
+}
+
+.cwginstock-subscribe-form .panel-warning>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #faebcc
+}
+
+.cwginstock-subscribe-form .panel-warning>.panel-heading .badge {
+    color: #fcf8e3;
+    background-color: #8a6d3b
+}
+
+.cwginstock-subscribe-form .panel-warning>.panel-footer+.panel-collapse>.panel-body {
+    border-bottom-color: #faebcc
+}
+
+.cwginstock-subscribe-form .panel-danger {
+    border-color: #ebccd1
+}
+
+.cwginstock-subscribe-form .panel-danger>.panel-heading {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1
+}
+
+.cwginstock-subscribe-form .panel-danger>.panel-heading+.panel-collapse>.panel-body {
+    border-top-color: #ebccd1
+}
+
+.cwginstock-subscribe-form .panel-danger>.panel-heading .badge {
+    color: #f2dede;
+    background-color: #a94442
+}
+
+.cwginstock-subscribe-form .panel-danger>.panel-footer+.panel-collapse>.panel-body {
+    border-bottom-color: #ebccd1
+}

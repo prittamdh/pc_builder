@@ -3,7 +3,6 @@ from datetime import datetime
 from sqlalchemy import (
     Boolean,
     ForeignKey,
-    Integer,
     SmallInteger,
     Text,
     text,
@@ -16,15 +15,15 @@ from db.base import Base
 
 
 class ScrapeTarget(Base):
-    __tablename__ = "scrape_target"
+    __tablename__ = "scrape_targets"
 
-    tid: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
     )
 
-    sid: Mapped[int] = mapped_column(
-        ForeignKey("store.sid"),
+    store_id: Mapped[int] = mapped_column(
+        ForeignKey("stores.id"),
         nullable=False,
         index=True,
     )

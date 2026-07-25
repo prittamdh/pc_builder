@@ -20,8 +20,14 @@ class StoreService:
 
         return store
 
-    def get_store(self, sid: int) -> Store | None:
-        return self.repository.get(sid)
+    def get(self, store_id: int) -> Store | None:
+        return self.repository.get(store_id)
 
-    def list_stores(self) -> list[Store]:
-        return self.repository.list()
+    def get_by_name(self, name: str) -> Store |None:
+        return self.repository.get_by_name(name)
+
+    def get_all(self) -> list[Store]:
+        return self.repository.get_all()
+
+    def get_active(self) -> list[Store]:
+        return self.repository.get_active()

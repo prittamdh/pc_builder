@@ -1,0 +1,552 @@
+/*
+  woo-advanced-product-information icon font: woo-advanced-product-information
+  Creation date: 17/05/2018 12:39
+  */
+
+@font-face {
+	font-family: "woo-advanced-product-information";
+	src: url("../fonts/woo-advanced-product-information.eot");
+	src: url("../fonts/woo-advanced-product-information.eot?#iefix") format("embedded-opentype"),
+	url("../fonts/woo-advanced-product-information.woff") format("woff"),
+	url("../fonts/woo-advanced-product-information.ttf") format("truetype"),
+	url("../fonts/woo-advanced-product-information.svg#woo-advanced-product-information") format("svg");
+	font-weight: normal;
+	font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+	@font-face {
+		font-family: "woo-advanced-product-information";
+		src: url("../fonts/woo-advanced-product-information.svg#woo-advanced-product-information") format("svg");
+	}
+}
+
+[class^="wapicons-"]:before, [class*=" wapicons-"]:before,
+[class^="wapicons-"]:after, [class*=" wapicons-"]:after {
+	font-family: "woo-advanced-product-information";
+	font-size: inherit;
+	font-style: normal;
+	width: 20px;
+	height: 20px;
+	line-height: 20px;
+}
+
+.wapicons-prize-badge-with-star-and-ribbon:before {
+	content: "\f100";
+}
+
+.wapicons-medal-4:before {
+	content: "\f101";
+}
+
+.wapicons-signs:before {
+	content: "\f102";
+}
+
+.wapicons-ribbon-1:before {
+	content: "\f103";
+}
+
+.wapicons-medal-3:before {
+	content: "\f104";
+}
+
+.wapicons-badge-2:before {
+	content: "\f105";
+}
+
+.wapicons-medal-2:before {
+	content: "\f106";
+}
+
+.wapicons-ribbon:before {
+	content: "\f107";
+}
+
+.wapicons-badge-1:before {
+	content: "\f108";
+}
+
+.wapicons-quality-1:before {
+	content: "\f109";
+}
+
+.wapicons-medal-1:before {
+	content: "\f10a";
+}
+
+.wapicons-quality:before {
+	content: "\f10b";
+}
+
+.wapicons-money-2:before {
+	content: "\f10c";
+}
+
+.wapicons-piggy-bank-3:before {
+	content: "\f10d";
+}
+
+.wapicons-investment:before {
+	content: "\f10e";
+}
+
+.wapicons-coin:before {
+	content: "\f10f";
+}
+
+.wapicons-bitcoin-logo:before {
+	content: "\f110";
+}
+
+.wapicons-free-shipping-truck:before {
+	content: "\f111";
+}
+
+.wapicons-free-shipping:before {
+	content: "\f112";
+}
+
+.wapicons-free:before {
+	content: "\f113";
+}
+
+.wapicons-chronometer:before {
+	content: "\f114";
+}
+
+.wapicons-delivery-box-on-a-hand:before {
+	content: "\f115";
+}
+
+.wapicons-free-delivery-truck:before {
+	content: "\f116";
+}
+
+.wapicons-international-delivery-business-symbol-of-world-grid-with-an-arrow-around:before {
+	content: "\f117";
+}
+
+.wapicons-phone-auricular-and-clock-delivery-symbol:before {
+	content: "\f118";
+}
+
+.wapicons-weight-tool:before {
+	content: "\f119";
+}
+
+.wapicons-delivery-truck-with-packages-behind:before {
+	content: "\f11a";
+}
+
+.wapicons-talking-by-phone-auricular-symbol-with-speech-bubble:before {
+	content: "\f11b";
+}
+
+.wapicons-woman-with-headset:before {
+	content: "\f11c";
+}
+
+.wapicons-triangular-arrows-sign-for-recycle:before {
+	content: "\f11d";
+}
+
+.wapicons-international-delivery:before {
+	content: "\f11e";
+}
+
+.wapicons-24-hours-delivery:before {
+	content: "\f11f";
+}
+
+.wapicons-call-center-worker-with-headset:before {
+	content: "\f120";
+}
+
+.wapicons-food:before {
+	content: "\f121";
+}
+
+.wapicons-ocean-transportation:before {
+	content: "\f122";
+}
+
+.wapicons-badge:before {
+	content: "\f123";
+}
+
+.wapicons-shopping-cart-3:before {
+	content: "\f124";
+}
+
+.wapicons-shopping-cart-2:before {
+	content: "\f125";
+}
+
+.wapicons-shopping-cart-1:before {
+	content: "\f126";
+}
+
+.wapicons-shopping-cart:before {
+	content: "\f127";
+}
+
+.wapicons-checkout:before {
+	content: "\f128";
+}
+
+.wapicons-transport-8:before {
+	content: "\f129";
+}
+
+.wapicons-transport-7:before {
+	content: "\f12a";
+}
+
+.wapicons-transport-6:before {
+	content: "\f12b";
+}
+
+.wapicons-transport-5:before {
+	content: "\f12c";
+}
+
+.wapicons-travel-1:before {
+	content: "\f12d";
+}
+
+.wapicons-delivery-truck:before {
+	content: "\f12e";
+}
+
+.wapicons-airplane-shape:before {
+	content: "\f12f";
+}
+
+.wapicons-plane:before {
+	content: "\f130";
+}
+
+.wapicons-fast-delivery-1:before {
+	content: "\f131";
+}
+
+.wapicons-fast-delivery:before {
+	content: "\f132";
+}
+
+.wapicons-transport-4:before {
+	content: "\f133";
+}
+
+.wapicons-transport-3:before {
+	content: "\f134";
+}
+
+.wapicons-transport-2:before {
+	content: "\f135";
+}
+
+.wapicons-transport-1:before {
+	content: "\f136";
+}
+
+.wapicons-transport:before {
+	content: "\f137";
+}
+
+.wapicons-startup-2:before {
+	content: "\f138";
+}
+
+.wapicons-startup-1:before {
+	content: "\f139";
+}
+
+.wapicons-rocket-icon:before {
+	content: "\f13a";
+}
+
+.wapicons-startup:before {
+	content: "\f13b";
+}
+
+.wapicons-rocket:before {
+	content: "\f13c";
+}
+
+.wapicons-small-rocket-ship-silhouette:before {
+	content: "\f13d";
+}
+
+.wapicons-rocket-ship:before {
+	content: "\f13e";
+}
+
+.wapicons-support-1:before {
+	content: "\f13f";
+}
+
+.wapicons-24-hours-symbol:before {
+	content: "\f140";
+}
+
+.wapicons-24-hours-phone-service:before {
+	content: "\f141";
+}
+
+.wapicons-medal:before {
+	content: "\f142";
+}
+
+.wapicons-ranking-cup:before {
+	content: "\f143";
+}
+
+.wapicons-rank:before {
+	content: "\f144";
+}
+
+.wapicons-guarantee:before {
+	content: "\f145";
+}
+
+.wapicons-podium:before {
+	content: "\f146";
+}
+
+.wapicons-travel:before {
+	content: "\f147";
+}
+
+.wapicons-map:before {
+	content: "\f148";
+}
+
+.wapicons-rating-2:before {
+	content: "\f149";
+}
+
+.wapicons-rating-1:before {
+	content: "\f14a";
+}
+
+.wapicons-rating:before {
+	content: "\f14b";
+}
+
+.wapicons-review-2:before {
+	content: "\f14c";
+}
+
+.wapicons-good-review:before {
+	content: "\f14d";
+}
+
+.wapicons-review-1:before {
+	content: "\f14e";
+}
+
+.wapicons-review:before {
+	content: "\f14f";
+}
+
+.wapicons-counterclockwide-arrow:before {
+	content: "\f150";
+}
+
+.wapicons-counterclockwise:before {
+	content: "\f151";
+}
+
+.wapicons-hourglass-countdown:before {
+	content: "\f152";
+}
+
+.wapicons-delivery:before {
+	content: "\f153";
+}
+
+.wapicons-support:before {
+	content: "\f154";
+}
+
+.wapicons-telephone-line-24-hours-service:before {
+	content: "\f155";
+}
+
+.wapicons-delivery-man:before {
+	content: "\f156";
+}
+
+.wapicons-delivery-truck-with-circular-clock:before {
+	content: "\f157";
+}
+
+.wapicons-logistics-delivery-truck-and-clock:before {
+	content: "\f158";
+}
+
+.wapicons-logistics-delivery-truck-in-movement:before {
+	content: "\f159";
+}
+
+.wapicons-world:before {
+	content: "\f15a";
+}
+
+.wapicons-open-eye:before {
+	content: "\f15b";
+}
+
+.wapicons-piggy-bank-2:before {
+	content: "\f15c";
+}
+
+.wapicons-piggy-bank-1:before {
+	content: "\f15d";
+}
+
+.wapicons-piggy-bank-with-dollar-coins:before {
+	content: "\f15e";
+}
+
+.wapicons-piggy-bank:before {
+	content: "\f15f";
+}
+
+.wapicons-compass:before {
+	content: "\f160";
+}
+
+.wapicons-savings:before {
+	content: "\f161";
+}
+
+.wapicons-handshake:before {
+	content: "\f162";
+}
+
+.wapicons-arrows:before {
+	content: "\f163";
+}
+
+.wapicons-return-of-investment:before {
+	content: "\f164";
+}
+
+.wapicons-discount-1:before {
+	content: "\f165";
+}
+
+.wapicons-discount-label-for-commerce:before {
+	content: "\f166";
+}
+
+.wapicons-coupon-3:before {
+	content: "\f167";
+}
+
+.wapicons-discount:before {
+	content: "\f168";
+}
+
+.wapicons-coupon-2:before {
+	content: "\f169";
+}
+
+.wapicons-coupon-1:before {
+	content: "\f16a";
+}
+
+.wapicons-coupon:before {
+	content: "\f16b";
+}
+
+.wapicons-security-2:before {
+	content: "\f16c";
+}
+
+.wapicons-security-1:before {
+	content: "\f16d";
+}
+
+.wapicons-shield-2:before {
+	content: "\f16e";
+}
+
+.wapicons-security:before {
+	content: "\f16f";
+}
+
+.wapicons-safety:before {
+	content: "\f170";
+}
+
+.wapicons-shield-1:before {
+	content: "\f171";
+}
+
+.wapicons-shield:before {
+	content: "\f172";
+}
+
+.wapicons-amazon-pay-card-logo:before {
+	content: "\f173";
+}
+
+.wapicons-amazon:before {
+	content: "\f174";
+}
+
+.wapicons-amazon-logo:before {
+	content: "\f175";
+}
+
+.wapicons-stripe-logo:before {
+	content: "\f176";
+}
+
+.wapicons-paypal-logo-1:before {
+	content: "\f177";
+}
+
+.wapicons-credit-card-payment:before {
+	content: "\f178";
+}
+
+.wapicons-paypal-logo:before {
+	content: "\f179";
+}
+
+.wapicons-money-1:before {
+	content: "\f17a";
+}
+
+.wapicons-check:before {
+	content: "\f17b";
+}
+
+.wapicons-credit-card-with-tick:before {
+	content: "\f17c";
+}
+
+.wapicons-secure-payment:before {
+	content: "\f17d";
+}
+
+.wapicons-checked:before {
+	content: "\f17e";
+}
+
+.wapicons-commerce:before {
+	content: "\f17f";
+}
+
+.wapicons-money:before {
+	content: "\f180";
+}
+
+.wapicons-business:before {
+	content: "\f181";
+}

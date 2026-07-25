@@ -1,5 +1,5 @@
 from scrapers.http_client import HttpClient
-from scrapers.sites.mdcomputers import MDComputersScraper
+from scrapers.mdcomputers.scraper import MDComputersScraper
 
 
 def main():
