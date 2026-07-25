@@ -55,3 +55,26 @@ src/db/migrations/versions/__pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+tests/html/**/*_files/
+tests/html/**/*_files/* 
+
+# Browser downloaded assets
+*.download
+
+# Saved webpage assets
+*_files/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+.venv/
+venv/
+
+# Environment
+.env
