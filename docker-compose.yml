@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pc_builder_postgres
+    environment:
+      - POSTGRES_USER=pc_builder
+      - POSTGRES_PASSWORD=pc_builder
+      - POSTGRES_DB=pc_builder
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pc_builder -d pc_builder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-standalone:
+    image: apache/airflow:2.9.1-python3.11
+    container_name: pc_builder_airflow
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://pc_builder:pc_builder@postgres:5432/pc_builder
+      - AIRFLOW__CORE__FERNET_KEY=46BK85BWoEWYvGtxPDjsfs0apWiyB_1BjgYFuBoOdFc=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=secret_key_pc_builder
+      - PYTHONPATH=/opt/airflow/src:/opt/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./logs:/opt/airflow/logs
+      - ./requirements.txt:/opt/airflow/requirements.txt
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin &&
+               airflow webserver &
+               airflow scheduler"
+
+volumes:
+  postgres_data:

@@ -1,7 +1,10 @@
-from decimal import Decimal
-from typing import Optional
+"""
+Product model returned by product page scrapers.
+"""
 
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from decimal import Decimal
+
+from pydantic import BaseModel, ConfigDict, HttpUrl, model_validator
 
 
 class Product(BaseModel):
@@ -10,23 +13,53 @@ class Product(BaseModel):
         extra="ignore",
     )
 
-    seller: str
+    # Store information
+    store: str          # mdcomputers, pcstudio, vedant, primeabgb
+    sid: int = 1        # Database store id
 
+    # Store-specific unique product identifier
+    pid: str = ""
+
+    # Product information
     name: str
     url: HttpUrl
 
-    price: Decimal
+    # Pricing
+    price: Decimal | None = None
     mrp: Decimal | None = None
-
-    image: HttpUrl | None = None
-
     currency: str = "INR"
 
+    # Media
+    image: HttpUrl | None = None
+
+    # Availability
     in_stock: bool | None = None
 
-    sku: Optional[str] = None
-    brand: Optional[str] = None
+    # Metadata
+    brand: str | None = None
+    category: str | None = None
+    description: str | None = None
 
-    description: Optional[str] = None
-
+    # Specifications extracted from the product page
     specifications: dict[str, str] = {}
+
+    @model_validator(mode="before")
+    @classmethod
+    def _fill_defaults(cls, values: dict):
+        if isinstance(values, dict):
+            # Fallback for store / seller
+            if not values.get("store") and values.get("seller"):
+                values["store"] = str(values["seller"]).lower()
+            
+            # Fallback for pid if missing or empty
+            if not values.get("pid"):
+                pid_val = values.get("sku")
+                if not pid_val:
+                    url = str(values.get("url", ""))
+                    if url:
+                        clean_url = url.split("?")[0].rstrip("/")
+                        pid_val = clean_url.split("/")[-1] or "unknown"
+                    else:
+                        pid_val = str(values.get("name", "unknown"))
+                values["pid"] = str(pid_val)
+        return values

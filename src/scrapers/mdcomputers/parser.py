@@ -55,9 +55,16 @@ class MDComputersParser(BaseParser):
                 else None
             )
 
+            pid = (
+                card.get("data-product-id")
+                or (url.split("?")[0].rstrip("/").split("/")[-1] if url else name)
+            )
+
             results.append(
                 SearchResult(
-                    seller=self.store.display_name,
+                    store=self.store.name,
+                    sid=self.store.id,
+                    pid=pid,
                     name=name,
                     url=url,
                     image=image,

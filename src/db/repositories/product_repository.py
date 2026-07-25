@@ -11,40 +11,47 @@ class ProductRepository:
     def get(self, product_id: int) -> Product | None:
         return self.session.get(Product, product_id)
 
-    def get_by_store_and_url(
-        self,
-        store_id: int,
-        product_url: str,
-    ) -> Product | None:
+    def get_by_sid_pid(self, sid: int, pid: str) -> Product | None:
         stmt = (
             select(Product)
             .where(
-                Product.store_id == store_id,
-                Product.product_url == product_url,
+                Product.sid == sid,
+                Product.pid == pid,
             )
         )
-
         return self.session.scalar(stmt)
 
     def create(
         self,
         *,
-        store_id: int,
-        external_id: str | None,
+        sid: int,
+        pid: str,
         name: str,
         product_url: str,
-        image_url: str | None,
-        brand: str | None,
-        category: str | None,
+        image_url: str | None = None,
+        brand: str | None = None,
+        category: str | None = None,
+        description: str | None = None,
+        specifications: dict | None = None,
+        currency: str = "INR",
+        current_price: float | None = None,
+        current_mrp: float | None = None,
+        in_stock: bool | None = None,
     ) -> Product:
         product = Product(
-            store_id=store_id,
-            external_id=external_id,
+            sid=sid,
+            pid=pid,
             name=name,
             product_url=product_url,
             image_url=image_url,
             brand=brand,
             category=category,
+            description=description,
+            specifications=specifications,
+            currency=currency,
+            current_price=current_price,
+            current_mrp=current_mrp,
+            in_stock=in_stock,
         )
 
         self.session.add(product)
@@ -55,29 +62,27 @@ class ProductRepository:
     def get_or_create(
         self,
         *,
-        store_id: int,
-        external_id: str | None,
-        name: str,
-        product_url: str,
-        image_url: str | None,
-        brand: str | None,
-        category: str | None,
-    ) -> Product:
-
-        product = self.get_by_store_and_url(
-            store_id,
-            product_url,
-        )
+        sid: int,
+        pid: str,
+        **kwargs,
+    ) -> tuple[Product, bool]:
+        product = self.get_by_sid_pid(sid, pid)
 
         if product:
-            return product
+            return product, False
 
-        return self.create(
-            store_id=store_id,
-            external_id=external_id,
-            name=name,
-            product_url=product_url,
-            image_url=image_url,
-            brand=brand,
-            category=category,
+        product = self.create(
+            sid=sid,
+            pid=pid,
+            **kwargs,
         )
+
+        return product, True
+
+    def update(self, product: Product, **fields) -> Product:
+        for key, value in fields.items():
+            if value is not None:
+                setattr(product, key, value)
+
+        self.session.flush()
+        return product
