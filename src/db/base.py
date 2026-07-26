@@ -1,5 +1,9 @@
-from sqlalchemy.orm import DeclarativeBase
+try:
+    from sqlalchemy.orm import DeclarativeBase
 
+    class Base(DeclarativeBase):
+        pass
+except ImportError:
+    from sqlalchemy.ext.declarative import declarative_base
 
-class Base(DeclarativeBase):
-    pass
+    Base = declarative_base()

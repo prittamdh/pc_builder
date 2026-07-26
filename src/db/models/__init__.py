@@ -1,3 +1,4 @@
+from .mixins import TimestampMixin
 from .price_history import PriceHistory
 from .product import Product
 from .scrape_target import ScrapeTarget
@@ -8,4 +9,5 @@ __all__ = [
     "ScrapeTarget",
     "Product",
     "PriceHistory",
+    "TimestampMixin",
 ]

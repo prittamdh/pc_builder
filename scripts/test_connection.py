@@ -8,11 +8,11 @@ def main():
         with engine.connect() as conn:
             version = conn.execute(text("SELECT version();")).scalar()
 
-            print("✅ Database connection successful!")
+            print("[OK] Database connection successful!")
             print(version)
 
     except Exception as e:
-        print("❌ Database connection failed!")
+        print("[FAIL] Database connection failed!")
         print(e)
 
 

@@ -1,8 +1,16 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric
+from sqlalchemy.orm import relationship
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+try:
+    from sqlalchemy.orm import Mapped, mapped_column
+except ImportError:
+    class Mapped:
+        def __class_getitem__(cls, item):
+            return Any
+    from sqlalchemy import Column as mapped_column
 
 from db.base import Base
 
@@ -10,9 +18,10 @@ from db.base import Base
 class PriceHistory(Base):
     __tablename__ = "price_history"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     product_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
     )

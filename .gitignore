@@ -1,80 +1,46 @@
-# Python
+# Python & Environment
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual environments
 .venv/
 venv/
 env/
-
-# Environment
 .env
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs & Caches
 logs/
 *.log
-
-# Pytest
 .pytest_cache/
 .coverage
 htmlcov/
-
-# Mypy
 .mypy_cache/
-
-# Ruff
 .ruff_cache/
 
-# Build
+# Build & Package
 build/
 dist/
 *.egg-info/
 
-# Local data
+# Local Data & Database dumps
 data/cache/
 data/raw/
 data/processed/
 data/exports/
-
-# Alembic cache
-src/db/migrations/versions/__pycache__/
-
-# Test HTML (optional)
-*.html
-
-# Local databases
 *.db
 *.sqlite
 *.sqlite3
 
-tests/html/**/*_files/
-tests/html/**/*_files/* 
-
-# Browser downloaded assets
+# Temporary HTML & Downloaded Assets
+*.html
 *.download
-
-# Saved webpage assets
 *_files/
+tests/html/**/*_files/
 
-# macOS
-.DS_Store
-
-# Python
-__pycache__/
-*.pyc
-
-# Virtual env
-.venv/
-venv/
-
-# Environment
-.env
+# Local Scratch Artifacts
+.agents/scratch/

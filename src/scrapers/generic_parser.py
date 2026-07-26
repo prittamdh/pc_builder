@@ -59,9 +59,16 @@ class GenericParser:
                     image.get(self.attributes["image"], "")
                 )
 
+            pid = (
+                card.get("data-product-id")
+                or product_url.split("?")[0].rstrip("/").split("/")[-1]
+            )
+
             results.append(
                 SearchResult(
-                    seller=self.store.display_name,
+                    store=self.store.name,
+                    sid=self.store.id,
+                    pid=pid,
                     name=title.get_text(strip=True),
                     url=product_url,
                     price=self._clean_price(price.get_text()),
@@ -173,8 +180,15 @@ class GenericParser:
             if value:
                 specifications[key] = value
 
+        pid = (
+            data.get("sku")
+            or (url.split("?")[0].rstrip("/").split("/")[-1] if url else data.get("name", ""))
+        )
+
         return Product(
-            seller=self.store.display_name,
+            store=self.store.name,
+            sid=self.store.id,
+            pid=str(pid),
             name=data.get("name", ""),
             url=url,
             price=self._clean_price(
@@ -187,7 +201,6 @@ class GenericParser:
                 self.store.currency,
             ),
             in_stock=in_stock,
-            sku=data.get("sku"),
             brand=brand,
             description=data.get("description"),
             specifications=specifications,

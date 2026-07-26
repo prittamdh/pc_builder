@@ -1,35 +1,57 @@
-from datetime import datetime
+from typing import TYPE_CHECKING, Any, List
+from sqlalchemy import (
+    Boolean,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+try:
+    from sqlalchemy.orm import Mapped, mapped_column
+except ImportError:
+    class Mapped:
+        def __class_getitem__(cls, item):
+            return Any
+    from sqlalchemy import Column as mapped_column
 
 from db.base import Base
+from db.models.mixins import TimestampMixin
+
+if TYPE_CHECKING:
+    from db.models.price_history import PriceHistory
 
 
-class Product(Base):
+class Product(Base, TimestampMixin):
     __tablename__ = "products"
 
     __table_args__ = (
-        UniqueConstraint(
-            "store_id",
-            "product_url",
-            name="products_store_id_product_url_key",
-        ),
+        UniqueConstraint("sid", "pid", name="uq_products_sid_pid"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    store_id: Mapped[int] = mapped_column(
-        ForeignKey("stores.id"),
+    # Store
+    sid: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("stores.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Store specific unique identifier
+    pid: Mapped[str] = mapped_column(
+        String(255),
         nullable=False,
     )
 
-    external_id: Mapped[str | None] = mapped_column(
-        String(100)
-    )
-
+    # Product
     name: Mapped[str] = mapped_column(
-        Text,
+        String(500),
         nullable=False,
     )
 
@@ -39,33 +61,44 @@ class Product(Base):
     )
 
     image_url: Mapped[str | None] = mapped_column(
-        Text
+        Text,
     )
 
     brand: Mapped[str | None] = mapped_column(
-        String(100)
+        String(255),
     )
 
     category: Mapped[str | None] = mapped_column(
-        String(100)
+        String(255),
     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
+    description: Mapped[str | None] = mapped_column(
+        Text,
+    )
+
+    specifications: Mapped[dict | None] = mapped_column(
+        JSONB,
+    )
+
+    currency: Mapped[str] = mapped_column(
+        String(10),
+        default="INR",
         nullable=False,
     )
 
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False,
+    current_price: Mapped[float | None] = mapped_column(
+        Numeric(12, 2),
     )
 
-    store = relationship("Store")
+    current_mrp: Mapped[float | None] = mapped_column(
+        Numeric(12, 2),
+    )
 
-    price_history = relationship(
+    in_stock: Mapped[bool | None] = mapped_column(
+        Boolean,
+    )
+
+    price_history: Mapped[List["PriceHistory"]] = relationship(
         "PriceHistory",
         back_populates="product",
         cascade="all, delete-orphan",
