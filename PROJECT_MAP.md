@@ -19,6 +19,12 @@
 - **src/api/routes/products.py**: Endpoints for product search, filtering, details, and price histories (`GET /api/v1/products`, `GET /api/v1/products/{id}`, `GET /api/v1/products/{id}/history`).
 - **src/api/routes/builder.py**: Endpoints for PC component slot listing and hardware compatibility validation (`GET /api/v1/builder/slots`, `POST /api/v1/builder/validate`).
 
+## Configuration & Shared Utilities
+- **src/configs/settings.py**: Global application settings, environment loader, and path constants.
+- **src/common/logger.py**: Structured logging system setup.
+- **src/common/retry.py**: Decorator & retry logic for resilient HTTP/database operations.
+- **src/common/constants.py**: Application constants and defaults.
+
 ## Domain Models
 - **src/domain/base.py**: Base scraper and parser interfaces.
 - **src/domain/store.py**: Store domain model representing retailer settings.
@@ -28,7 +34,7 @@
 
 ## Database Models & ORM
 - **src/db/base.py**: SQLAlchemy DeclarativeBase initialization.
-- **src/db/session.py**: Database engine and SessionLocal session factory.
+- **src/db/connection.py**: Database engine creation and SessionLocal session factory.
 - **src/db/models/mixins.py**: Base model mixins (`TimestampMixin` with `created_at` and `updated_at`).
 - **src/db/models/store.py**: Store model storing configuration, CSS/attribute selectors, and search endpoints.
 - **src/db/models/product.py**: Product model uniquely constrained on `(sid, pid)`.

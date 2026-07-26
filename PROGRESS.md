@@ -22,9 +22,23 @@
 
 ## Detailed Task Breakdown
 
-### Airflow Scheduling & Container Deployment (Fully Live & Verified ✅)
+### Database Infrastructure & `(sid, pid)` Architecture (Fully Live & Verified ✅)
+- [x] **Composite Product Identity**: Implemented composite primary/unique key `(sid, pid)` across `products` and `price_history`.
+- [x] **Store Management**: Configurable store schema (`stores`) with dynamic CSS selectors, pagination templates, and active flags.
+- [x] **Alembic Migrations**: Schema migrations with version isolation (`app_alembic_version`) to avoid Airflow metadata table conflicts.
 
+### Scraper Engine & Multi-Store Persistence (Fully Live & Verified ✅)
+- [x] **Generic Scraper**: Selector-driven generic scraper (`GenericScraper`) handling single-page and multi-page pagination.
+- [x] **Multi-Store Support**: Verified scraping across 4 retailer stores: MDComputers, PCStudio, Vedant Computers, and PrimeABGB.
+- [x] **Price History Tracking**: Auto-capturing price snapshots and stock changes per product on every scrape cycle.
+
+### FastAPI REST Backend & PC Builder Engine (Fully Live & Verified ✅)
+- [x] **REST Endpoints**: `/api/v1/stores`, `/api/v1/products`, `/api/v1/products/{id}`, `/api/v1/products/{id}/history`.
+- [x] **PC Builder Compatibility Engine**: Socket matching (AM5, LGA1700), RAM generation (DDR4, DDR5), TDP wattage estimation, and multi-store cost optimization.
+- [x] **Static Mounting & CORS**: Mounting glassmorphic dark-mode web application directly at `http://127.0.0.1:8000/`.
+
+### Airflow Scheduling & Container Deployment (Fully Live & Verified ✅)
 - [x] **Docker Container Launch**: `docker compose up -d` running `apache/airflow:2.9.1-python3.11` + `postgres:15-alpine`.
 - [x] **Airflow Web UI Live**: Accessible at **http://localhost:8085** (Port `8085` mapped to avoid port conflict).
 - [x] **Credentials & Auth**: User `admin` initialized with password `admin`.
-- [x] **DAG Execution Success**: Tested and verified `process_due_targets` task execution — processed 10 due targets and saved 150+ products across MDComputers, PCStudio, and Vedant Computers with status **SUCCESS**.
+- [x] **DAG Execution Success**: Verified `process_due_targets` task execution — processed 10 due targets and saved 150+ products across MDComputers, PCStudio, and Vedant Computers with status **SUCCESS**.
