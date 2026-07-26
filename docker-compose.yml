@@ -6,7 +6,7 @@ services:
     container_name: pc_builder_postgres
     environment:
       - POSTGRES_USER=pc_builder
-      - POSTGRES_PASSWORD=pc_builder
+      - POSTGRES_PASSWORD=pc_builder123
       - POSTGRES_DB=pc_builder
     ports:
       - "5432:5432"
@@ -27,7 +27,8 @@ services:
         condition: service_healthy
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://pc_builder:pc_builder@postgres:5432/pc_builder
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://pc_builder:pc_builder123@postgres:5432/pc_builder
+      - DATABASE_URL=postgresql+psycopg2://pc_builder:pc_builder123@postgres:5432/pc_builder
       - AIRFLOW__CORE__FERNET_KEY=46BK85BWoEWYvGtxPDjsfs0apWiyB_1BjgYFuBoOdFc=
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__SECRET_KEY=secret_key_pc_builder
@@ -35,6 +36,7 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
+      - ./scripts:/opt/airflow/scripts
       - ./logs:/opt/airflow/logs
       - ./requirements.txt:/opt/airflow/requirements.txt
     ports:

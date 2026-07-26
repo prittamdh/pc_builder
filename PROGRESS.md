@@ -27,4 +27,4 @@
 - [x] **Docker Container Launch**: `docker compose up -d` running `apache/airflow:2.9.1-python3.11` + `postgres:15-alpine`.
 - [x] **Airflow Web UI Live**: Accessible at **http://localhost:8085** (Port `8085` mapped to avoid port conflict).
 - [x] **Credentials & Auth**: User `admin` initialized with password `admin`.
-- [x] **DAG Active**: `pc_builder_scheduled_scraper` DAG in `dags/scheduled_scraper_dag.py` active and scheduled every 15 minutes.
+- [x] **DAG Execution Success**: Tested and verified `process_due_targets` task execution — processed 10 due targets and saved 150+ products across MDComputers, PCStudio, and Vedant Computers with status **SUCCESS**.

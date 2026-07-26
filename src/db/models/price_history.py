@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import relationship
 
 try:
@@ -18,9 +18,10 @@ from db.base import Base
 class PriceHistory(Base):
     __tablename__ = "price_history"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     product_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
     )

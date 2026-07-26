@@ -33,10 +33,11 @@ class Product(Base, TimestampMixin):
         UniqueConstraint("sid", "pid", name="uq_products_sid_pid"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
     # Store
     sid: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("stores.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

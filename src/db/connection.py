@@ -17,7 +17,7 @@ if "postgresql+psycopg://" in db_url:
         except ImportError:
             db_url = db_url.replace("postgresql+psycopg://", "postgresql+psycopg2://")
 
-# Inside Docker container, fallback localhost:5432 to postgres:5432 if host is unreachable
+# Inside Docker container, fallback localhost:5432 to postgres:5432
 if os.path.exists("/.dockerenv") and "@localhost:5432" in db_url:
     db_url = db_url.replace("@localhost:5432", "@postgres:5432")
 
