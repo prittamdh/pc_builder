@@ -7,9 +7,17 @@ from sqlalchemy import (
     Text,
     text,
 )
+from typing import Any
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
+
+try:
+    from sqlalchemy.orm import Mapped, mapped_column
+except ImportError:
+    class Mapped:
+        def __class_getitem__(cls, item):
+            return Any
+    from sqlalchemy import Column as mapped_column
 
 from db.base import Base
 

@@ -38,12 +38,9 @@ services:
       - ./logs:/opt/airflow/logs
       - ./requirements.txt:/opt/airflow/requirements.txt
     ports:
-      - "8080:8080"
+      - "8085:8080"
     command: >
-      bash -c "airflow db init &&
-               airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin &&
-               airflow webserver &
-               airflow scheduler"
+      bash -c "airflow standalone"
 
 volumes:
   postgres_data:

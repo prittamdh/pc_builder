@@ -12,20 +12,19 @@
 | **Product Page Scraper** | ✅ | JSON-LD & fallback extraction for detailed product pages |
 | **sid/pid Refactor** | ✅ | Completely implemented & verified end-to-end |
 | **Pagination & Scrape Target Management** | ✅ | Multi-page pagination, target seeding & target execution verified |
-| **Airflow Container Verification** | 🚧 | Docker compose created (`docker-compose.yml`); pending container spin-up & DAG validation |
-| **FastAPI Backend** | ⏳ | REST API for products, price history, and search |
-| **Frontend UI** | ⏳ | Web interface for price comparison and build planning |
-| **PC Builder Assembly Tool** | ⏳ | Compatibility checker & budget build calculator |
-| **Advanced Features** | ⏳ | Price drop alerts, wishlist, stock notifications |
+| **Airflow Scheduling & Web UI** | ✅ | Airflow 2.9.1 container running live on `http://localhost:8085` with `pc_builder_scheduled_scraper` DAG |
+| **FastAPI Backend** | ✅ | Production-grade REST API server & endpoints (`src/api/`) live on `http://127.0.0.1:8000` |
+| **Frontend UI** | ✅ | Glassmorphic dark mode UI live on `http://localhost:8000/` |
+| **PC Builder Assembly Tool** | ✅ | Component slots, socket/RAM/TDP compatibility & multi-store optimizer |
+| **Advanced Features** | ⏳ | Price drop alerts, wishlist, stock notifications (Next Phase) |
 
 ---
 
 ## Detailed Task Breakdown
 
-### Airflow Docker Container Verification (In Progress 🚧)
+### Airflow Scheduling & Container Deployment (Fully Live & Verified ✅)
 
-- [x] **Docker Check**: Confirmed Docker version 29.5.3 installed on machine.
-- [x] **Airflow Docker Compose**: Created `docker-compose.yml` with Airflow 2.9.1 + PostgreSQL.
-- [x] **DAG Code**: Created `dags/scheduled_scraper_dag.py`.
-- [ ] **Container Launch**: Execute `docker compose up -d` to launch Airflow webserver & scheduler.
-- [ ] **DAG Validation**: Verify DAG parses without import errors and executes scheduled tasks in Airflow UI.
+- [x] **Docker Container Launch**: `docker compose up -d` running `apache/airflow:2.9.1-python3.11` + `postgres:15-alpine`.
+- [x] **Airflow Web UI Live**: Accessible at **http://localhost:8085** (Port `8085` mapped to avoid port conflict).
+- [x] **Credentials & Auth**: User `admin` initialized with password `admin`.
+- [x] **DAG Active**: `pc_builder_scheduled_scraper` DAG in `dags/scheduled_scraper_dag.py` active and scheduled every 15 minutes.

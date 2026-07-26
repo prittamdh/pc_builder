@@ -4,11 +4,27 @@
 - **src/main.py**: Application entry point.
 - **docker-compose.yml**: Docker Compose configuration running Airflow webserver/scheduler & PostgreSQL.
 
+## Web UI & Frontend
+- **src/static/index.html**: Semantic HTML5 web application document.
+- **src/static/index.css**: Glassmorphic dark mode design system, typography, gradient badges, and responsive layout styles.
+- **src/static/app.js**: Client-side application logic for product search, store filters, price comparison cards, and SVG sparkline chart generation.
+
+## FastAPI REST API & Assembly Tool
+- **src/api/main.py**: FastAPI app entry point with CORS middleware, static file mounting (`/static`, `/`), and route inclusion (`/health`, `/docs`).
+- **src/api/deps.py**: Database session generator dependency (`get_db()`).
+- **src/api/schemas/store.py**: Pydantic response schema `StoreOut`.
+- **src/api/schemas/product.py**: Pydantic response schemas `ProductOut` and `ProductListResponse`.
+- **src/api/schemas/price_history.py**: Pydantic response schema `PriceHistoryOut`.
+- **src/api/routes/stores.py**: Endpoints for store listings (`GET /api/v1/stores`).
+- **src/api/routes/products.py**: Endpoints for product search, filtering, details, and price histories (`GET /api/v1/products`, `GET /api/v1/products/{id}`, `GET /api/v1/products/{id}/history`).
+- **src/api/routes/builder.py**: Endpoints for PC component slot listing and hardware compatibility validation (`GET /api/v1/builder/slots`, `POST /api/v1/builder/validate`).
+
 ## Domain Models
 - **src/domain/base.py**: Base scraper and parser interfaces.
 - **src/domain/store.py**: Store domain model representing retailer settings.
 - **src/domain/search_result.py**: Search result model containing store (`store`), store ID (`sid`), product ID (`pid`), price, MRP, and URLs.
 - **src/domain/product.py**: Product details model containing `sid`, `pid`, metadata, specifications, and availability.
+- **src/domain/builder.py**: Pydantic models for PC builder slots, hardware selections, compatibility warnings, and multi-store cost breakdowns.
 
 ## Database Models & ORM
 - **src/db/base.py**: SQLAlchemy DeclarativeBase initialization.
@@ -31,6 +47,7 @@
 - **src/services/search_service.py**: Service to persist search results and insert price history entries.
 - **src/services/product_service.py**: Service to update detailed product metadata from product pages.
 - **src/services/scrape_target_service.py**: Service to manage upcoming scraping targets and scheduling queue.
+- **src/services/builder_service.py**: PC Builder service performing socket/RAM compatibility checks, TDP wattage estimation, and multi-store price optimization.
 
 ## Scrapers & Parsers
 - **src/scrapers/http_client.py**: Resilient HTTP client wrapper for fetching store pages.
@@ -51,6 +68,8 @@
 - **scripts/test_product_scraper.py**: Tests fetching and parsing detailed product pages.
 - **scripts/test_pagination_and_targets.py**: Tests multi-page pagination scraping for due scrape targets.
 - **scripts/test_airflow_task.py**: Verifies Airflow task execution callable outside Airflow environment.
+- **scripts/test_api.py**: Tests FastAPI REST API endpoints & static web UI route.
+- **scripts/test_builder.py**: Tests PC Builder component slots, compatibility rules, and multi-store price calculation.
 
 ## Deprecated / Obsolete Scripts
 - **scripts/test_mdcomputers_scraper.py**: [DEPRECATED] Hardcoded single-store scraper (superseded by `test_all_stores.py`).

@@ -2,6 +2,10 @@
 requests>=2.32.0
 httpx>=0.28.0
 
+# FastAPI Framework
+fastapi>=0.115.0
+uvicorn>=0.30.0
+
 # HTML Parsing
 beautifulsoup4>=4.13.0
 lxml>=6.0.0

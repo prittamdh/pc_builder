@@ -1,8 +1,16 @@
 from datetime import datetime
 from decimal import Decimal
-
+from typing import Any
 from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import relationship
+
+try:
+    from sqlalchemy.orm import Mapped, mapped_column
+except ImportError:
+    class Mapped:
+        def __class_getitem__(cls, item):
+            return Any
+    from sqlalchemy import Column as mapped_column
 
 from db.base import Base
 
