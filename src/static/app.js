@@ -1,241 +1,353 @@
-/* PC Builder 2 - Application Client Logic */
+/**
+ * PC Builder 2 - Modern Single Page Application Client
+ */
 
+const API_BASE = '/api/v1';
+
+// Global App State
 const state = {
-  stores: [],
-  storeMap: {},
-  query: 'rtx',
-  selectedStore: '',
-  inStockOnly: '',
-  minPrice: '',
-  maxPrice: '',
-  debounceTimer: null,
+    activeTab: 'catalog',
+    products: [],
+    searchQuery: '',
+    selectedCategory: '',
+    builderSelections: {
+        cpu: null,
+        motherboard: null,
+        gpu: null,
+        ram: null,
+        storage: null,
+        psu: null,
+        case: null
+    },
+    activeSlotKey: null
 };
 
-// DOM Elements
-const searchInput = document.getElementById('search-input');
-const storeFilter = document.getElementById('store-filter');
-const stockFilter = document.getElementById('stock-filter');
-const minPriceInput = document.getElementById('min-price-input');
-const maxPriceInput = document.getElementById('max-price-input');
-const productsGrid = document.getElementById('products-grid');
-const resultsCount = document.getElementById('results-count');
-const activeStoresCount = document.getElementById('active-stores-count');
-const totalProductsCount = document.getElementById('total-products-count');
+// Initialize Application
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
+    initCatalog();
+    initBuilder();
+});
 
-const historyModal = document.getElementById('history-modal');
-const modalCloseBtn = document.getElementById('modal-close-btn');
-const modalProductTitle = document.getElementById('modal-product-title');
-const modalProductSubtitle = document.getElementById('modal-product-subtitle');
-const priceChartSvg = document.getElementById('price-chart-svg');
+// Navigation Handler
+function initNavigation() {
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-// Format Currency
-function formatCurrency(val) {
-  if (val === null || val === undefined) return 'N/A';
-  return '₹' + Number(val).toLocaleString('en-IN');
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`${targetTab}-tab`).classList.add('active');
+            state.activeTab = targetTab;
+
+            if (targetTab === 'catalog' && state.products.length === 0) {
+                fetchProducts();
+            }
+        });
+    });
 }
 
-// Fetch Active Stores
-async function loadStores() {
-  try {
-    const res = await fetch('/api/v1/stores');
-    if (!res.ok) return;
-    const stores = await res.json();
-    state.stores = stores;
-    
-    storeFilter.innerHTML = '<option value="">All Stores</option>';
-    stores.forEach(s => {
-      state.storeMap[s.id] = s;
-      const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = s.display_name;
-      storeFilter.appendChild(opt);
+// Catalog Search & Category Filters
+function initCatalog() {
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+
+    if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', () => {
+            state.searchQuery = searchInput.value.trim();
+            fetchProducts();
+        });
+
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                state.searchQuery = searchInput.value.trim();
+                fetchProducts();
+            }
+        });
+    }
+
+    const categoryChips = document.querySelectorAll('.chip');
+    categoryChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            categoryChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            state.selectedCategory = chip.dataset.category || '';
+            fetchProducts();
+        });
     });
 
-    if (activeStoresCount) {
-      activeStoresCount.textContent = stores.length;
-    }
-  } catch (err) {
-    console.error('Failed to load stores:', err);
-  }
+    fetchProducts();
 }
 
-// Fetch Products from API
 async function fetchProducts() {
-  try {
-    resultsCount.textContent = 'Searching items...';
+    const grid = document.getElementById('products-grid');
+    if (!grid) return;
 
-    const params = new URLSearchParams();
-    if (state.query) params.append('q', state.query);
-    if (state.selectedStore) params.append('sid', state.selectedStore);
-    if (state.inStockOnly) params.append('in_stock', 'true');
-    if (state.minPrice) params.append('min_price', state.minPrice);
-    if (state.maxPrice) params.append('max_price', state.maxPrice);
-    params.append('size', '40');
+    grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; grid-column: 1/-1;">Loading products...</div>';
 
-    const res = await fetch(`/api/v1/products?${params.toString()}`);
-    if (!res.ok) throw new Error('API error');
+    let url = `${API_BASE}/products?size=40`;
+    if (state.searchQuery) url += `&q=${encodeURIComponent(state.searchQuery)}`;
     
-    const data = await res.json();
-    renderProducts(data.items, data.total);
-  } catch (err) {
-    console.error('Failed to fetch products:', err);
-    resultsCount.textContent = 'Failed to load products.';
-    productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--accent-red);">Error fetching items from server.</div>';
-  }
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        let items = data.items || [];
+        if (state.selectedCategory) {
+            items = items.filter(p => (p.category || '').toUpperCase() === state.selectedCategory.toUpperCase());
+        }
+
+        state.products = items;
+        renderProducts(items);
+    } catch (err) {
+        grid.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1/-1;">Failed to load catalog products: ${err.message}</div>`;
+    }
 }
 
-// Render Products Grid
-function renderProducts(items, total) {
-  resultsCount.textContent = `Found ${total} matching hardware items`;
-  if (totalProductsCount) totalProductsCount.textContent = total;
+function renderProducts(products) {
+    const grid = document.getElementById('products-grid');
+    if (!grid) return;
 
-  if (!items || items.length === 0) {
-    productsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">No components found matching your search.</div>';
-    return;
-  }
+    if (products.length === 0) {
+        grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; grid-column: 1/-1;">No hardware components found matching your query.</div>';
+        return;
+    }
 
-  productsGrid.innerHTML = items.map(p => {
-    const storeName = state.storeMap[p.sid]?.display_name || `Store #${p.sid}`;
-    const imgUrl = p.image_url || 'https://via.placeholder.com/250x200?text=PC+Hardware';
-    const stockClass = p.in_stock ? 'stock-in' : 'stock-out';
-    const stockText = p.in_stock ? 'In Stock' : 'Out of Stock';
-
-    return `
-      <div class="product-card">
-        <div class="card-img-container">
-          <span class="store-badge">${storeName}</span>
-          <img src="${imgUrl}" alt="${p.name}" class="card-img" onerror="this.src='https://via.placeholder.com/250x200?text=Hardware'">
-        </div>
-        <div class="card-body">
-          <h3 class="card-title" title="${p.name}">${p.name}</h3>
-          
-          <div class="card-price-group">
+    grid.innerHTML = products.map(p => `
+        <div class="product-card">
             <div>
-              <span class="card-price">${formatCurrency(p.current_price)}</span>
-              ${p.current_mrp ? `<span class="card-mrp">${formatCurrency(p.current_mrp)}</span>` : ''}
+                <span class="product-badge">${p.brand || p.category || 'Component'}</span>
+                ${p.image_url ? `<img class="product-img" src="${p.image_url}" alt="${p.name}">` : '<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:#64748b;">No Image</div>'}
+                <h3 class="product-title">${escapeHtml(p.name)}</h3>
             </div>
-            <span class="stock-tag ${stockClass}">${stockText}</span>
-          </div>
-
-          <div class="card-actions">
-            <a href="${p.product_url}" target="_blank" rel="noopener" class="btn btn-primary">
-              View Store ➔
-            </a>
-            <button class="btn btn-outline" onclick="openPriceHistory(${p.id}, '${escapeQuotes(p.name)}', '${storeName}')">
-              History
-            </button>
-          </div>
+            <div>
+                <div class="product-price-row">
+                    <span class="product-price">₹${p.current_price ? Number(p.current_price).toLocaleString('en-IN') : 'N/A'}</span>
+                    ${p.current_mrp ? `<span class="product-mrp">₹${Number(p.current_mrp).toLocaleString('en-IN')}</span>` : ''}
+                </div>
+                <div class="card-actions">
+                    <button class="btn-secondary" onclick="openCompareModal('${escapeHtml(p.name)}')">Compare</button>
+                    <button class="btn-secondary" onclick="openHistoryModal(${p.id})">History</button>
+                </div>
+            </div>
         </div>
-      </div>
-    `;
-  }).join('');
+    `).join('');
 }
 
-function escapeQuotes(str) {
-  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+// PC Builder Manager
+function initBuilder() {
+    const slots = [
+        { key: 'cpu', name: 'Processor (CPU)' },
+        { key: 'motherboard', name: 'Motherboard' },
+        { key: 'gpu', name: 'Graphics Card (GPU)' },
+        { key: 'ram', name: 'Memory (RAM)' },
+        { key: 'storage', name: 'Storage (SSD/HDD)' },
+        { key: 'psu', name: 'Power Supply (PSU)' },
+        { key: 'case', name: 'Cabinet / Case' }
+    ];
+
+    const container = document.getElementById('slots-container');
+    if (!container) return;
+
+    container.innerHTML = slots.map(s => `
+        <div class="slot-card" id="slot-${s.key}">
+            <div class="slot-info">
+                <div class="slot-icon">⚙</div>
+                <div>
+                    <div class="slot-title">${s.name}</div>
+                    <div class="slot-selected-item" id="slot-name-${s.key}">No component selected</div>
+                </div>
+            </div>
+            <button class="btn-secondary" onclick="openSelectModal('${s.key}', '${s.name}')">Select</button>
+        </div>
+    `).join('');
+
+    validateBuild();
 }
 
-// Open Price History Chart Modal
-async function openPriceHistory(productId, productName, storeName) {
-  modalProductTitle.textContent = productName;
-  modalProductSubtitle.textContent = `Historical price trends from ${storeName}`;
-  priceChartSvg.innerHTML = '<text x="300" y="100" text-anchor="middle" fill="#94a3b8">Loading history...</text>';
-  
-  historyModal.classList.add('active');
+function openSelectModal(slotKey, slotName) {
+    state.activeSlotKey = slotKey;
+    const modal = document.getElementById('select-modal');
+    const title = document.getElementById('select-modal-title');
+    const list = document.getElementById('select-modal-list');
 
-  try {
-    const res = await fetch(`/api/v1/products/${productId}/history`);
-    if (!res.ok) throw new Error('History error');
-    const history = await res.json();
-    renderPriceSvgChart(history);
-  } catch (err) {
-    priceChartSvg.innerHTML = '<text x="300" y="100" text-anchor="middle" fill="#ef4444">Failed to load price history.</text>';
-  }
+    title.innerText = `Select ${slotName}`;
+    modal.classList.add('active');
+
+    // Filter catalog matching slot category
+    const catMap = {
+        cpu: 'CPU',
+        gpu: 'GPU',
+        motherboard: 'MOTHERBOARD',
+        ram: 'RAM',
+        storage: 'SSD',
+        psu: 'PSU',
+        case: 'CABINET'
+    };
+    const targetCat = catMap[slotKey];
+
+    const matching = state.products.filter(p => !targetCat || (p.category || '').toUpperCase().includes(targetCat));
+
+    if (matching.length === 0) {
+        list.innerHTML = '<div style="color: var(--text-secondary);">No matching components loaded. Search or select a category first.</div>';
+        return;
+    }
+
+    list.innerHTML = matching.map(p => `
+        <div class="slot-card" style="margin-bottom: 0.75rem; cursor: pointer;" onclick="selectComponentForSlot('${slotKey}', ${p.id}, '${escapeHtml(p.name)}')">
+            <div>
+                <div style="font-weight: 600;">${escapeHtml(p.name)}</div>
+                <div style="color: var(--accent-cyan); font-weight: 700;">₹${Number(p.current_price || 0).toLocaleString('en-IN')}</div>
+            </div>
+            <button class="btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Choose</button>
+        </div>
+    `).join('');
 }
 
-// Render SVG Trend Sparkline Chart
-function renderPriceSvgChart(history) {
-  if (!history || history.length === 0) {
-    priceChartSvg.innerHTML = '<text x="300" y="100" text-anchor="middle" fill="#94a3b8">No historical snapshots recorded yet.</text>';
-    return;
-  }
-
-  const padding = 40;
-  const width = 600;
-  const height = 200;
-
-  const prices = history.map(h => Number(h.price));
-  const minP = Math.min(...prices) * 0.95;
-  const maxP = Math.max(...prices) * 1.05 || minP + 100;
-
-  const points = history.map((h, i) => {
-    const x = padding + (i / Math.max(1, history.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((Number(h.price) - minP) / (maxP - minP)) * (height - padding * 2);
-    return `${x},${y}`;
-  }).join(' ');
-
-  let dotsSvg = history.map((h, i) => {
-    const x = padding + (i / Math.max(1, history.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((Number(h.price) - minP) / (maxP - minP)) * (height - padding * 2);
-    return `<circle cx="${x}" cy="${y}" r="4" fill="#6366f1"><title>₹${h.price} on ${new Date(h.scraped_at).toLocaleDateString()}</title></circle>`;
-  }).join('');
-
-  priceChartSvg.innerHTML = `
-    <!-- Grid lines -->
-    <line x1="${padding}" y1="${padding}" x2="${width - padding}" y2="${padding}" stroke="rgba(255,255,255,0.05)" />
-    <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="rgba(255,255,255,0.1)" />
-    
-    <!-- Price Labels -->
-    <text x="${padding}" y="${padding - 10}" fill="#94a3b8" font-size="12">Max: ₹${Math.round(maxP)}</text>
-    <text x="${padding}" y="${height - 10}" fill="#94a3b8" font-size="12">Min: ₹${Math.round(minP)}</text>
-    
-    <!-- Sparkline -->
-    <polyline fill="none" stroke="#6366f1" stroke-width="3" points="${points}" />
-    ${dotsSvg}
-  `;
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
 }
 
-// Event Listeners
-searchInput.addEventListener('input', (e) => {
-  clearTimeout(state.debounceTimer);
-  state.query = e.target.value;
-  state.debounceTimer = setTimeout(fetchProducts, 300);
-});
+function selectComponentForSlot(slotKey, productId, productName) {
+    const product = state.products.find(p => p.id === productId);
+    state.builderSelections[slotKey] = product;
+    document.getElementById(`slot-name-${slotKey}`).innerText = productName;
+    closeModal('select-modal');
+    validateBuild();
+}
 
-storeFilter.addEventListener('change', (e) => {
-  state.selectedStore = e.target.value;
-  fetchProducts();
-});
+async function validateBuild() {
+    const selectedProducts = Object.values(state.builderSelections).filter(Boolean);
+    const productIds = selectedProducts.map(p => p.id);
 
-stockFilter.addEventListener('change', (e) => {
-  state.inStockOnly = e.target.value;
-  fetchProducts();
-});
+    try {
+        const res = await fetch(`${API_BASE}/builder/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_ids: productIds })
+        });
+        const summary = await res.json();
 
-minPriceInput.addEventListener('input', (e) => {
-  clearTimeout(state.debounceTimer);
-  state.minPrice = e.target.value;
-  state.debounceTimer = setTimeout(fetchProducts, 400);
-});
+        // Render Summary Sidebar
+        const statusEl = document.getElementById('compatibility-status');
+        const warningsEl = document.getElementById('warnings-list');
+        const costEl = document.getElementById('total-cost');
+        const wattageEl = document.getElementById('total-wattage');
 
-maxPriceInput.addEventListener('input', (e) => {
-  clearTimeout(state.debounceTimer);
-  state.maxPrice = e.target.value;
-  state.debounceTimer = setTimeout(fetchProducts, 400);
-});
+        if (summary.compatible) {
+            statusEl.className = 'compatibility-status ok';
+            statusEl.innerText = '✓ Compatibility Checked & Verified';
+        } else {
+            statusEl.className = 'compatibility-status error';
+            statusEl.innerText = '⚠ Incompatibilities Detected';
+        }
 
-modalCloseBtn.addEventListener('click', () => {
-  historyModal.classList.remove('active');
-});
+        warningsEl.innerHTML = (summary.warnings || []).map(w => `
+            <div class="warning-item ${w.level}">${w.message}</div>
+        `).join('');
 
-historyModal.addEventListener('click', (e) => {
-  if (e.target === historyModal) {
-    historyModal.classList.remove('active');
-  }
-});
+        wattageEl.innerText = `${summary.estimated_wattage || 0} W`;
+        costEl.innerText = `₹${Number(summary.total_min_cost || 0).toLocaleString('en-IN')}`;
 
-// Initial Load
-document.addEventListener('DOMContentLoaded', () => {
-  loadStores();
-  fetchProducts();
-});
+    } catch (err) {
+        console.error('Validation error:', err);
+    }
+}
+
+// Compare Modal
+async function openCompareModal(productName) {
+    const modal = document.getElementById('compare-modal');
+    const content = document.getElementById('compare-modal-content');
+    modal.classList.add('active');
+
+    content.innerHTML = '<div>Loading price comparison across retailer stores...</div>';
+
+    try {
+        const res = await fetch(`${API_BASE}/compare?q=${encodeURIComponent(productName)}`);
+        const data = await res.json();
+
+        content.innerHTML = `
+            <h2>${escapeHtml(data.query)}</h2>
+            <div style="margin: 1rem 0; display: flex; gap: 1rem;">
+                <div>Lowest: <strong style="color: var(--accent-cyan);">₹${Number(data.lowest_price || 0).toLocaleString('en-IN')}</strong></div>
+                <div>Highest: <strong>₹${Number(data.highest_price || 0).toLocaleString('en-IN')}</strong></div>
+            </div>
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${(data.offers || []).map(o => `
+                        <tr>
+                            <td>${o.store_name}</td>
+                            <td style="color: var(--accent-cyan); font-weight: 700;">₹${Number(o.price).toLocaleString('en-IN')}</td>
+                            <td>${o.in_stock ? 'In Stock' : 'Out of Stock'}</td>
+                            <td><a href="${o.url}" target="_blank" class="btn-primary" style="padding: 0.3rem 0.8rem; text-decoration: none; font-size: 0.85rem;">Buy</a></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        content.innerHTML = `<div style="color: var(--danger);">Failed to load comparison data: ${err.message}</div>`;
+    }
+}
+
+// History Modal
+async function openHistoryModal(productId) {
+    const modal = document.getElementById('history-modal');
+    const content = document.getElementById('history-modal-content');
+    modal.classList.add('active');
+
+    content.innerHTML = '<div>Loading historical price snapshots...</div>';
+
+    try {
+        const res = await fetch(`${API_BASE}/products/${productId}/history`);
+        const history = await res.json();
+
+        if (history.length === 0) {
+            content.innerHTML = '<div>No historical price snapshots recorded yet.</div>';
+            return;
+        }
+
+        content.innerHTML = `
+            <h3>Price History Snapshots</h3>
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Price</th>
+                        <th>MRP</th>
+                        <th>Stock Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${history.map(h => `
+                        <tr>
+                            <td>${new Date(h.scraped_at).toLocaleString()}</td>
+                            <td style="color: var(--accent-cyan); font-weight: 700;">₹${Number(h.price).toLocaleString('en-IN')}</td>
+                            <td>${h.mrp ? '₹' + Number(h.mrp).toLocaleString('en-IN') : '-'}</td>
+                            <td>${h.in_stock ? 'In Stock' : 'Out of Stock'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        content.innerHTML = `<div style="color: var(--danger);">Failed to load price history: ${err.message}</div>`;
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
