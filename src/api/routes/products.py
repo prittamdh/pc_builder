@@ -46,9 +46,16 @@ def list_products(
     stmt = stmt.offset(offset).limit(size).order_by(Product.updated_at.desc())
     items = list(db.scalars(stmt))
 
+    product_outs = []
+    for p in items:
+        p_out = ProductOut.model_validate(p)
+        p_out.target_ids = [t.id for t in p.targets] if hasattr(p, "targets") else []
+        p_out.keywords = [t.target_value for t in p.targets] if hasattr(p, "targets") else []
+        product_outs.append(p_out)
+
     return ProductListResponse(
         total=total,
-        items=items,
+        items=product_outs,
         page=page,
         size=size,
     )
@@ -63,7 +70,10 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Product with ID {product_id} not found",
         )
-    return product
+    p_out = ProductOut.model_validate(product)
+    p_out.target_ids = [t.id for t in product.targets] if hasattr(product, "targets") else []
+    p_out.keywords = [t.target_value for t in product.targets] if hasattr(product, "targets") else []
+    return p_out
 
 
 @router.get("/{product_id}/history", response_model=list[PriceHistoryOut])

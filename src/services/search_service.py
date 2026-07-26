@@ -12,7 +12,7 @@ class SearchService:
         self.session = session
         self.product_repository = ProductRepository(session)
 
-    def save(self, result: SearchResult):
+    def save(self, result: SearchResult, target_id: int | None = None):
         product, created = self.product_repository.get_or_create(
             sid=result.sid,
             pid=result.pid,
@@ -37,6 +37,9 @@ class SearchService:
                 in_stock=result.in_stock,
             )
 
+        if target_id is not None:
+            self.product_repository.link_target(product.id, target_id)
+
         price_history = PriceHistory(
             product_id=product.id,
             price=Decimal(result.price),
@@ -46,8 +49,8 @@ class SearchService:
 
         self.session.add(price_history)
 
-    def save_many(self, results: list[SearchResult]):
+    def save_many(self, results: list[SearchResult], target_id: int | None = None):
         for result in results:
-            self.save(result)
+            self.save(result, target_id=target_id)
 
         self.session.commit()

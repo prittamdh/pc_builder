@@ -103,3 +103,9 @@ class Product(Base, TimestampMixin):
         back_populates="product",
         cascade="all, delete-orphan",
     )
+
+    targets = relationship(
+        "ScrapeTarget",
+        secondary="product_targets",
+        backref="products",
+    )

@@ -86,3 +86,30 @@ class ProductRepository:
 
         self.session.flush()
         return product
+
+    def link_target(self, product_id: int, target_id: int) -> None:
+        from db.models.product_target import ProductTarget
+        stmt = select(ProductTarget).where(
+            ProductTarget.product_id == product_id,
+            ProductTarget.target_id == target_id,
+        )
+        exists = self.session.scalar(stmt)
+        if not exists:
+            pt = ProductTarget(product_id=product_id, target_id=target_id)
+            self.session.add(pt)
+            self.session.flush()
+
+    def get_unscraped_products(self, limit: int = 10) -> list[Product]:
+        stmt = (
+            select(Product)
+            .where(
+                (Product.description.is_(None)) | (Product.specifications.is_(None))
+            )
+            .limit(limit)
+        )
+        return list(self.session.scalars(stmt))
+
+    def get_product_target_ids(self, product_id: int) -> list[int]:
+        from db.models.product_target import ProductTarget
+        stmt = select(ProductTarget.target_id).where(ProductTarget.product_id == product_id)
+        return list(self.session.scalars(stmt))
