@@ -9,10 +9,55 @@ from db.session import engine
 
 
 TARGET_KEYWORDS = [
-    "rtx 5070",
-    "rtx 5080",
+    # CPUs
     "ryzen 9000",
+    "ryzen 7000",
+    "intel core ultra",
+    "intel core i9",
+    "intel core i7",
+    "intel core i5",
+    # GPUs
+    "rtx 5090",
+    "rtx 5080",
+    "rtx 5070 ti",
+    "rtx 5070",
+    "rtx 5060 ti",
+    "rtx 5060",
+    "rx 9070 xt",
+    "rx 9070",
+    # Motherboards
+    "b850 motherboard",
+    "x870 motherboard",
+    "b650 motherboard",
+    "z890 motherboard",
+    # Memory
     "ddr5 ram",
+    "ddr4 ram",
+    "32gb ddr5",
+    "64gb ddr5",
+    "6000mhz ram",
+    # Storage
+    "nvme ssd",
+    "1tb ssd",
+    "2tb ssd",
+    "gen5 ssd",
+    # Power Supplies
+    "650w psu",
+    "750w psu",
+    "850w psu",
+    "1000w psu",
+    # Cooling
+    "air cooler",
+    "aio cooler",
+    "240mm aio",
+    "360mm aio",
+    # Cases
+    "atx cabinet",
+    "matx cabinet",
+    # Displays
+    "1440p monitor",
+    "4k monitor",
+    "oled monitor",
 ]
 
 
