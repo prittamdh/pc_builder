@@ -1,3 +1,14 @@
+from .category_specs import (
+    CabinetSpecs,
+    CoolerSpecs,
+    CPUSpecs,
+    GPUSpecs,
+    MonitorSpecs,
+    MotherboardSpecs,
+    PSUSpecs,
+    RAMSpecs,
+    SSDSpecs,
+)
 from .mixins import TimestampMixin
 from .price_history import PriceHistory
 from .product import Product
@@ -12,4 +23,13 @@ __all__ = [
     "ProductTarget",
     "PriceHistory",
     "TimestampMixin",
+    "CPUSpecs",
+    "GPUSpecs",
+    "MotherboardSpecs",
+    "RAMSpecs",
+    "SSDSpecs",
+    "PSUSpecs",
+    "CabinetSpecs",
+    "CoolerSpecs",
+    "MonitorSpecs",
 ]

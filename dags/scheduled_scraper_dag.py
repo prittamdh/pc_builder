@@ -83,6 +83,16 @@ def execute_unscraped_product_enrichment(limit: int = 10):
                     print(f"[Product Scraper Error] Failed '{db_product.name}': {e}")
 
 
+def execute_catalog_normalization(limit: int = 50):
+    """Normalizes specifications and populates category tables for scraped products."""
+    from services.normalization_service import NormalizationService
+
+    with SessionLocal() as session:
+        service = NormalizationService(session)
+        count = service.normalize_all_unclassified(limit=limit)
+        print(f"[Normalizer Task] Normalized and populated category specs for {count} products.")
+
+
 # Airflow DAG Definition (evaluated when apache-airflow is installed)
 try:
     from airflow import DAG
@@ -118,6 +128,12 @@ try:
         dag=dag,
     )
 
-    process_targets_task >> enrich_products_task
+    normalize_catalog_task = PythonOperator(
+        task_id="normalize_catalog_specs",
+        python_callable=execute_catalog_normalization,
+        dag=dag,
+    )
+
+    process_targets_task >> enrich_products_task >> normalize_catalog_task
 except ImportError:
     pass

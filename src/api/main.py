@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from api.routes import builder, products, stores
+from api.routes import builder, compare, products, stores
 
 app = FastAPI(
     title="PC Builder API",
@@ -27,6 +27,7 @@ app.add_middleware(
 app.include_router(stores.router, prefix="/api/v1")
 app.include_router(products.router, prefix="/api/v1")
 app.include_router(builder.router, prefix="/api/v1")
+app.include_router(compare.router, prefix="/api/v1")
 
 # Mount Static UI Files
 static_dir = Path(__file__).resolve().parent.parent / "static"

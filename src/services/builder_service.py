@@ -118,6 +118,18 @@ class BuilderService:
                 )
             )
 
+        # Use Strict Compatibility Engine for Category Spec Rules
+        from services.compatibility_engine import CompatibilityEngine
+        engine = CompatibilityEngine(self.session)
+        engine_compatible, engine_warnings, engine_wattage = engine.validate_build(product_ids)
+
+        warnings.extend(engine_warnings)
+        if not engine_compatible:
+            compatible = False
+
+        if engine_wattage > 0:
+            estimated_wattage = engine_wattage
+
         # Multi-Store Cost Breakdown
         store_totals: dict[int, Decimal] = {s.id: Decimal("0.00") for s in stores}
         store_counts: dict[int, int] = {s.id: 0 for s in stores}
