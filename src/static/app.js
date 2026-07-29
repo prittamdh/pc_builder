@@ -91,15 +91,12 @@ async function fetchProducts() {
 
     let url = `${API_BASE}/products?size=40`;
     if (state.searchQuery) url += `&q=${encodeURIComponent(state.searchQuery)}`;
+    if (state.selectedCategory) url += `&p_category=${encodeURIComponent(state.selectedCategory)}`;
     
     try {
         const res = await fetch(url);
         const data = await res.json();
-        
-        let items = data.items || [];
-        if (state.selectedCategory) {
-            items = items.filter(p => (p.category || '').toUpperCase() === state.selectedCategory.toUpperCase());
-        }
+        const items = data.items || [];
 
         state.products = items;
         renderProducts(items);
@@ -120,7 +117,7 @@ function renderProducts(products) {
     grid.innerHTML = products.map(p => `
         <div class="product-card">
             <div>
-                <span class="product-badge">${p.brand || p.category || 'Component'}</span>
+                <span class="product-badge">${p.p_category || p.category || 'Component'}</span>
                 ${p.image_url ? `<img class="product-img" src="${p.image_url}" alt="${p.name}">` : '<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:#64748b;">No Image</div>'}
                 <h3 class="product-title">${escapeHtml(p.name)}</h3>
             </div>

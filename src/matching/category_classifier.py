@@ -6,9 +6,9 @@ import re
 
 
 PRODUCTION_CATEGORIES = [
-    "Processor",
+    "CPU",
     "Motherboard",
-    "Graphics Card",
+    "GPU",
     "RAM",
     "Storage",
     "Cabinet",
@@ -27,19 +27,19 @@ class CategoryClassifier:
         title_lower = (title or "").lower()
         combined = f"{cat_lower} {title_lower}"
 
-        # 1. Processors
+        # 1. Processors (CPU)
         if any(k in combined for k in ["processor", "cpu", "ryzen", "intel core", "threadripper", "i3-", "i5-", "i7-", "i9-", "ultra 5", "ultra 7", "ultra 9"]):
             if not any(k in combined for k in ["cooler", "fan", "motherboard", "mobo", "paste"]):
-                return "Processor"
+                return "CPU"
 
         # 2. Motherboards
         if any(k in combined for k in ["motherboard", "motherboards", "mobo", "chipset", "b450", "b550", "b650", "x570", "x670", "h610", "b760", "z790", "z890", "am4", "am5", "lga"]):
             if "cabinet" not in combined and "cooler" not in combined:
                 return "Motherboard"
 
-        # 3. Graphics Cards
+        # 3. Graphics Cards (GPU)
         if any(k in combined for k in ["graphics card", "gpu", "rtx", "gtx", "radeon", "geforce", "vga", "rx "]):
-            return "Graphics Card"
+            return "GPU"
 
         # 4. RAM
         if any(k in combined for k in ["ram", "memory", "ddr4", "ddr5", "desktop ram", "laptop ram", "so-dimm", "sodimm"]):
