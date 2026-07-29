@@ -5,52 +5,66 @@ Classifies products into canonical categories based on name, category string, an
 import re
 
 
-CATEGORIES = [
-    "CPU",
-    "GPU",
+PRODUCTION_CATEGORIES = [
+    "Processor",
     "Motherboard",
+    "Graphics Card",
     "RAM",
-    "SSD",
-    "HDD",
-    "PSU",
+    "Storage",
     "Cabinet",
+    "Power Supply",
     "CPU Cooler",
     "Monitor",
-    "Keyboard",
-    "Mouse",
     "Accessories",
-]
-
-
-PATTERN_MAP = [
-    # GPU / Graphics Cards
-    (r"\b(rtx\s?\d{4}|rx\s?\d{4}|graphics\ card|vga|gpu|geforce|radeon)\b", "GPU"),
-    
-    # CPU / Processors
-    (r"\b(ryzen\s?\d{4}|intel\ core|processor|cpu|i3-|i5-|i7-|i9-|core\ ultra)\b", "CPU"),
-    
-    # CPU Coolers
-    (r"\b(aio|liquid\ cooler|cpu\ cooler|air\ cooler|radiator|240mm|360mm|420mm|hyper\ 212|ak620|frozen\ prism)\b", "CPU Cooler"),
-    
-    # Cabinets / Cases
-    (r"\b(cabinet|case|chassis|mid\ tower|full\ tower|mini\ itx\ case|atx\ case|matx\ case)\b", "Cabinet"),
-    
-    # Monitors
-    (r"\b(monitor|display|1440p|4k\ monitor|oled\ monitor|ips\ panel|curved\ monitor|\d{2}\s?inch\ monitor|\d{2}\"\ monitor|hz)\b", "Monitor"),
-    
-    # Keyboard & Mouse
-    (r"\b(mechanical\ keyboard|keyboard|keychron)\b", "Keyboard"),
-    (r"\b(mouse|wireless\ mouse|gaming\ mouse|mx\ master)\b", "Mouse"),
 ]
 
 
 class CategoryClassifier:
     @staticmethod
-    def classify(name: str, category_raw: str | None = None, url: str | None = None) -> str:
-        text = f"{name} {category_raw or ''} {url or ''}".lower()
+    def get_p_category(raw_category: str | None = None, title: str | None = None) -> str:
+        cat_str = (raw_category or "").strip()
+        cat_lower = cat_str.lower()
+        title_lower = (title or "").lower()
+        combined = f"{cat_lower} {title_lower}"
 
-        for pattern, cat in PATTERN_MAP:
-            if re.search(pattern, text, re.IGNORECASE):
-                return cat
+        # 1. Processors
+        if any(k in combined for k in ["processor", "cpu", "ryzen", "intel core", "threadripper", "i3-", "i5-", "i7-", "i9-", "ultra 5", "ultra 7", "ultra 9"]):
+            if not any(k in combined for k in ["cooler", "fan", "motherboard", "mobo", "paste"]):
+                return "Processor"
 
+        # 2. Motherboards
+        if any(k in combined for k in ["motherboard", "motherboards", "mobo", "chipset", "b450", "b550", "b650", "x570", "x670", "h610", "b760", "z790", "z890", "am4", "am5", "lga"]):
+            if "cabinet" not in combined and "cooler" not in combined:
+                return "Motherboard"
+
+        # 3. Graphics Cards
+        if any(k in combined for k in ["graphics card", "gpu", "rtx", "gtx", "radeon", "geforce", "vga", "rx "]):
+            return "Graphics Card"
+
+        # 4. RAM
+        if any(k in combined for k in ["ram", "memory", "ddr4", "ddr5", "desktop ram", "laptop ram", "so-dimm", "sodimm"]):
+            if "ssd" not in combined and "hdd" not in combined:
+                return "RAM"
+
+        # 5. Storage (SSDs & HDDs)
+        if any(k in combined for k in ["ssd", "nvme", "m.2", "sata", "hdd", "hard drive", "hard disk", "storage"]):
+            return "Storage"
+
+        # 6. Cabinets / Cases
+        if any(k in combined for k in ["cabinet", "case", "chassis", "tower"]):
+            return "Cabinet"
+
+        # 7. Power Supply / SMPS
+        if any(k in combined for k in ["power supply", "psu", "smps", "80+"]):
+            return "Power Supply"
+
+        # 8. CPU Coolers
+        if any(k in combined for k in ["cooler", "cooling", "liquid cooler", "air cooler", "aio", "radiator", "fan"]):
+            return "CPU Cooler"
+
+        # 9. Monitors
+        if any(k in combined for k in ["monitor", "display", "screen"]):
+            return "Monitor"
+
+        # 10. Default / Peripherals
         return "Accessories"

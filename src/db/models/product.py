@@ -72,6 +72,12 @@ class Product(Base, TimestampMixin):
         String(255),
     )
 
+    # Production/Standardized User-facing Category
+    p_category: Mapped[str | None] = mapped_column(
+        String(255),
+        index=True,
+    )
+
     description: Mapped[str | None] = mapped_column(
         Text,
     )

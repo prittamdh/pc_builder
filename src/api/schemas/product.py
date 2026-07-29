@@ -14,6 +14,7 @@ class ProductOut(BaseModel):
     image_url: str | None = None
     brand: str | None = None
     category: str | None = None
+    p_category: str | None = None
     description: str | None = None
     specifications: dict | None = None
     currency: str

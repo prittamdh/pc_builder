@@ -16,6 +16,8 @@ router = APIRouter(prefix="/products", tags=["Products"])
 def list_products(
     q: str | None = Query(None, description="Search query string"),
     sid: int | None = Query(None, description="Filter by store ID"),
+    category: str | None = Query(None, description="Filter by raw category"),
+    p_category: str | None = Query(None, description="Filter by standardized production category"),
     in_stock: bool | None = Query(None, description="Filter by in-stock status"),
     min_price: Decimal | None = Query(None, description="Minimum current price"),
     max_price: Decimal | None = Query(None, description="Maximum current price"),
@@ -30,6 +32,10 @@ def list_products(
         stmt = stmt.where(Product.name.ilike(f"%{q}%"))
     if sid is not None:
         stmt = stmt.where(Product.sid == sid)
+    if category:
+        stmt = stmt.where(Product.category.ilike(f"%{category}%"))
+    if p_category:
+        stmt = stmt.where(Product.p_category.ilike(f"%{p_category}%"))
     if in_stock is not None:
         stmt = stmt.where(Product.in_stock == in_stock)
     if min_price is not None:

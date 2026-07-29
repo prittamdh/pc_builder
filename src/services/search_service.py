@@ -17,6 +17,9 @@ class SearchService:
         if not existing_product and not result.in_stock:
             return
 
+        from matching.category_classifier import CategoryClassifier
+        p_category = CategoryClassifier.get_p_category(hard_category, result.name)
+
         product, created = self.product_repository.get_or_create(
             sid=result.sid,
             pid=result.pid,
@@ -24,6 +27,7 @@ class SearchService:
             product_url=str(result.url),
             image_url=str(result.image) if result.image else None,
             category=hard_category,
+            p_category=p_category,
             currency=result.currency,
             current_price=float(result.price),
             current_mrp=float(result.mrp) if result.mrp is not None else None,
@@ -35,6 +39,7 @@ class SearchService:
                 "name": result.name,
                 "product_url": str(result.url),
                 "image_url": str(result.image) if result.image else None,
+                "p_category": p_category,
                 "currency": result.currency,
                 "current_price": float(result.price),
                 "current_mrp": float(result.mrp) if result.mrp is not None else None,
