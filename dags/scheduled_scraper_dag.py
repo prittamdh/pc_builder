@@ -36,21 +36,35 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
 
                 print(f"[Scheduled Scraper] Scraping target '{target.target_value}' on {store.display_name}")
 
+                target_val = str(target.target_value)
                 try:
                     scraper = GenericScraper(client, store)
-                    results = scraper.scrape_search_all_pages(
-                        query=target.target_value,
-                        max_pages=max_pages,
-                    )
+
+                    # Check if target is CATEGORY catalog URL vs SEARCH query
+                    is_category = target.target_type == 2 or "catalog/" in target.target_value
+                    target_max_pages = target.schedule_config.get("max_pages", max_pages) if isinstance(target.schedule_config, dict) else max_pages
+                    hard_category = target.schedule_config.get("category") if isinstance(target.schedule_config, dict) else None
+
+                    if is_category:
+                        results = scraper.scrape_category_all_pages(
+                            endpoint=target.target_value,
+                            max_pages=target_max_pages,
+                        )
+                    else:
+                        results = scraper.scrape_search_all_pages(
+                            query=target.target_value,
+                            max_pages=max_pages,
+                        )
 
                     if results:
-                        search_service.save_many(results, target_id=target.id)
-                        print(f"[Scheduled Scraper] Saved {len(results)} products for '{target.target_value}' (target_id={target.id})")
+                        search_service.save_many(results, target_id=target.id, hard_category=hard_category)
+                        print(f"[Scheduled Scraper] Saved {len(results)} products for '{target_val}' (target_id={target.id}, category={hard_category})")
 
                     target_service.mark_scraped(target)
 
                 except Exception as e:
-                    print(f"[Scheduled Scraper Error] Failed scraping target '{target.target_value}': {e}")
+                    session.rollback()
+                    print(f"[Scheduled Scraper Error] Failed scraping target '{target_val}': {e}")
 
 
 def execute_unscraped_product_enrichment(limit: int = 10):

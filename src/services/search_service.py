@@ -12,13 +12,17 @@ class SearchService:
         self.session = session
         self.product_repository = ProductRepository(session)
 
-    def save(self, result: SearchResult, target_id: int | None = None):
+    def save(self, result: SearchResult, target_id: int | None = None, hard_category: str | None = None):
+        if not result.in_stock:
+            return
+
         product, created = self.product_repository.get_or_create(
             sid=result.sid,
             pid=result.pid,
             name=result.name,
             product_url=str(result.url),
             image_url=str(result.image) if result.image else None,
+            category=hard_category,
             currency=result.currency,
             current_price=float(result.price),
             current_mrp=float(result.mrp) if result.mrp is not None else None,
@@ -26,16 +30,19 @@ class SearchService:
         )
 
         if not created:
-            self.product_repository.update(
-                product,
-                name=result.name,
-                product_url=str(result.url),
-                image_url=str(result.image) if result.image else None,
-                currency=result.currency,
-                current_price=float(result.price),
-                current_mrp=float(result.mrp) if result.mrp is not None else None,
-                in_stock=result.in_stock,
-            )
+            update_fields = {
+                "name": result.name,
+                "product_url": str(result.url),
+                "image_url": str(result.image) if result.image else None,
+                "currency": result.currency,
+                "current_price": float(result.price),
+                "current_mrp": float(result.mrp) if result.mrp is not None else None,
+                "in_stock": result.in_stock,
+            }
+            if hard_category:
+                update_fields["category"] = hard_category
+
+            self.product_repository.update(product, **update_fields)
 
         if target_id is not None:
             self.product_repository.link_target(product.id, target_id)
@@ -49,8 +56,12 @@ class SearchService:
 
         self.session.add(price_history)
 
-    def save_many(self, results: list[SearchResult], target_id: int | None = None):
-        for result in results:
-            self.save(result, target_id=target_id)
+    def save_many(self, results: list[SearchResult], target_id: int | None = None, hard_category: str | None = None):
+        deduped = {}
+        for r in results:
+            deduped[(r.sid, r.pid)] = r
+
+        for result in deduped.values():
+            self.save(result, target_id=target_id, hard_category=hard_category)
 
         self.session.commit()

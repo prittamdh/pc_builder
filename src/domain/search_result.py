@@ -46,7 +46,27 @@ class SearchResult(BaseModel):
                 url = str(values.get("url", ""))
                 if url:
                     clean_url = url.split("?")[0].rstrip("/")
-                    values["pid"] = clean_url.split("/")[-1] or "unknown"
+                    if "/product/" in clean_url:
+                        segs = [s for s in clean_url.split("/product/")[1].split("/") if s]
+                        cat_slugs = {
+                            "processor", "cpu-cooler", "motherboard", "graphics-card",
+                            "desktop-ram", "internal-hdd", "sata-ssd", "gen3-ssd",
+                            "gen4-ssd", "gen5-ssd", "monitor", "cabinet", "smps",
+                            "external-hdd", "external-ssd", "laptop-ram", "ram",
+                            "storage", "hard-drive"
+                        }
+                        if segs and segs[0].lower() in cat_slugs and len(segs) > 1:
+                            values["pid"] = segs[-1]
+                        elif segs and segs[-1].lower() in cat_slugs:
+                            values["pid"] = segs[0]
+                        elif segs:
+                            values["pid"] = segs[0]
+                        else:
+                            values["pid"] = clean_url.split("/")[-1]
+                    elif clean_url:
+                        values["pid"] = clean_url.split("/")[-1]
+                    else:
+                        values["pid"] = str(values.get("name", "unknown"))
                 else:
                     values["pid"] = str(values.get("name", "unknown"))
         return values

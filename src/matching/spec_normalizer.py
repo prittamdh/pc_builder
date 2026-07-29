@@ -167,3 +167,59 @@ class SpecNormalizer:
             specs["form_factor"] = "Mid Tower"
 
         return specs
+
+    @staticmethod
+    def normalize_cooler(name: str, raw_specs: dict) -> dict:
+        text = f"{name} {raw_specs}".lower()
+        specs = {}
+        if "liquid" in text or "aio" in text or "360mm" in text or "240mm" in text or "420mm" in text or "120mm" in text:
+            specs["cooler_type"] = "Liquid"
+        else:
+            specs["cooler_type"] = "Air"
+
+        if "360mm" in text or "360" in text:
+            specs["radiator_size_mm"] = 360
+        elif "240mm" in text or "240" in text:
+            specs["radiator_size_mm"] = 240
+        elif "420mm" in text or "420" in text:
+            specs["radiator_size_mm"] = 420
+        elif "120mm" in text or "120" in text:
+            specs["radiator_size_mm"] = 120
+        return specs
+
+    @staticmethod
+    def normalize_ssd(name: str, raw_specs: dict) -> dict:
+        text = f"{name} {raw_specs}".lower()
+        specs = {}
+        if "nvme" in text or "m.2" in text or "gen4" in text or "gen5" in text or "gen3" in text:
+            specs["interface"] = "M.2 NVMe"
+        elif "sata" in text or "hdd" in text or "hard drive" in text:
+            specs["interface"] = "SATA"
+
+        cap_match = re.search(r"(\d+)\s?(tb|gb)", text)
+        if cap_match:
+            val = int(cap_match.group(1))
+            unit = cap_match.group(2)
+            specs["capacity_gb"] = val * 1000 if unit == "tb" else val
+        return specs
+
+    @staticmethod
+    def normalize_monitor(name: str, raw_specs: dict) -> dict:
+        text = f"{name} {raw_specs}".lower()
+        specs = {}
+        size_match = re.search(r"(\d{2}\.?\d?)\s?(inch|\"|-inch)", text)
+        if size_match:
+            specs["screen_size_inch"] = float(size_match.group(1))
+
+        hz_match = re.search(r"(\d{2,3})\s?hz", text)
+        if hz_match:
+            specs["refresh_rate_hz"] = int(hz_match.group(1))
+
+        if "4k" in text or "3840x2160" in text:
+            specs["resolution"] = "3840x2160"
+        elif "2k" in text or "qhd" in text or "2560x1440" in text or "1440p" in text:
+            specs["resolution"] = "2560x1440"
+        elif "fhd" in text or "1080p" in text or "1920x1080" in text:
+            specs["resolution"] = "1920x1080"
+
+        return specs

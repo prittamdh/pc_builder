@@ -38,24 +38,33 @@ class NormalizationService:
 
         raw_specs = product.specifications or {}
 
-        if cat == "CPU":
+        if cat in ("CPU", "Processor", "CPU Processor"):
             norm = SpecNormalizer.normalize_cpu(product.name, raw_specs)
             self._upsert_specs(CPUSpecs, product.id, norm)
-        elif cat == "GPU":
+        elif cat in ("GPU", "Graphics Card"):
             norm = SpecNormalizer.normalize_gpu(product.name, raw_specs)
             self._upsert_specs(GPUSpecs, product.id, norm)
         elif cat == "Motherboard":
             norm = SpecNormalizer.normalize_motherboard(product.name, raw_specs)
             self._upsert_specs(MotherboardSpecs, product.id, norm)
-        elif cat == "RAM":
+        elif cat in ("RAM", "Desktop RAM", "Laptop RAM", "Memory / RAM", "RAM Memory"):
             norm = SpecNormalizer.normalize_ram(product.name, raw_specs)
             self._upsert_specs(RAMSpecs, product.id, norm)
-        elif cat == "PSU":
+        elif cat in ("PSU", "Power Supply", "Power Supply / SMPS", "SMPS"):
             norm = SpecNormalizer.normalize_psu(product.name, raw_specs)
             self._upsert_specs(PSUSpecs, product.id, norm)
         elif cat == "Cabinet":
             norm = SpecNormalizer.normalize_cabinet(product.name, raw_specs)
             self._upsert_specs(CabinetSpecs, product.id, norm)
+        elif cat in ("CPU Cooler", "Cooler"):
+            norm = SpecNormalizer.normalize_cooler(product.name, raw_specs)
+            self._upsert_specs(CoolerSpecs, product.id, norm)
+        elif any(k in cat for k in ("SSD", "HDD", "Storage", "Hard Drive", "Disk")):
+            norm = SpecNormalizer.normalize_ssd(product.name, raw_specs)
+            self._upsert_specs(SSDSpecs, product.id, norm)
+        elif "Monitor" in cat:
+            norm = SpecNormalizer.normalize_monitor(product.name, raw_specs)
+            self._upsert_specs(MonitorSpecs, product.id, norm)
 
         self.session.commit()
         return cat
