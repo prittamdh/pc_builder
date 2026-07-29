@@ -13,7 +13,8 @@ class SearchService:
         self.product_repository = ProductRepository(session)
 
     def save(self, result: SearchResult, target_id: int | None = None, hard_category: str | None = None):
-        if not result.in_stock:
+        existing_product = self.product_repository.get_by_sid_pid(result.sid, result.pid)
+        if not existing_product and not result.in_stock:
             return
 
         product, created = self.product_repository.get_or_create(
