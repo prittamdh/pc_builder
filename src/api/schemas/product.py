@@ -20,6 +20,8 @@ class ProductOut(BaseModel):
     current_price: Decimal | None = None
     current_mrp: Decimal | None = None
     in_stock: bool | None = None
+    target_ids: list[int] = []
+    keywords: list[str] = []
     created_at: datetime
     updated_at: datetime
 

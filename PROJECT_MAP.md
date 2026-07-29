@@ -40,6 +40,7 @@
 - **src/db/models/product.py**: Product model uniquely constrained on `(sid, pid)`.
 - **src/db/models/price_history.py**: Historical price snapshots linked to `products`.
 - **src/db/models/scrape_target.py**: Scheduled scraping target model for category/search URLs.
+- **src/db/models/specs.py**: 9 normalized specification tables (`cpu_specs`, `gpu_specs`, `motherboard_specs`, `ram_specs`, `ssd_specs`, `psu_specs`, `cabinet_specs`, `cooler_specs`, `monitor_specs`).
 
 ## Repositories
 - **src/db/repositories/base_repository.py**: Base repository wrapping DB session operations.
@@ -50,24 +51,32 @@
 
 ## Services
 - **src/services/store_service.py**: Service to retrieve and manage store configurations.
-- **src/services/search_service.py**: Service to persist search results and insert price history entries.
+- **src/services/search_service.py**: Service to persist search results and insert price history entries (with 100% in-stock filtering).
 - **src/services/product_service.py**: Service to update detailed product metadata from product pages.
 - **src/services/scrape_target_service.py**: Service to manage upcoming scraping targets and scheduling queue.
 - **src/services/builder_service.py**: PC Builder service performing socket/RAM compatibility checks, TDP wattage estimation, and multi-store price optimization.
+- **src/services/normalization_service.py**: Component specification extraction and normalization service.
 
 ## Scrapers & Parsers
 - **src/scrapers/http_client.py**: Resilient HTTP client wrapper for fetching store pages.
 - **src/scrapers/base_scraper.py**: Abstract base scraper interface.
 - **src/scrapers/base_parser.py**: Abstract base parser interface.
-- **src/scrapers/generic_scraper.py**: Unified scraper handling search (single & multi-page pagination) and product scraping for all stores.
-- **src/scrapers/generic_parser.py**: Unified parser extracting HTML elements/JSON-LD into domain models.
+- **src/scrapers/generic_scraper.py**: Unified multi-engine scraper handling HTML, Shopify JSON API, FleetCart API, HTMX, and Next.js App Router pagination.
+- **src/scrapers/generic_parser.py**: Unified multi-engine parser for HTML elements, JSON-LD, Shopify JSON, FleetCart JSON, HTMX lists, and Next.js App Router payloads.
 
 ## Airflow DAGs
 - **dags/scheduled_scraper_dag.py**: Airflow DAG `pc_builder_scheduled_scraper` orchestrating multi-store scraping for due targets every 15 minutes.
 
 ## Active Core Scripts
-- **scripts/seed_stores.py**: Seeds supported stores (`mdcomputers`, `pcstudio`, `vedant`, `primeabgb`) and selectors/pagination endpoints into DB.
-- **scripts/seed_scrape_targets.py**: Seeds initial search targets (`rtx 5070`, `rtx 5080`, `ryzen 9000`, `ddr5 ram`) for all active stores into `scrape_targets`.
+- **scripts/seed_stores.py**: Seeds supported stores and initial selector configs into DB.
+- **scripts/seed_scrape_targets.py**: Seeds initial category/search targets for active stores into `scrape_targets`.
+- **scripts/batch_scrape_elitehubs.py**: Batch pipeline script for EliteHubs category catalog targets.
+- **scripts/setup_clarion_and_computech.py**: Registers Clarion Computers (`sid=7`) and Computech Store (`sid=8`) in DB.
+- **scripts/batch_scrape_clarion_and_computech.py**: Batch pipeline script for Clarion Computers and Computech Store.
+- **scripts/setup_three_stores.py**: Registers TPS Tech (`sid=9`), ModxComputers (`sid=10`), and TLG Gaming (`sid=11`) in DB.
+- **scripts/batch_scrape_three_stores.py**: Batch pipeline script for TPS Tech, ModxComputers, and TLG Gaming.
+- **scripts/purge_out_of_stock_products.py**: Purges out-of-stock products across all tables in PostgreSQL.
+- **scripts/update_granular_categories.py**: Enforces 100% granular categories across all products in PostgreSQL.
 - **scripts/test_connection.py**: Verifies PostgreSQL connection.
 - **scripts/test_store_service.py**: Tests `StoreService` methods against active stores.
 - **scripts/test_all_stores.py**: Scrapes search results for every active store and saves products/price history.
@@ -78,6 +87,6 @@
 - **scripts/test_builder.py**: Tests PC Builder component slots, compatibility rules, and multi-store price calculation.
 
 ## Deprecated / Obsolete Scripts
-- **scripts/test_mdcomputers_scraper.py**: [DEPRECATED] Hardcoded single-store scraper (superseded by `test_all_stores.py`).
+- **scripts/test_mdcomputers_scraper.py**: [DEPRECATED] Hardcoded single-store scraper.
 - **scripts/run_search.py**: [DEPRECATED] Legacy static HTML file parser.
 - **scripts/setup_db.py**: [DEPRECATED] Empty script (superseded by Alembic migrations).

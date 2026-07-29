@@ -24,8 +24,10 @@ def test_all_stores_have_valid_search_config():
         for store in stores:
             config = store.search_config
 
-            assert "selectors" in config
-            assert "attributes" in config
-
-            assert required_selectors.issubset(config["selectors"].keys())
-            assert required_attributes.issubset(config["attributes"].keys())
+            if config.get("platform") in ("shopify", "fleetcart", "nextjs"):
+                assert "page_endpoint" in config
+            else:
+                assert "selectors" in config
+                assert "attributes" in config
+                assert required_selectors.issubset(config["selectors"].keys())
+                assert required_attributes.issubset(config["attributes"].keys())

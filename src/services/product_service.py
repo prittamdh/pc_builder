@@ -49,3 +49,9 @@ class ProductService:
 
         self.session.commit()
         return db_product
+
+    def get_unscraped_products(self, limit: int = 10):
+        return self.product_repository.get_unscraped_products(limit=limit)
+
+    def get_product_target_ids(self, product_id: int) -> list[int]:
+        return self.product_repository.get_product_target_ids(product_id)

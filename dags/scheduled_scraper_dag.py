@@ -36,21 +36,75 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
 
                 print(f"[Scheduled Scraper] Scraping target '{target.target_value}' on {store.display_name}")
 
+                target_val = str(target.target_value)
                 try:
                     scraper = GenericScraper(client, store)
-                    results = scraper.scrape_search_all_pages(
-                        query=target.target_value,
-                        max_pages=max_pages,
-                    )
+
+                    # Check if target is CATEGORY catalog URL vs SEARCH query
+                    is_category = target.target_type == 2 or "catalog/" in target.target_value
+                    target_max_pages = target.schedule_config.get("max_pages", max_pages) if isinstance(target.schedule_config, dict) else max_pages
+                    hard_category = target.schedule_config.get("category") if isinstance(target.schedule_config, dict) else None
+
+                    if is_category:
+                        results = scraper.scrape_category_all_pages(
+                            endpoint=target.target_value,
+                            max_pages=target_max_pages,
+                        )
+                    else:
+                        results = scraper.scrape_search_all_pages(
+                            query=target.target_value,
+                            max_pages=max_pages,
+                        )
 
                     if results:
-                        search_service.save_many(results)
-                        print(f"[Scheduled Scraper] Saved {len(results)} products for '{target.target_value}'")
+                        search_service.save_many(results, target_id=target.id, hard_category=hard_category)
+                        print(f"[Scheduled Scraper] Saved {len(results)} products for '{target_val}' (target_id={target.id}, category={hard_category})")
 
                     target_service.mark_scraped(target)
 
                 except Exception as e:
-                    print(f"[Scheduled Scraper Error] Failed scraping target '{target.target_value}': {e}")
+                    session.rollback()
+                    print(f"[Scheduled Scraper Error] Failed scraping target '{target_val}': {e}")
+
+
+def execute_unscraped_product_enrichment(limit: int = 10):
+    """Enriches static metadata for unique products missing details."""
+    from services.product_service import ProductService
+
+    with SessionLocal() as session:
+        product_service = ProductService(session)
+        store_service = StoreService(session)
+
+        unscraped_products = product_service.get_unscraped_products(limit=limit)
+        print(f"[Product Scraper] Found {len(unscraped_products)} unscraped products to enrich.")
+
+        if not unscraped_products:
+            return
+
+        with HttpClient() as client:
+            for db_product in unscraped_products:
+                store = store_service.get(db_product.sid)
+                if not store or not store.active:
+                    continue
+
+                try:
+                    scraper = GenericScraper(client, store)
+                    p_details = scraper.scrape_product(db_product.product_url)
+                    if p_details:
+                        product_service.save(p_details)
+                        print(f"[Product Scraper] Enriched static metadata for '{db_product.name}'")
+                except Exception as e:
+                    print(f"[Product Scraper Error] Failed '{db_product.name}': {e}")
+
+
+def execute_catalog_normalization(limit: int = 50):
+    """Normalizes specifications and populates category tables for scraped products."""
+    from services.normalization_service import NormalizationService
+
+    with SessionLocal() as session:
+        service = NormalizationService(session)
+        count = service.normalize_all_unclassified(limit=limit)
+        print(f"[Normalizer Task] Normalized and populated category specs for {count} products.")
 
 
 # Airflow DAG Definition (evaluated when apache-airflow is installed)
@@ -81,5 +135,19 @@ try:
         python_callable=execute_due_scrape_targets,
         dag=dag,
     )
+
+    enrich_products_task = PythonOperator(
+        task_id="enrich_unscraped_products",
+        python_callable=execute_unscraped_product_enrichment,
+        dag=dag,
+    )
+
+    normalize_catalog_task = PythonOperator(
+        task_id="normalize_catalog_specs",
+        python_callable=execute_catalog_normalization,
+        dag=dag,
+    )
+
+    process_targets_task >> enrich_products_task >> normalize_catalog_task
 except ImportError:
     pass
