@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initCatalog();
     initBuilder();
+    initCanonical();
 });
 
 // Navigation Handler
@@ -46,6 +47,8 @@ function initNavigation() {
 
             if (targetTab === 'catalog' && state.products.length === 0) {
                 fetchProducts();
+            } else if (targetTab === 'canonical') {
+                fetchCanonicalProducts();
             }
         });
     });
@@ -347,4 +350,128 @@ async function openHistoryModal(productId) {
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Canonical Match (Test) GUI Logic
+let canonicalState = {
+    selectedCategory: '',
+    reviewOnly: false
+};
+
+function initCanonical() {
+    const chips = document.querySelectorAll('#canonical-category-chips .chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            canonicalState.selectedCategory = chip.dataset.canonicalCat || '';
+            fetchCanonicalProducts();
+        });
+    });
+
+    const reviewCheckbox = document.getElementById('canonical-review-only');
+    if (reviewCheckbox) {
+        reviewCheckbox.addEventListener('change', () => {
+            canonicalState.reviewOnly = reviewCheckbox.checked;
+            fetchCanonicalProducts();
+        });
+    }
+
+    const runBtn = document.getElementById('run-canonical-btn');
+    if (runBtn) {
+        runBtn.addEventListener('click', runCanonicalPipeline);
+    }
+}
+
+async function runCanonicalPipeline() {
+    const grid = document.getElementById('canonical-grid');
+    const runBtn = document.getElementById('run-canonical-btn');
+    if (runBtn) runBtn.innerText = '⏳ Running...';
+    if (grid) grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Executing experimental matching pipeline across 10 stores...</div>';
+
+    try {
+        const res = await fetch(`${API_BASE}/canonical/run`, { method: 'POST' });
+        const data = await res.json();
+        if (runBtn) runBtn.innerText = '▶ Run Pipeline';
+        fetchCanonicalProducts();
+    } catch (err) {
+        if (runBtn) runBtn.innerText = '▶ Run Pipeline';
+        if (grid) grid.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 2rem;">Failed to execute pipeline: ${err.message}</div>`;
+    }
+}
+
+async function fetchCanonicalProducts() {
+    const grid = document.getElementById('canonical-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Loading canonical product groups...</div>';
+
+    let url = `${API_BASE}/canonical/products?limit=80`;
+    if (canonicalState.selectedCategory) url += `&category=${encodeURIComponent(canonicalState.selectedCategory)}`;
+    if (canonicalState.reviewOnly) url += `&needs_review=true`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        renderCanonicalProducts(data.items || []);
+    } catch (err) {
+        grid.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 2rem;">Failed to fetch canonical products: ${err.message}</div>`;
+    }
+}
+
+function renderCanonicalProducts(items) {
+    const grid = document.getElementById('canonical-grid');
+    if (!grid) return;
+
+    if (items.length === 0) {
+        grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">No canonical product groups match your filter. Click "▶ Run Pipeline" to generate groups.</div>';
+        return;
+    }
+
+    grid.innerHTML = items.map(c => `
+        <div class="product-card" style="display: block; margin-bottom: 1rem; border-left: 4px solid ${c.needs_review ? 'var(--danger)' : 'var(--accent-cyan)'};">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                <div>
+                    <span class="product-badge" style="background: ${c.needs_review ? 'rgba(239, 68, 68, 0.2)' : 'rgba(6, 182, 212, 0.2)'}; color: ${c.needs_review ? '#f87171' : '#38bdf8'}; font-weight: 700;">
+                        ${c.needs_review ? '⚠ REVIEW QUEUE' : '✓ MATCHED GROUP (' + (c.listings ? c.listings.length : 0) + ' Stores)'}
+                    </span>
+                    <span class="product-badge" style="margin-left: 0.5rem;">${(c.category || '').toUpperCase()}</span>
+                    <h3 class="product-title" style="margin-top: 0.4rem; font-size: 1.1rem; color: #f8fafc;">${escapeHtml(c.name)}</h3>
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
+                        Key: <code style="background: #0f172a; padding: 0.2rem 0.5rem; border-radius: 4px; color: #a5f3fc;">${escapeHtml(c.canonical_key || 'None')}</code>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.85rem; color: #cbd5e1;">
+                <strong>Structured Attributes:</strong> ${escapeHtml(JSON.stringify(c.attributes))}
+            </div>
+
+            <div>
+                <strong style="font-size: 0.9rem; color: var(--text-primary);">Mapped Retailer Store Listings:</strong>
+                <table class="compare-table" style="margin-top: 0.5rem; font-size: 0.85rem;">
+                    <thead>
+                        <tr>
+                            <th>Store</th>
+                            <th>Listing Title</th>
+                            <th>Price</th>
+                            <th>Normalized Match Text</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${(c.listings || []).map(l => `
+                            <tr>
+                                <td style="font-weight: 600; color: #a5f3fc;">${escapeHtml(l.store_name)}</td>
+                                <td style="color: #f1f5f9;">${escapeHtml(l.raw_title)}</td>
+                                <td style="color: var(--accent-cyan); font-weight: 700;">₹${Number(l.price || 0).toLocaleString('en-IN')}</td>
+                                <td style="color: var(--text-secondary); font-size: 0.8rem;">${escapeHtml(l.normalized_title)}</td>
+                                <td><a href="${l.product_url}" target="_blank" class="btn-secondary" style="padding: 0.2rem 0.6rem; text-decoration: none; font-size: 0.8rem;">View</a></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `).join('');
 }

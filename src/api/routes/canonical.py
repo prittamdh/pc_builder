@@ -5,14 +5,14 @@ Enables running the matching pipeline and inspecting canonical product groups vi
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from db.session import get_session
+from api.deps import get_db
 from services.canonical_matching_service import CanonicalMatchingService
 
 router = APIRouter(prefix="/canonical", tags=["canonical"])
 
 
 @router.post("/run")
-def run_canonical_matching(session: Session = Depends(get_session)):
+def run_canonical_matching(session: Session = Depends(get_db)):
     """Run the experimental matching pipeline over 10-store database products."""
     service = CanonicalMatchingService(session)
     summary = service.run_experimental_matching()
@@ -24,7 +24,7 @@ def get_canonical_products(
     category: str | None = Query(None, description="Filter by category e.g. cpu, gpu, ram, storage, psu"),
     needs_review: bool | None = Query(None, description="Filter by review queue status"),
     limit: int = Query(50, ge=1, le=200),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_db)
 ):
     """Fetch grouped canonical products and store listings for GUI inspection."""
     service = CanonicalMatchingService(session)
