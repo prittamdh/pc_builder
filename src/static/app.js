@@ -118,7 +118,7 @@ function renderProducts(products) {
         <div class="product-card">
             <div>
                 <span class="product-badge">${p.p_category || p.category || 'Component'}</span>
-                ${p.image_url ? `<img class="product-img" src="${p.image_url}" alt="${p.name}">` : '<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:#64748b;">No Image</div>'}
+                ${p.image_url ? `<img class="product-img" src="${p.image_url}" alt="${escapeHtml(p.name)}" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://placehold.co/300x300/1e293b/94a3b8?text=Hardware+Image';">` : '<div class="product-img" style="display:flex;align-items:center;justify-content:center;color:#64748b;">No Image</div>'}
                 <h3 class="product-title">${escapeHtml(p.name)}</h3>
             </div>
             <div>
