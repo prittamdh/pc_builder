@@ -25,6 +25,9 @@ class CPUSpecs(Base):
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     socket: Mapped[str | None] = mapped_column(String(50), index=True)
     cores: Mapped[int | None] = mapped_column(Integer)
@@ -43,6 +46,9 @@ class GPUSpecs(Base):
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     chipset: Mapped[str | None] = mapped_column(String(100), index=True)
     memory_size_gb: Mapped[int | None] = mapped_column(Integer)
@@ -59,6 +65,9 @@ class MotherboardSpecs(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
+    )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     socket: Mapped[str | None] = mapped_column(String(50), index=True)
@@ -77,6 +86,9 @@ class RAMSpecs(Base):
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     memory_type: Mapped[str | None] = mapped_column(String(20), index=True)
     speed_mhz: Mapped[int | None] = mapped_column(Integer)
@@ -91,6 +103,9 @@ class SSDSpecs(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
+    )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     capacity_gb: Mapped[int | None] = mapped_column(Integer)
@@ -107,6 +122,9 @@ class PSUSpecs(Base):
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     wattage: Mapped[int | None] = mapped_column(Integer, index=True)
     efficiency_rating: Mapped[str | None] = mapped_column(String(50))
@@ -120,6 +138,9 @@ class CabinetSpecs(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
+    )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     form_factor: Mapped[str | None] = mapped_column(String(50))
@@ -135,6 +156,9 @@ class CoolerSpecs(Base):
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     cooler_type: Mapped[str | None] = mapped_column(String(50))
     radiator_size_mm: Mapped[int | None] = mapped_column(Integer)
@@ -149,6 +173,9 @@ class MonitorSpecs(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
+    )
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     screen_size_inch: Mapped[float | None] = mapped_column(Numeric(4, 1))

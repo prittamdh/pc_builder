@@ -60,6 +60,12 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FILE = LOG_DIR / "pc_builder.log"
 
 # ---------------------------------------------------------------------
+# AI / LLM Configuration
+# ---------------------------------------------------------------------
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+# ---------------------------------------------------------------------
 # Database Configuration
 # ---------------------------------------------------------------------
 
@@ -67,4 +73,3 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+psycopg://pc_builder:pc_builder123@localhost:5432/pc_builder"
 )
-

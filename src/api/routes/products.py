@@ -16,6 +16,8 @@ router = APIRouter(prefix="/products", tags=["Products"])
 def list_products(
     q: str | None = Query(None, description="Search query string"),
     sid: int | None = Query(None, description="Filter by store ID"),
+    category: str | None = Query(None, description="Filter by raw category"),
+    p_category: str | None = Query(None, description="Filter by standardized production category"),
     in_stock: bool | None = Query(None, description="Filter by in-stock status"),
     min_price: Decimal | None = Query(None, description="Minimum current price"),
     max_price: Decimal | None = Query(None, description="Maximum current price"),
@@ -24,24 +26,36 @@ def list_products(
     db: Session = Depends(get_db),
 ):
     """Search and filter products across all stores."""
-    stmt = select(Product)
+    from sqlalchemy import func
+
+    conditions = []
 
     if q:
-        stmt = stmt.where(Product.name.ilike(f"%{q}%"))
+        conditions.append(Product.name.ilike(f"%{q}%"))
     if sid is not None:
-        stmt = stmt.where(Product.sid == sid)
+        conditions.append(Product.sid == sid)
+    if category:
+        conditions.append(Product.category.ilike(f"%{category}%"))
+    if p_category:
+        conditions.append(func.lower(Product.p_category) == p_category.lower())
     if in_stock is not None:
-        stmt = stmt.where(Product.in_stock == in_stock)
+        conditions.append(Product.in_stock == in_stock)
     if min_price is not None:
-        stmt = stmt.where(Product.current_price >= min_price)
+        conditions.append(Product.current_price >= min_price)
     if max_price is not None:
-        stmt = stmt.where(Product.current_price <= max_price)
+        conditions.append(Product.current_price <= max_price)
 
     # Count total matching items
-    count_stmt = select(Product.id).where(stmt.whereclause) if stmt.whereclause is not None else select(Product.id)
-    total = len(list(db.scalars(count_stmt)))
+    count_stmt = select(func.count(Product.id))
+    if conditions:
+        count_stmt = count_stmt.where(*conditions)
+    total = db.scalar(count_stmt) or 0
 
     # Apply pagination
+    stmt = select(Product)
+    if conditions:
+        stmt = stmt.where(*conditions)
+
     offset = (page - 1) * size
     stmt = stmt.offset(offset).limit(size).order_by(Product.updated_at.desc())
     items = list(db.scalars(stmt))

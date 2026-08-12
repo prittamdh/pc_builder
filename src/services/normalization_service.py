@@ -26,48 +26,43 @@ class NormalizationService:
         self.session = session
 
     def normalize_product(self, product: Product) -> str:
-        cat = CategoryClassifier.classify(
-            name=product.name,
-            category_raw=product.category,
-            url=product.product_url,
-        )
-
-        if product.category != cat:
-            product.category = cat
+        p_cat = product.p_category or CategoryClassifier.get_p_category(product.category, product.name)
+        if product.p_category != p_cat:
+            product.p_category = p_cat
             self.session.flush()
 
         raw_specs = product.specifications or {}
 
-        if cat in ("CPU", "Processor", "CPU Processor"):
+        if p_cat == "CPU":
             norm = SpecNormalizer.normalize_cpu(product.name, raw_specs)
             self._upsert_specs(CPUSpecs, product.id, norm)
-        elif cat in ("GPU", "Graphics Card"):
+        elif p_cat == "GPU":
             norm = SpecNormalizer.normalize_gpu(product.name, raw_specs)
             self._upsert_specs(GPUSpecs, product.id, norm)
-        elif cat == "Motherboard":
+        elif p_cat == "Motherboard":
             norm = SpecNormalizer.normalize_motherboard(product.name, raw_specs)
             self._upsert_specs(MotherboardSpecs, product.id, norm)
-        elif cat in ("RAM", "Desktop RAM", "Laptop RAM", "Memory / RAM", "RAM Memory"):
+        elif p_cat == "RAM":
             norm = SpecNormalizer.normalize_ram(product.name, raw_specs)
             self._upsert_specs(RAMSpecs, product.id, norm)
-        elif cat in ("PSU", "Power Supply", "Power Supply / SMPS", "SMPS"):
+        elif p_cat == "Power Supply":
             norm = SpecNormalizer.normalize_psu(product.name, raw_specs)
             self._upsert_specs(PSUSpecs, product.id, norm)
-        elif cat == "Cabinet":
+        elif p_cat == "Cabinet":
             norm = SpecNormalizer.normalize_cabinet(product.name, raw_specs)
             self._upsert_specs(CabinetSpecs, product.id, norm)
-        elif cat in ("CPU Cooler", "Cooler"):
+        elif p_cat == "CPU Cooler":
             norm = SpecNormalizer.normalize_cooler(product.name, raw_specs)
             self._upsert_specs(CoolerSpecs, product.id, norm)
-        elif any(k in cat for k in ("SSD", "HDD", "Storage", "Hard Drive", "Disk")):
+        elif p_cat == "Storage":
             norm = SpecNormalizer.normalize_ssd(product.name, raw_specs)
             self._upsert_specs(SSDSpecs, product.id, norm)
-        elif "Monitor" in cat:
+        elif p_cat == "Monitor":
             norm = SpecNormalizer.normalize_monitor(product.name, raw_specs)
             self._upsert_specs(MonitorSpecs, product.id, norm)
 
         self.session.commit()
-        return cat
+        return p_cat
 
     def _upsert_specs(self, model_cls, product_id: int, norm_dict: dict):
         if not norm_dict:

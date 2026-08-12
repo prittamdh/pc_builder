@@ -72,6 +72,12 @@ class Product(Base, TimestampMixin):
         String(255),
     )
 
+    # Production/Standardized User-facing Category
+    p_category: Mapped[str | None] = mapped_column(
+        String(255),
+        index=True,
+    )
+
     description: Mapped[str | None] = mapped_column(
         Text,
     )
@@ -96,6 +102,18 @@ class Product(Base, TimestampMixin):
 
     in_stock: Mapped[bool | None] = mapped_column(
         Boolean,
+    )
+
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255),
+        ForeignKey("canonical_parts.canonical_id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    canonical_part = relationship(
+        "CanonicalPart",
+        back_populates="listings",
     )
 
     price_history: Mapped[List["PriceHistory"]] = relationship(
