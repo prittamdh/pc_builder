@@ -154,7 +154,13 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
         chipset = chipset_match.group(0).upper() if chipset_match else "Unknown"
 
         variant_match = re.search(r"(ventus|gaming\s*x|tuf|strix|aorus|eagle|windforce|solid|twin\s*edge|shadow|inspire)", t_lower)
-        variant = variant_match.group(0) if variant_match else "base"
+        raw_variant = variant_match.group(0) if variant_match else "base"
+        
+        # Strip brand token if present in variant_model to avoid duplication
+        brand_lower = brand.lower()
+        if raw_variant.lower().startswith(brand_lower):
+            raw_variant = raw_variant[len(brand_lower):].strip()
+        variant = raw_variant if raw_variant else "base"
 
         key_dict["aib_brand"] = brand
         key_dict["variant_model"] = variant
@@ -170,8 +176,11 @@ def make_canonical_key_string(category: str, key_dict: dict) -> str:
     """Generates deterministic string representation of the canonical key dict."""
     cat = normalize_category(category)
     parts = [cat]
+    seen_vals = set()
     for k in sorted(key_dict.keys()):
         if k != "category":
             val = str(key_dict[k]).lower().strip().replace(" ", "_")
-            parts.append(val)
+            if val and val not in seen_vals:
+                parts.append(val)
+                seen_vals.add(val)
     return ":".join(parts)

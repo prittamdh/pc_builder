@@ -24,7 +24,6 @@ class CanonicalPart(Base, TimestampMixin):
     category: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     brand: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     key_fields: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    specs: Mapped[dict] = mapped_column(JSONB, nullable=False)
     chipset_id: Mapped[str | None] = mapped_column(
         String(255),
         ForeignKey("chipset_specs.chipset_id", ondelete="SET NULL"),
