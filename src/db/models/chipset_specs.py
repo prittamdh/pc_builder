@@ -2,15 +2,13 @@
 Chipset Specs Model (Tier 1 spec table for GPU and Motherboard chipsets).
 """
 from typing import Any
-from sqlalchemy import Boolean, String, Text
+from db.base import Base
+from sqlalchemy import Boolean, DateTime, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from db.base import Base
-from db.models.mixins import TimestampMixin
 
-
-class ChipsetSpecs(Base, TimestampMixin):
+class ChipsetSpecs(Base):
     """
     Tier 1 Chipset Specs table (e.g. keyed by 'rtx_4070', 'b650').
     Extracted/looked up once per chipset.
@@ -22,5 +20,6 @@ class ChipsetSpecs(Base, TimestampMixin):
     specs: Mapped[dict] = mapped_column(JSONB, nullable=False)
     source: Mapped[str] = mapped_column(String(100), nullable=False, default="manual")
     verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[Any] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     canonical_parts = relationship("CanonicalPart", back_populates="chipset_specs")

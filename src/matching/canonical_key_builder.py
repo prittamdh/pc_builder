@@ -40,6 +40,13 @@ def normalize_category(category: str) -> str:
 def extract_brand(title: str) -> str:
     """Extracts known brand name from title."""
     title_lower = title.lower()
+    
+    # Explicit brand inference for CPUs
+    if "ryzen" in title_lower or "threadripper" in title_lower:
+        return "AMD"
+    if "intel" in title_lower or "core i" in title_lower or "xeon" in title_lower:
+        return "Intel"
+
     known_brands = [
         "ant esports", "cooler master", "western digital", "deepcool", "thermalright",
         "lii auto", "g.skill", "gskill", "kingston", "corsair", "crucial", "adata",
@@ -62,6 +69,12 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
     """
     cat = normalize_category(category)
     t_lower = title.lower()
+    
+    # Normalize spaces/hyphens and word order for CPU model numbers
+    t_clean = re.sub(r"(\d{4}[a-z0-9]*)\s*ryzen\s*(\d)", r"ryzen \2 \1", t_lower)
+    t_clean = re.sub(r"ryzen\s*(\d)\s*[\-_\s]*(\d{4}[a-z0-9]*)", r"ryzen \1 \2", t_clean)
+    t_clean = re.sub(r"core\s*i\s*([3579])\s*[\-_\s]*(\d{4,5}[a-z]*)", r"core i\1-\2", t_clean)
+
     brand = extract_brand(title)
     specs = specs or {}
 
@@ -69,9 +82,8 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
 
     if cat == "cpu":
         # CPU: brand + model_number
-        # Example: AMD Ryzen 7 7800X3D -> brand: AMD, model_number: ryzen 7 7800x3d
-        match = re.search(r"(ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-?\d{4,5}[a-z]*|\b\d{4,5}[a-z]{1,2}\b)", t_lower)
-        model_num = match.group(0) if match else t_lower
+        match = re.search(r"(ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-\d{4,5}[a-z]*|\b\d{4,5}[a-z]{1,2}\b)", t_clean)
+        model_num = match.group(0) if match else t_clean
         key_dict["model_number"] = model_num.strip()
 
     elif cat == "psu":

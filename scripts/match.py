@@ -18,6 +18,7 @@ from collections import defaultdict
 from dataclasses import dataclass, asdict
 from typing import Any
 
+from matching.resolver import resolve_canonical, calculate_fuzzy_score
 from normalize import normalize_title
 from schemas import extract_attributes
 

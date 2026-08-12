@@ -1,7 +1,5 @@
 """
 Global project settings.
-
-All application-wide configuration should live here.
 """
 import os
 from pathlib import Path
@@ -15,15 +13,12 @@ load_dotenv()
 # ---------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
 SRC_DIR = PROJECT_ROOT / "src"
-
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 EXPORT_DIR = DATA_DIR / "exports"
 CACHE_DIR = DATA_DIR / "cache"
-
 LOG_DIR = PROJECT_ROOT / "logs"
 
 # ---------------------------------------------------------------------
@@ -31,7 +26,6 @@ LOG_DIR = PROJECT_ROOT / "logs"
 # ---------------------------------------------------------------------
 
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 20))
-
 DEFAULT_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -48,7 +42,6 @@ DEFAULT_HEADERS = {
 # ---------------------------------------------------------------------
 
 MAX_RETRIES = int(os.getenv("MAX_RETRIES", 3))
-
 RETRY_BACKOFF = int(os.getenv("BACKOFF_FACTOR", 2))
 
 # ---------------------------------------------------------------------
@@ -56,7 +49,6 @@ RETRY_BACKOFF = int(os.getenv("BACKOFF_FACTOR", 2))
 # ---------------------------------------------------------------------
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-
 LOG_FILE = LOG_DIR / "pc_builder.log"
 
 # ---------------------------------------------------------------------
@@ -64,6 +56,12 @@ LOG_FILE = LOG_DIR / "pc_builder.log"
 # ---------------------------------------------------------------------
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+# ---------------------------------------------------------------------
+# Matching Pipeline Configuration
+# ---------------------------------------------------------------------
+
+FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.90))
 
 # ---------------------------------------------------------------------
 # Database Configuration
