@@ -60,8 +60,28 @@ def test_groq_extraction(api_key: str | None = None, sample_size: int = 5):
         rows = session.execute(sql, {"limit": sample_size}).fetchall()
 
     print("=" * 80)
-    print(f"TESTING LLM FEATURE EXTRACTION (llama-3.1-8b-instant) ON {len(rows)} LIVE PRODUCTS")
+    print(f"TESTING HIERARCHICAL LLM FEATURE EXTRACTION (llama-3.1-8b-instant) ON {len(rows)} PRODUCTS")
     print("=" * 80)
+
+    # Ultra-lean system prompt (Token Efficient: <120 tokens)
+    system_prompt = (
+        "Extract hardware specs into JSON. Return ONLY JSON.\n"
+        "Schema:\n"
+        "{\n"
+        '  "brand": "Brand",\n'
+        '  "model_series": "Model line/number",\n'
+        '  "specs_in_title": {"explicit_spec": "text in title"},\n'
+        '  "specs_inferred": {"total_cores": 16, "p_cores": 8, "e_cores": 8, "socket": "LGA1700"},\n'
+        '  "hierarchical": {\n'
+        '    "family": "i7/Ryzen 9/RTX 5070",\n'
+        '    "variant": "14700KF/9900X",\n'
+        '    "igpu": "Radeon Graphics/Intel UHD 770/None",\n'
+        '    "capacity": "32GB/1TB",\n'
+        '    "speed": "6000MHz/10000MBs",\n'
+        '    "form_factor_size": "240mm/120mm/ATX"\n'
+        "  }\n"
+        "}"
+    )
 
     for r in rows:
         pid_id, sid, pid, name, p_cat = r
@@ -72,28 +92,25 @@ def test_groq_extraction(api_key: str | None = None, sample_size: int = 5):
             response = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a hardware data extraction assistant. Extract structural specs from product title into JSON.\n"
-                            "Keys required:\n"
-                            "- \"brand\": Manufacturer name (e.g. Intel, AMD, Corsair, Kioxia, Kingston, Adata)\n"
-                            "- \"model_series\": Full model name/line (e.g. Core i7-14700, Ryzen 7 9800X3D, Fury Beast)\n"
-                            "- \"extracted_spec\": Technical specs (e.g. 16 Cores, 32GB 5200MHz, 1TB NVMe Gen5, 750W, 240mm)\n"
-                            "Return ONLY a JSON object."
-                        )
-                    },
-                    {"role": "user", "content": f"Product Title: {name}"}
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"Category: {p_cat} | Title: {name}"}
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.0
             )
 
+            usage = response.usage
+            tokens_info = f"Prompt Tokens: {usage.prompt_tokens} | Completion Tokens: {usage.completion_tokens} | Total: {usage.total_tokens}" if usage else ""
+
             extracted = json.loads(response.choices[0].message.content)
             print("  Extracted Specs:")
-            print(f"    - Brand:          {extracted.get('brand')}")
-            print(f"    - Model Series:   {extracted.get('model_series')}")
-            print(f"    - Extracted Spec: {extracted.get('extracted_spec')}")
+            print(f"    - Brand:            {extracted.get('brand')}")
+            print(f"    - Model Series:     {extracted.get('model_series')}")
+            print(f"    - Specs In Title:   {extracted.get('specs_in_title')}")
+            print(f"    - Specs Inferred:   {extracted.get('specs_inferred')}")
+            print(f"    - Hierarchical:     {extracted.get('hierarchical')}")
+            if tokens_info:
+                print(f"    [Token Usage] {tokens_info}")
 
         except Exception as e:
             print(f"  [Error] Extraction failed: {e}")
