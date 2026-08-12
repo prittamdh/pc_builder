@@ -54,3 +54,30 @@ def test_missing_critical_field_flags_review():
 
     assert key_psu["wattage"] == "Unknown"
     assert key_ram["cl_timing"] == "Unknown"
+
+
+def test_cpu_suffix_preservation_distinct_keys():
+    """Verify i7-14700 vs i7-14700K vs i7-14700KF and 9800X vs 9800X3D produce distinct canonical keys."""
+    t1 = "Intel Core i7-14700 Desktop Processor"
+    t2 = "Intel Core i7-14700K Desktop Processor"
+    t3 = "Intel Core i7-14700KF Desktop Processor"
+
+    k1 = make_canonical_key_string("CPU", build_canonical_key(t1, "CPU"))
+    k2 = make_canonical_key_string("CPU", build_canonical_key(t2, "CPU"))
+    k3 = make_canonical_key_string("CPU", build_canonical_key(t3, "CPU"))
+
+    assert k1 == "cpu:intel:core_i7-14700"
+    assert k2 == "cpu:intel:core_i7-14700k"
+    assert k3 == "cpu:intel:core_i7-14700kf"
+    assert len({k1, k2, k3}) == 3
+
+    # AMD Ryzen X vs X3D suffix preservation
+    amd1 = "AMD Ryzen 7 9800X Processor"
+    amd2 = "AMD Ryzen 7 9800X3D Processor"
+
+    ak1 = make_canonical_key_string("CPU", build_canonical_key(amd1, "CPU"))
+    ak2 = make_canonical_key_string("CPU", build_canonical_key(amd2, "CPU"))
+
+    assert ak1 == "cpu:amd:ryzen_7_9800x"
+    assert ak2 == "cpu:amd:ryzen_7_9800x3d"
+    assert ak1 != ak2

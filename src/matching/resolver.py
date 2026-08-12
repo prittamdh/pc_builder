@@ -11,8 +11,21 @@ from db.models.canonical_part import CanonicalPart
 from matching.canonical_key_builder import build_canonical_key, make_canonical_key_string, normalize_category
 
 
+def has_suffix_mismatch(s1: str, s2: str) -> bool:
+    """Checks if two key strings differ in critical CPU/GPU model suffix variants (e.g. 14700 vs 14700k vs 14700kf, 245k vs 265k vs 285k, 9800x vs 9800x3d)."""
+    import re
+    # Extract trailing suffix letters/digits attached to model numbers e.g. 14700, 14700k, 14700kf, 245k, 9800x, 9800x3d
+    m1 = re.findall(r"\d{3,5}[a-z0-9]*", s1.lower())
+    m2 = re.findall(r"\d{3,5}[a-z0-9]*", s2.lower())
+    if m1 and m2 and m1[0] != m2[0]:
+        return True
+    return False
+
+
 def calculate_fuzzy_score(s1: str, s2: str) -> float:
     """Calculates token-sort ratio between two key strings."""
+    if has_suffix_mismatch(s1, s2):
+        return 0.0
     tokens1 = sorted(s1.lower().replace(":", " ").replace("_", " ").split())
     tokens2 = sorted(s2.lower().replace(":", " ").replace("_", " ").split())
     return SequenceMatcher(None, " ".join(tokens1), " ".join(tokens2)).ratio()

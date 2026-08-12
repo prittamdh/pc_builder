@@ -82,7 +82,8 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
 
     if cat == "cpu":
         # CPU: brand + model_number
-        match = re.search(r"(ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-\d{4,5}[a-z]*|\b\d{4,5}[a-z]{1,2}\b)", t_clean)
+        # Handles Intel Core i, Intel Core Ultra, AMD Ryzen, Threadripper, Athlon, Pentium
+        match = re.search(r"(core\s+ultra\s+[3579]\s+\d{3}[a-z]*|ryzen\s+threadripper\s+(pro\s+)?\d{4}[a-z]*|ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-\d{4,5}[a-z]*|athlon\s+3000g|pentium\s+[a-z0-9]+|\b\d{4,5}[a-z]{1,2}\b)", t_clean)
         model_num = match.group(0) if match else t_clean
         key_dict["model_number"] = model_num.strip()
 

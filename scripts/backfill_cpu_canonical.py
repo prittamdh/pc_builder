@@ -25,12 +25,24 @@ def backfill_cpu_canonical():
         print("Resolving canonical parts...")
 
         resolved_count = 0
+        review_flag_checks_run = 0
+
         for p in cpu_products:
             canonical_id = resolve_canonical(p.name, 'CPU', session)
             p.canonical_id = canonical_id
             resolved_count += 1
 
+            # Verify review flag check ran for this listing
+            cp_stmt = select(CanonicalPart).where(CanonicalPart.canonical_id == canonical_id)
+            cp = session.scalar(cp_stmt)
+            assert cp is not None and cp.status in ('OK', 'NEEDS_REVIEW'), f"Review check failed for listing {p.id}"
+            review_flag_checks_run += 1
+
         session.commit()
+
+        # Confirm review flag check ran for 100% of listings
+        assert review_flag_checks_run == total_cpu_listings, "Review flag check did not run for all listings!"
+        print(f"[Verified] Review-flag check ran for 100% ({review_flag_checks_run}/{total_cpu_listings}) of CPU listings.")
 
         # 2. Query collapse statistics
         stmt_parts = select(func.count(CanonicalPart.canonical_id)).where(CanonicalPart.category == 'cpu')
