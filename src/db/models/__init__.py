@@ -1,3 +1,4 @@
+from .canonical_part import CanonicalPart
 from .category_specs import (
     CabinetSpecs,
     CoolerSpecs,
@@ -9,6 +10,7 @@ from .category_specs import (
     RAMSpecs,
     SSDSpecs,
 )
+from .chipset_specs import ChipsetSpecs
 from .mixins import TimestampMixin
 from .price_history import PriceHistory
 from .product import Product
@@ -23,6 +25,8 @@ __all__ = [
     "ProductTarget",
     "PriceHistory",
     "TimestampMixin",
+    "ChipsetSpecs",
+    "CanonicalPart",
     "CPUSpecs",
     "GPUSpecs",
     "MotherboardSpecs",

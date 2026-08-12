@@ -104,6 +104,18 @@ class Product(Base, TimestampMixin):
         Boolean,
     )
 
+    canonical_id: Mapped[str | None] = mapped_column(
+        String(255),
+        ForeignKey("canonical_parts.canonical_id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    canonical_part = relationship(
+        "CanonicalPart",
+        back_populates="listings",
+    )
+
     price_history: Mapped[List["PriceHistory"]] = relationship(
         "PriceHistory",
         back_populates="product",
