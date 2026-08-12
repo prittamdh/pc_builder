@@ -70,8 +70,9 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
     cat = normalize_category(category)
     t_lower = title.lower()
     
-    # Normalize spaces/hyphens, filler words, and word order for CPU model numbers
-    t_clean = re.sub(r"core\s+ultra\s+([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{3}[a-z]*)", r"core ultra \1 \3", t_lower)
+    # Normalize spaces/hyphens, filler words, generation prefixes, and word order for CPU model numbers
+    t_clean = re.sub(r"core\s+(\d{1,2}(st|nd|rd|th))\s+gen\s+(i[3579])", r"core \3", t_lower)
+    t_clean = re.sub(r"core\s+ultra\s+([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{3}[a-z]*)", r"core ultra \1 \3", t_clean)
     t_clean = re.sub(r"core\s+i\s*([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{4,5}[a-z]*)", r"core i\1-\3", t_clean)
     t_clean = re.sub(r"ryzen\s*(\d)\s*[\-_\s]+\s*(processor\s+)?(\d{4}[a-z0-9]*)", r"ryzen \1 \3", t_clean)
     t_clean = re.sub(r"(\d{4}[a-z0-9]*)\s*ryzen\s*(\d)", r"ryzen \2 \1", t_clean)
@@ -84,8 +85,28 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
     if cat == "cpu":
         # CPU: brand + model_number
         # Handles Intel Core i, Intel Core Ultra, AMD Ryzen, Threadripper, Athlon, Pentium
-        match = re.search(r"(core\s+ultra\s+[3579]\s+\d{3}[a-z]*|ryzen\s+threadripper\s+(pro\s+)?\d{4}[a-z]*|ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-\d{4,5}[a-z]*|athlon\s+3000g|pentium\s+[a-z0-9]+|\b\d{4,5}[a-z]{1,2}\b)", t_clean)
-        model_num = match.group(0) if match else t_clean
+        match = re.search(r"(core\s+ultra\s+[3579]\s+\d{3}[a-z]*|ryzen\s+threadripper\s+(pro\s+)?\d{4}[a-z]*|ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-\d{4,5}[a-z]*|athlon\s+3000g|pentium\s+[a-z0-9]+)", t_clean)
+        if match:
+            model_num = match.group(0)
+        else:
+            # Fallback for bare numbers like "12400F" or "13600K"
+            bare_match = re.search(r"\b(1\d{4}|[3579]\d{3})[a-z]{0,2}\b", t_clean)
+            if bare_match:
+                num = bare_match.group(0)
+                # Map bare model number to full prefix based on generation/digits e.g. 12400f -> core i5-12400f
+                if num.startswith("12400") or num.startswith("13400") or num.startswith("14400") or num.startswith("12600") or num.startswith("13600") or num.startswith("14600") or num.startswith("10400") or num.startswith("11400"):
+                    model_num = f"core i5-{num}"
+                elif num.startswith("12700") or num.startswith("13700") or num.startswith("14700") or num.startswith("10700") or num.startswith("11700"):
+                    model_num = f"core i7-{num}"
+                elif num.startswith("12900") or num.startswith("13900") or num.startswith("14900") or num.startswith("10900") or num.startswith("11900"):
+                    model_num = f"core i9-{num}"
+                elif num.startswith("12100") or num.startswith("13100") or num.startswith("14100") or num.startswith("10100"):
+                    model_num = f"core i3-{num}"
+                else:
+                    model_num = num
+            else:
+                model_num = t_clean
+
         key_dict["model_number"] = model_num.strip()
 
     elif cat == "psu":

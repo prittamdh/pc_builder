@@ -16,7 +16,20 @@ def backfill_cpu_canonical():
         print("PHASE 3: RUNNING CANONICAL RESOLUTION FOR CPU CATEGORY LISTINGS")
         print("=" * 80)
 
-        # Clear existing canonical_parts for cpu to prevent orphaned keys from previous regex iterations
+        # 1. Correct Category Leaks (GPU / PSU / Cooler incorrectly tagged as CPU)
+        leak_gpu = text("UPDATE products SET p_category = 'GPU', canonical_id = NULL WHERE p_category = 'CPU' AND LOWER(name) LIKE '%graphics card%';")
+        leak_psu = text("UPDATE products SET p_category = 'PSU', canonical_id = NULL WHERE p_category = 'CPU' AND (LOWER(name) LIKE '%power supply%' OR LOWER(name) LIKE '% 1200w %');")
+        leak_cooler = text("UPDATE products SET p_category = 'COOLER', canonical_id = NULL WHERE p_category = 'CPU' AND (LOWER(name) LIKE '%cooling kit%' OR LOWER(name) LIKE '%liquid cooler%');")
+
+        r_gpu = session.execute(leak_gpu).rowcount
+        r_psu = session.execute(leak_psu).rowcount
+        r_cooler = session.execute(leak_cooler).rowcount
+        session.commit()
+
+        total_rerouted = r_gpu + r_psu + r_cooler
+        print(f"[Category Leak Routing Fix] Re-routed {total_rerouted} non-CPU products: {r_gpu} GPUs, {r_psu} PSUs, {r_cooler} Coolers.")
+
+        # Clear existing canonical_parts for cpu to prevent orphaned keys from previous iterations
         session.execute(text("UPDATE products SET canonical_id = NULL WHERE p_category = 'CPU';"))
         session.execute(text("DELETE FROM canonical_parts WHERE category = 'cpu';"))
         session.commit()
