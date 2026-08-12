@@ -70,10 +70,11 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
     cat = normalize_category(category)
     t_lower = title.lower()
     
-    # Normalize spaces/hyphens and word order for CPU model numbers
-    t_clean = re.sub(r"(\d{4}[a-z0-9]*)\s*ryzen\s*(\d)", r"ryzen \2 \1", t_lower)
-    t_clean = re.sub(r"ryzen\s*(\d)\s*[\-_\s]*(\d{4}[a-z0-9]*)", r"ryzen \1 \2", t_clean)
-    t_clean = re.sub(r"core\s*i\s*([3579])\s*[\-_\s]*(\d{4,5}[a-z]*)", r"core i\1-\2", t_clean)
+    # Normalize spaces/hyphens, filler words, and word order for CPU model numbers
+    t_clean = re.sub(r"core\s+ultra\s+([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{3}[a-z]*)", r"core ultra \1 \3", t_lower)
+    t_clean = re.sub(r"core\s+i\s*([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{4,5}[a-z]*)", r"core i\1-\3", t_clean)
+    t_clean = re.sub(r"ryzen\s*(\d)\s*[\-_\s]+\s*(processor\s+)?(\d{4}[a-z0-9]*)", r"ryzen \1 \3", t_clean)
+    t_clean = re.sub(r"(\d{4}[a-z0-9]*)\s*ryzen\s*(\d)", r"ryzen \2 \1", t_clean)
 
     brand = extract_brand(title)
     specs = specs or {}

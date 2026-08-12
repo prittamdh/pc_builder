@@ -16,6 +16,11 @@ def backfill_cpu_canonical():
         print("PHASE 3: RUNNING CANONICAL RESOLUTION FOR CPU CATEGORY LISTINGS")
         print("=" * 80)
 
+        # Clear existing canonical_parts for cpu to prevent orphaned keys from previous regex iterations
+        session.execute(text("UPDATE products SET canonical_id = NULL WHERE p_category = 'CPU';"))
+        session.execute(text("DELETE FROM canonical_parts WHERE category = 'cpu';"))
+        session.commit()
+
         # 1. Fetch all CPU listings from products table
         stmt = select(Product).where(Product.p_category == 'CPU')
         cpu_products = session.scalars(stmt).all()

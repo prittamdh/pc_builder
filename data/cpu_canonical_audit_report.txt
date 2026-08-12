@@ -1,0 +1,1221 @@
+================================================================================
+AUDIT REPORT: CANONICAL CPU GROUPS AND MAPPED RAW TITLES
+================================================================================
+
+Total Unique Canonical CPU Parts: 131
+--------------------------------------------------------------------------------
+
+[001/131] Canonical Key: 'cpu:amd:amd_radeon_pro_w7700_16gb_gddr6_professional_graphics_card'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'amd radeon pro w7700 16gb gddr6 professional graphics card'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Amd Radeon Pro W7700 16GB GDDR6 Professional Graphics Card
+
+[002/131] Canonical Key: 'cpu:amd:athlon_3000g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'athlon 3000g'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Athlon 3000G Open Box OEM Processor With Radeon Vega 3 Graphics
+
+[003/131] Canonical Key: 'cpu:amd:ryzen_3_3200g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 3 3200g'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - AMD Ryzen 3 3200G 3rd Generation Processor ( 4GHz / 4 Cores / 4 Threads )
+       - AMD Ryzen 3 3200G 4 Cores 4 Threads 3.6GHz 6MB Cache AM4 Socket 64-Bit Desktop Processor
+       - AMD Ryzen 3 3200G Processor with Radeon Vega 8 Graphics
+       - AMD Ryzen 3 3200G Processor with Radeon Vega 8 Graphics (4 Cores, 4 Threads, Max. Boost Clock Up To 4.0GHz, AM4 Socket and 6MB Cache)
+       - AMD Ryzen 3 3200G processor
+       - AMD Ryzen 3 3200G with Radeon Vega 8 Graphics 3rd Gen Desktop Processor YD3200C5FHBOX
+       - Amd Ryzen 3 3200G AM4 Desktop Processor (4 GHz /  4 Cores / 4 Threads)
+       - Amd Ryzen 3 3200G Processor With Radeon ...
+
+[004/131] Canonical Key: 'cpu:amd:ryzen_3_4100'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 3 4100'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen 3 4100 Open Box OEM AM4 Desktop Processor (4 GHz /  4 Cores / 8 Threads)
+
+[005/131] Canonical Key: 'cpu:amd:ryzen_5_3400g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 3400g'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 5 3400G AM4 Desktop Processor (4.2 GHz / 4 Cores / 8 Threads)
+       - AMD Ryzen 5 3400G APU 2nd Generation Processor ( 4.2 GHz / 4 Cores / 8 Threads )
+       - AMD Ryzen 5 3400G Desktop Processor 4 Cores up to 4.2GHz 6MB Cache AM4 Socket
+       - AMD Ryzen 5 3400G OEM Processor With Radeon Vega 11 Graphics (Upto 4.2GHz 6MB Cache)
+       - AMD Ryzen 5 3400G Processor
+       - AMD Ryzen 5 3400G Processor With Radeon Vega 11 Graphics (Upto 4.2GHz 6MB Cache)
+       - AMD Ryzen 5 3400G Processor with Radeon RX Vega 11 Graphics
+       - AMD Ryzen 5 3400G with Radeon RX Vega 11 Graphics 3rd Gen Desktop Processor YD3400C5FHBOX
+       - Amd Ryzen 5 3400G With Radeon Rx Vega 11...
+
+[006/131] Canonical Key: 'cpu:amd:ryzen_5_4500'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 4500'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen 5 4500 AM4 Desktop Processor (4.1 GHz / 6 Cores / 12 Threads)
+
+[007/131] Canonical Key: 'cpu:amd:ryzen_5_5500'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5500'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5500
+       - AMD Ryzen 5 5500 6 Cores 12 Threads 4.2GHz 19MB Cache AM4 Socket 64-Bit Desktop Processor
+       - AMD Ryzen 5 5500 6-core 12-threads AM4 Desktop Processor
+       - AMD Ryzen 5 5500 AM4 Desktop Processor (4.2 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 5500 Desktop Processor (6 Cores/12 Threads/3.6GHz) 100-100000457BOX
+       - AMD Ryzen 5 5500 Processor
+       - AMD Ryzen 5 5500 Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.2GHz, AM4 Socket and 19MB Cache)
+       - Amd Ryzen 5 5500 Desktop Processor (Upto...
+
+[008/131] Canonical Key: 'cpu:amd:ryzen_5_5500gt'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5500gt'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5500GT 5th Generation ( 4.4 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 5500GT 6 Cores 12 Threads 3.6GHz 16MB Cache AM4 Socket 64-Bit Desktop Processor
+       - AMD Ryzen 5 5500GT 6-core 12-threads AM4 Desktop Processor
+       - AMD Ryzen 5 5500GT Processor
+       - AMD Ryzen 5 5500GT Processor with Radeon Graphics
+       - AMD Ryzen 5 5500GT Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 4.4GHz, AM4 Socket and 19MB Cache)
+       - AMD Ryzen 5 5500GT Ryzen 5 5000 Series 6-Core 3.6 GHz Socket AM4 65W AMD Radeon Graphics Processor 100-100001489BOX
+       - Amd Ryzen 5 5500GT Processor With Radeon...
+
+[009/131] Canonical Key: 'cpu:amd:ryzen_5_5600'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5600'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5600
+       - AMD Ryzen 5 5600 5th Generation Processor ( 4.4 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 5600 AM4 Desktop Processor (4.4 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 5600 AM4 Desktop Processor 6 Cores 12 Threads 100-100000927BOX
+       - AMD Ryzen 5 5600 Desktop Processor (6 Cores/12 Threads)
+       - AMD Ryzen 5 5600 Processor
+       - AMD Ryzen 5 5600 Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.4GHz, AM4 Socket and 35MB Cache)
+       - Amd Ryzen 5 5600 Desktop Processor (Up T...
+
+[010/131] Canonical Key: 'cpu:amd:ryzen_5_5600f'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5600f'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5600F 5th Generation Processor ( 4 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 5600F AM4 Desktop Processor (4 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 5600F AM4 Desktop Processor 6 Cores 12 Threads 100-000001903BOX
+
+[011/131] Canonical Key: 'cpu:amd:ryzen_5_5600g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5600g'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5600G 6 Cores 12 Threads 4.4GHz 19MB Cache AM4 Socket Radeon Graphics Desktop Processor
+       - AMD Ryzen 5 5600G Desktop Processor With Integrated Radeon Graphics 100-100000252BOX
+       - AMD Ryzen 5 5600G Processor
+       - AMD Ryzen 5 5600G Processor With Radeon ...
+
+[012/131] Canonical Key: 'cpu:amd:ryzen_5_5600gt'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5600gt'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5600GT 5th Generation (4.6 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 5600GT 6 Cores 12 Threads 4.6GHz 19MB Cache AM4 Socket 64-bit Desktop Processor
+       - AMD Ryzen 5 5600GT AM4 Desktop Processor (4.6 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 5600GT Processor
+       - AMD Ryzen 5 5600GT Processor with Radeon Graphics
+       - AMD Ryzen 5 5600GT Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 19MB Cache)
+       - AMD Ryzen 5 5600GT Ryzen 5 5000 Series 6-Core 3.6 GHz Socket AM4 65W AMD Radeon Graphics Processor 100-100001488BOX
+       - AMD Ryzen 5 5600GT desktop processor with Radeon graphics
+       - Amd Ryzen 5 5600GT Processor With Radeon...
+
+[013/131] Canonical Key: 'cpu:amd:ryzen_5_5600x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 5600x'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 5 5600X 5th Gen Processor  ( 4.6 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 5600X Desktop Processor (6 Cores/12 Threads/3.7GHz)
+       - AMD Ryzen 5 5600X Desktop Processor 6 Cores up to 4.6GHz 35MB Cache AM4 Socket-OEM
+       - AMD Ryzen 5 5600X Processor
+       - AMD Ryzen 5 5600X Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 35MB Cache)
+       - AMD Ryzen 5 5600X processor
+       - Amd Ryzen 5 5600X AM4 Desktop Processor (4.6 GHz / 6 Cores / 12 Threads)
+       - Amd Ryzen 5 5600X Processor
+
+[014/131] Canonical Key: 'cpu:amd:ryzen_5_7500f'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 7500f'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 5 7500F
+       - AMD Ryzen 5 7500F 7th Generation Processor ( 5 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 7500F 7th Generation Processor 6 Cores 12 Threads 100-100000597BOX
+       - AMD Ryzen 5 7500F AM5 Desktop Processor (5 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 7500F Desktop Processor
+       - AMD Ryzen 5 7500F Desktop Processor (100...
+       - AMD Ryzen 5 7500F Processor
+       - AMD Ryzen 5 7500F Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 5GHz, AM5 Socket and 38MB Cache)
+
+[015/131] Canonical Key: 'cpu:amd:ryzen_5_7500x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 7500x3d'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen 5 7500X3D (Tray) Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.5GHz, AM5 Socket and 96MB Cache)
+       - AMD Ryzen 5 7500X3D (Tray) Processor OEM PROCESSOR FRESH UNIT
+       - AMD Ryzen 5 7500X3D Desktop Processor (T...
+       - AMD Ryzen 5 7500X3D Tray Processor
+
+[016/131] Canonical Key: 'cpu:amd:ryzen_5_7600'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 7600'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen 5 7600 6 Cores 12 Threads 5.1GHz 38MB Cache AM5 Socket Radeon Graphics Desktop Processor
+       - AMD Ryzen 5 7600 6-core 12-threads 7000 Series Desktop Processor
+       - AMD Ryzen 5 7600 7th Generation Processor ( 5.1 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 7600 AM5 Desktop Processor (5.1 GHz / 6 Cores / 12 Threads)
+
+[017/131] Canonical Key: 'cpu:amd:ryzen_5_7600x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 7600x'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 5 7600X 6-core 12-threads 7000 Series ZEN 4 Desktop Processor
+       - AMD Ryzen 5 7600X 7th Generation Processor ( 5.3 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 7600X Desktop Processor (Up ...
+       - AMD Ryzen 5 7600X Desktop Processor 100-100000593WOF
+       - AMD Ryzen 5 7600X Desktop Processor 6 Cores up to 5.3GHz 38MB Cache AM5 Socket with Radeon Graphics
+       - AMD Ryzen 5 7600X Processor
+       - AMD Ryzen 5 7600X Processor with Radeon Graphics
+       - AMD Ryzen 5 7600X Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.3GHz, AM5 Socket and 38MB Cache)
+       - Amd Ryzen 5 7600X AM5 Desktop Processor (5.3 GHz / 6 Cores / 12 Threads)
+
+[018/131] Canonical Key: 'cpu:amd:ryzen_5_8500g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 8500g'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 5 8500G
+       - AMD Ryzen 5 8500G 6 Cores 12 Threads 5GHz 22MB Cache AM5 Socket 64-Bit Desktop Processor
+       - AMD Ryzen 5 8500G 6-Core 12-Threads AM5 8000 Series Desktop Processor with Radeon 740M Graphics
+       - AMD Ryzen 5 8500G 8th Generation Processor ( 5 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 8500G Desktop Processor 100-100000931BOX
+       - AMD Ryzen 5 8500G Processor
+       - AMD Ryzen 5 8500G Processor with Radeon 740M Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.0GHz, AM5 Socket and 22MB Cache)
+       - AMD Ryzen 5 8500G Processor with Radeon Graphics
+       - Amd Ryzen 5 8500G AM5 Desktop Processor (5 GHz / 6 Cores / 12 Threads)
+       - Amd Ryzen 5 8500G Processor With Radeon ...
+
+[019/131] Canonical Key: 'cpu:amd:ryzen_5_8600g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 8600g'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 5 8600G 6 Cores 12 Threads 5GHz 22MB Cache AM5 Socket 64-Bit Desktop Processor
+       - AMD Ryzen 5 8600G 6-Core 12-Threads AM5 8000 Series Desktop Processor with Radeon 760M Graphics
+       - AMD Ryzen 5 8600G 8th Generation Processor ( 5 GHz / 6 Cores / 12 Threads )
+       - AMD Ryzen 5 8600G AM5 Desktop Processor (5 GHz/  6 Cores / 12 Threads)
+       - AMD Ryzen 5 8600G Desktop Processor 100-100001237BOX
+       - AMD Ryzen 5 8600G Processor
+       - AMD Ryzen 5 8600G Processor with Radeon 760M Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.0GHz, AM5 Socket and 22MB Cache)
+       - AMD Ryzen 5 8600G Processor with Radeon Graphics
+       - Amd Ryzen 5 8600G Processor With Radeon ...
+
+[020/131] Canonical Key: 'cpu:amd:ryzen_5_9600x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 5 9600x'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD RYZEN 5 9600X 9th Generation Processor (5.4 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 9600X
+       - AMD Ryzen 5 9600X 3.9 GHz 6-Core AM5 Processor 100-100001405WOF
+       - AMD Ryzen 5 9600X 6 Cores 12 Threads 5.4GHz 38MB Cache AM5 Socket Desktop Processor
+       - AMD Ryzen 5 9600X 6-Core 12-Threads 9000 Series Desktop Processor
+       - AMD Ryzen 5 9600X AM5 Desktop Processor (5.4 GHz / 6 Cores / 12 Threads)
+       - AMD Ryzen 5 9600X Desktop Processor (100...
+       - AMD Ryzen 5 9600X Processor
+       - AMD Ryzen 5 9600X Processor with Radeon Graphics
+       - AMD Ryzen 5 9600X Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.4GHz, AM5 Socket and 38MB Cache)
+
+[021/131] Canonical Key: 'cpu:amd:ryzen_7_3700x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 3700x'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen 7 3700X 3rd Gen Desktop Processor 100-100000071BOX
+
+[022/131] Canonical Key: 'cpu:amd:ryzen_7_5700g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 5700g'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 7 5700G 5th Generation Processor (4.6 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 5700G AM4 Desktop Processor (4.6 GHz / 8 Cores / 16 Threads)
+       - AMD Ryzen 7 5700G Desktop Processor 8 Cores up to 4.6GHz 20MB Cache AM4 Socket with Radeon Graphics
+       - AMD Ryzen 7 5700G Desktop Processor 8 Cores up to 4.6GHz 20MB Cache AM4 Socket with Radeon Graphics -Tray
+       - AMD Ryzen 7 5700G Desktop Processor With Integrated Radeon Graphics 100-100000263BOX
+       - AMD Ryzen 7 5700G Processor with Radeon Graphics
+       - AMD Ryzen 7 5700G Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 20MB Cache)
+       - AMD Ryzen 7 5700G desktop processor with Radeon graphics
+       - Amd Ryzen 7 5700G Processor With Radeon ...
+
+[023/131] Canonical Key: 'cpu:amd:ryzen_7_5700x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 5700x'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen 7 5700X 8 Cores 16 Threads 4.6GHz 36MB Cache AM4 Socket 64-Bit Desktop Processor-Tray (OEM Pack)
+       - AMD Ryzen 7 5700X OEM Processor
+       - AMD Ryzen 7 5700X OEM Processor (8 Cores, 16 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 36MB Cache)
+       - AMD Ryzen 7 5700X OEM Processor (8 Cores...
+
+[024/131] Canonical Key: 'cpu:amd:ryzen_7_5800x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 5800x3d'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 7 5800X3D 10th Anniversary Edition Gaming Processor
+       - AMD Ryzen 7 5800X3D 5th generation 10th Anniversary Edition Processor ( 4.5 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 5800X3D Desktop Gaming Proce...
+       - AMD Ryzen 7 5800X3D Gaming Processor 100-100000651POF 10th Anniversary Edition
+       - AMD Ryzen 7 5800X3D Processor
+       - AMD Ryzen 7 5800X3D Processor 10th Anniversary Edition With Carbice Ice Pad
+
+[025/131] Canonical Key: 'cpu:amd:ryzen_7_7700x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 7700x'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 7 7700X 7th Generation Processor ( 5.4 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 7700X AM5 Desktop Processor (5.4 GHz / 8 Cores / 16 Threads)
+       - AMD Ryzen 7 7700X Desktop Processor 100-100000591WOF
+       - AMD Ryzen 7 7700X Desktop Processor 8 Cores up to 5.4GHz 40MB Cache AM5 Socket with Radeon Graphics (Tray)
+       - AMD Ryzen 7 7700X OEM Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.4GHz, AM5 Socket and 40MB Cache)
+       - AMD Ryzen 7 7700X Processor
+       - AMD Ryzen 7 7700X Processor with Radeon Graphics
+       - AMD Ryzen 7 7700X Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.4GHz, AM5 Socket and 40MB Cache)
+       - Amd Ryzen 7 7700X Desktop Processor (Up ...
+
+[026/131] Canonical Key: 'cpu:amd:ryzen_7_7700x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 7700x3d'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - AMD Ryzen 7 7700X3D
+       - AMD Ryzen 7 7700X3D 7th Generation Processor ( 4.5 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 7700X3D Desktop Processor (1...
+       - AMD Ryzen 7 7700X3D Desktop Processor 100-100002235WOF
+       - AMD Ryzen 7 7700X3D Processor with Radeon Graphics
+       - AMD Ryzen 7 7700X3D Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 4.5 GHz, AM5 Socket and 104MB Cache)
+
+[027/131] Canonical Key: 'cpu:amd:ryzen_7_7800x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 7800x'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen 7 7800X 3D 8 Cores 16 Threads 5.6GHz 104MB Cache AM5 Socket 64-Bit Desktop Processor
+
+[028/131] Canonical Key: 'cpu:amd:ryzen_7_7800x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 7800x3d'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 7 7800X3D 7th Generation Processor ( 5 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 7800X3D 8-Core 16-Threads Desktop Processor with 106MB 3D-V Cache
+       - AMD Ryzen 7 7800X3D AM5 Desktop Processor (5 GHz / 8 Cores / 16 Threads)
+       - AMD Ryzen 7 7800X3D Gaming Processor 100-100000910WOF
+       - AMD Ryzen 7 7800X3D Processor
+       - AMD Ryzen 7 7800X3D Processor with Radeon Graphics
+       - AMD Ryzen 7 7800X3D Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.0GHz, AM5 Socket and 104MB Cache)
+       - Amd Ryzen 7 7800X3D Gaming Processor (10...
+       - Amd Ryzen 7 7800X3D Gaming Processor Oem...
+
+[029/131] Canonical Key: 'cpu:amd:ryzen_7_8700f'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 8700f'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - AMD Ryzen 7 8700F 8th Generation Processor ( 4.1 GHz / 8cores / 16Threads )
+       - AMD Ryzen 7 8700F OEM Processor
+       - Amd Ryzen 7 8700F Desktop Processor (100...
+
+[030/131] Canonical Key: 'cpu:amd:ryzen_7_8700g'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 8700g'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - AMD Ryzen 7 8700G 8 Cores 16 Threads 5.1GHz 24MB Cache AM5 Socket 64-Bit Desktop Processor
+       - AMD Ryzen 7 8700G 8-Core 16-Threads AM5 8000 Series Desktop Processor with Radeon 780M Graphics
+       - AMD Ryzen 7 8700G AM5 Desktop Processor (5.1 GHz / 8 Cores / 16 Threads)
+       - AMD Ryzen 7 8700G Desktop Processor 100-100001236BOX
+       - AMD Ryzen 7 8700G Processor
+       - AMD Ryzen 7 8700G Processor With Radeon Graphics ( 5.1 GHz/ 8 Cores / 16 Threads )
+       - AMD Ryzen 7 8700G Processor with Radeon Graphics
+       - Amd Ryzen 7 8700G Processor With Radeon ...
+
+[031/131] Canonical Key: 'cpu:amd:ryzen_7_9700x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 9700x'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 7 9700X
+       - AMD Ryzen 7 9700X 3.8 GHz 8-Core AM5 Processor 100-100001404WOF
+       - AMD Ryzen 7 9700X 8 Cores 16 Threads 5.5GHz 40MB Cache AM5 Socket Desktop Processor
+       - AMD Ryzen 7 9700X 8-Core 16-Threads 9000 Series Desktop Processor
+       - AMD Ryzen 7 9700X 9th Generation Processor ( 5.5 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 9700X AM5 Desktop Processor (5.5 GHz / 8 Cores / 16 Threads)
+       - AMD Ryzen 7 9700X Desktop Processor (100...
+       - AMD Ryzen 7 9700X Processor
+       - AMD Ryzen 7 9700X Processor with Radeon Graphics
+       - AMD Ryzen 7 9700X Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.5GHz, AM5 Socket and 40MB Cache)
+
+[032/131] Canonical Key: 'cpu:amd:ryzen_7_9800x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 9800x'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen 7 9800X 3D 8 Cores 16 Threads 5.2GHz 104MB Cache AM5 Socket Desktop Processor
+
+[033/131] Canonical Key: 'cpu:amd:ryzen_7_9800x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 9800x3d'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - AMD Ryzen 7 9800X3D
+       - AMD Ryzen 7 9800X3D 4.7 GHz Eight-Core AM5 Processor 100-100001084WOF
+       - AMD Ryzen 7 9800X3D 8-Core 16-Threads AM5 Desktop Processor with 3D-V Cache
+       - AMD Ryzen 7 9800X3D 9th Generation Processor ( 4.7GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 9800X3D AM5 Desktop Processor (5.2 GHz / 8 Cores / 16 Threads)
+       - AMD Ryzen 7 9800X3D Processor
+       - AMD Ryzen 7 9800X3D Processor with Radeo...
+       - AMD Ryzen 7 9800X3D Processor with Radeon Graphics
+       - AMD Ryzen 7 9800X3D Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.2GHz, AM5 Socket and 104MB Cache)
+
+[034/131] Canonical Key: 'cpu:amd:ryzen_7_9850x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 7 9850x3d'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - AMD Ryzen 7 9850X3D 8-core 16-threads AM5 Desktop Processor
+       - AMD Ryzen 7 9850X3D 9th Generation Processor ( 5.6 GHz / 8 Cores / 16 Threads )
+       - AMD Ryzen 7 9850X3D CPU Processor, 8 Cor...
+       - AMD Ryzen 7 9850X3D Desktop Processor
+       - AMD Ryzen 7 9850X3D Desktop Processor 100-100001973WOF
+       - AMD Ryzen 7 9850X3D Processor
+       - AMD Ryzen 7 9850X3D Processor with Radeon Graphics
+       - AMD Ryzen 7 9850X3D Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.6GHz, AM5 Socket and 104MB Cache)
+
+[035/131] Canonical Key: 'cpu:amd:ryzen_9_7900x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 9 7900x'}
+     Mapped Listings Count: 6
+     Mapped Raw Titles:
+       - AMD Ryzen 9 7900X 7th Generation Processor ( 5.6 GHz / 12 Cores / 24 Threads )
+       - AMD Ryzen 9 7900X AM5 Desktop Processor (5.6 GHz / 12 Cores / 24 Threads)
+       - AMD Ryzen 9 7900X Processor
+       - AMD Ryzen 9 7900X Processor with Radeon Graphics
+       - AMD Ryzen 9 7900X Processor with Radeon Graphics (12 Cores, 24 Threads, Max. Boost Clock Up To 5.6GHz, AM5 Socket and 76MB Cache)
+       - Amd Ryzen 9 7900X Desktop Processor (Up ...
+
+[036/131] Canonical Key: 'cpu:amd:ryzen_9_9900x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 9 9900x'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 9 9900X
+       - AMD Ryzen 9 9900X 12 Cores 24 Threads 5.6GHz 76MB Cache AM5 Socket Gaming Processor
+       - AMD Ryzen 9 9900X 12-Core 24-Threads 9000 Series Desktop Processor
+       - AMD Ryzen 9 9900X 9th Generation Processor ( 4.4 GHz / 12 cores / 24 Threads )
+       - AMD Ryzen 9 9900X AM5 Desktop Processor (5.6 GHz / 12 Cores / 24 Threads)
+       - AMD Ryzen 9 9900X Desktop Processor (100...
+       - AMD Ryzen 9 9900X Desktop Processor 100-100000662WOF
+       - AMD Ryzen 9 9900X Processor
+       - AMD Ryzen 9 9900X Processor with Radeon Graphics
+       - AMD Ryzen 9 9900X Processor with Radeon Graphics (12 Cores, 24 Threads, Max. Boost Clock Up To 5.6GHz, AM5 Socket and 76MB Cache)
+
+[037/131] Canonical Key: 'cpu:amd:ryzen_9_9900x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 9 9900x3d'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - AMD Ryzen 9 9900X3D 12-Cores 24-Threads Desktop CPU with 128MB L3 3D-V Cache
+       - AMD Ryzen 9 9900X3D 9th Generation Processor ( 5.5 GHz / 12 Cores / 24 Threads )
+       - AMD Ryzen 9 9900X3D AM5 Desktop Processor (5.5 GHz / 12 Cores / 24 Threads)
+       - AMD Ryzen 9 9900X3D Desktop Gaming and C...
+       - AMD Ryzen 9 9900X3D Gaming and Content Creation Processor 100-1000001368WOF
+       - AMD Ryzen 9 9900X3D Processor
+       - AMD Ryzen 9 9900X3D Processor with Radeon Graphics (12 Cores, 24 Threads, Max. Boost Clock Up To 5.5GHz, AM5 Socket and 140MB Cache)
+
+[038/131] Canonical Key: 'cpu:amd:ryzen_9_9950x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 9 9950x'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - AMD Ryzen 9 9950X (Tray) Processor with Radeon Graphics (16 Cores, 32 Threads, Max. Boost Clock Up To 5.7GHz, AM5 Socket and 80MB Cache)
+       - AMD Ryzen 9 9950X 16 Cores 32 Threads 5.7GHz 80MB Cache AM5 Socket Gaming Processor
+       - AMD Ryzen 9 9950X 16-Core 32-Threads 9000 Series Desktop Processor
+       - AMD Ryzen 9 9950X 3D 16 Cores 32 Threads 5.7GHz 128MB Cache AM5 Socket Gaming Processor
+       - AMD Ryzen 9 9950X 4.3 GHz 16-Core AM5 Processor 100-100001277WOF
+       - AMD Ryzen 9 9950X 9th Generation Processor ( 5.7 GHz / 16 Cores / 32 Threads )
+       - AMD Ryzen 9 9950X AM5 Desktop Processor (5.7 GHz / 16 Cores / 32 Threads)
+       - AMD Ryzen 9 9950X AM5 Processor with Rad...
+       - AMD Ryzen 9 9950X Processor
+       - AMD Ryzen 9 9950X Processor with Radeon Graphics
+
+[039/131] Canonical Key: 'cpu:amd:ryzen_9_9950x3d'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 9 9950x3d'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - AMD Ryzen 9 9950X3D 16-Cores 32-Threads Desktop CPU with 140MB 3D-V Cache
+       - AMD Ryzen 9 9950X3D 9th Generation Processors ( 5.7GHz / 16Core / 32 Threads )
+       - AMD Ryzen 9 9950X3D AM5 Desktop Processor (5.7 GHz / 16 Cores / 32 Threads)
+       - AMD Ryzen 9 9950X3D Desktop Gaming and C...
+       - AMD Ryzen 9 9950X3D Gaming & Content Creation Processor 100-100000719WOF
+       - AMD Ryzen 9 9950X3D Processor
+       - AMD Ryzen 9 9950X3D Processor with Radeon Graphics (16 Cores, 32 Threads, Max. Boost Clock Up To 5.7GHz, AM5 Socket and 144MB Cache)
+
+[040/131] Canonical Key: 'cpu:amd:ryzen_9_9950x3d2'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen 9 9950x3d2'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - AMD Ryzen 9 9950X3D2 Dual Edition 9th Generation Processors ( 5.6GHz / 16Core / 32 Threads )
+       - AMD Ryzen 9 9950X3D2 Dual Edition Deskto...
+       - AMD Ryzen 9 9950X3D2 Dual Edition Desktop Processor
+       - AMD Ryzen 9 9950X3D2 Dual Edition Desktop Processor 100-100001978WOF
+       - AMD Ryzen 9 9950X3D2 Dual Edition Desktop Processor OEM TRAY FRESH UNIT
+       - AMD Ryzen 9 9950X3D2 Dual Edition Desktop Processor with Radeon Graphics (16 Cores, 32 Threads, Max. Boost Clock Up To 5.6GHz, AM5 Socket and 208MB Cache)
+       - AMD Ryzen 9 9950X3D2 Dual Edition Processor
+       - AMD Ryzen 9 9950X3D2 Processor with Radeon Graphics
+
+[041/131] Canonical Key: 'cpu:amd:ryzen_threadripper_7960x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper 7960x'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper 7960X 100-000001352 OEM OPEN Processor
+       - AMD Ryzen Threadripper 7960X 24?Core 48?Thread Processor Up to 5.3GHz Boost 128MB Cache Tray
+       - AMD Ryzen Threadripper 7960X 7th Generation Processor ( 5.3GHz / 24 Cores / 48 Threads )
+       - AMD Ryzen Threadripper 7960X Open Box OEM Processor
+
+[042/131] Canonical Key: 'cpu:amd:ryzen_threadripper_7970x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper 7970x'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper 7970X 100-000001351 OEM OPEN Processor
+       - AMD Ryzen Threadripper 7970X Open Box OEM Processor
+       - Amd Ryzen Threadripper 7970X Oem Open De...
+
+[043/131] Canonical Key: 'cpu:amd:ryzen_threadripper_7980x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper 7980x'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper 7980X 100-000001350 OEM OPEN Processor
+       - AMD Ryzen Threadripper 7980X 64 Core 128 Thread Desktop Processor Tray
+       - AMD Ryzen Threadripper 7980X Open Box Gen5 OEM Processor ( 5.1GHz / 64 Cores / 128 Threads )
+       - AMD Ryzen Threadripper 7980X Open Box OEM Processor
+
+[044/131] Canonical Key: 'cpu:amd:ryzen_threadripper_9960x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper 9960x'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper 9960X Workstation Processor (100-100001595WOF)
+       - AMD Ryzen Threadripper 9960X Workstation Processor Tray (100-100001595)
+
+[045/131] Canonical Key: 'cpu:amd:ryzen_threadripper_9970x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper 9970x'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper 9970X 32 Core 64 Thread 4.0GHz Workstation Processor (TRAY)
+       - AMD Ryzen Threadripper 9970X Workstation Processor Tray (100-100001594)
+       - AMD Ryzen Threadripper 9970X Workstation Processor Tray 100-100001594
+       - AMD Ryzen Threadripper 9970X Workstation...
+
+[046/131] Canonical Key: 'cpu:amd:ryzen_threadripper_9980x'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper 9980x'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper 9980X 64?Core 128?Thread Desktop Processor OEM (Tray)
+       - AMD Ryzen Threadripper 9980X Workstation Processor (100-100001593)
+       - AMD Ryzen Threadripper 9980X Workstation Processor Tray (100-100001593)
+       - AMD Ryzen Threadripper 9980X Workstation...
+
+[047/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_5955wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 5955wx'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 5955WX Workstation 5th Generation Processor ( 4.5 GHz / 16 Cores / 32 Threads )
+       - AMD Ryzen Threadripper Pro 5955WX Processor
+
+[048/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_5965wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 5965wx'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 5965WX Workstation 5th Generation Processor ( 4.5 Ghz / 24 Cores / 48 Threads )
+       - AMD Ryzen Threadripper Pro 5965WX Processor
+
+[049/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_5975wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 5975wx'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper Pro 5975WX Processor
+
+[050/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_5995wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 5995wx'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 5995WX Workstation 5th Generation Processor ( 4.5 GHz / 64 Cores / 128 Threads )
+       - AMD Ryzen Threadripper Pro 5995WX Processor OEM PACK
+
+[051/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_7955wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 7955wx'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 7955WX  16 Cores 32 Threads 5.3GHz 64MB L3 Cache sTR5 Socket Processor
+
+[052/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_7965wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 7965wx'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 7965WX 100-100000885 OEM OPEN Processor
+       - AMD Ryzen Threadripper Pro 7965WX 7th Generations OEM Processor ( 5.3 GHz / 24 Cores / 48 Threads )
+       - Amd Ryzen Threadripper Pro 7965WX Oem Op...
+       - Amd Ryzen Threadripper Pro 7965WX Oem Open Desktop Processor
+
+[053/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_7975wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 7975wx'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 7975WX 100-100000453 OEM OPEN Processor
+       - AMD Ryzen Threadripper Pro 7975WX 7th Generations OEM Processor ( 5.3 GHz / 32 Cores / 64 Threads )
+       - AMD Ryzen Threadripper Pro 7975WX Open Box OEM Processor
+       - Amd Ryzen Threadripper Pro 7975WX Oem Op...
+
+[054/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_7985wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 7985wx'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 7985WX 100-100000454 OEM OPEN Processor
+       - AMD Ryzen Threadripper Pro 7985WX 7th Generation OEM Processor ( 5.1GHz / 64 Cores / 128 Threads )
+       - AMD Ryzen Threadripper Pro 7985WX Open Box OEM Processor
+       - Amd Ryzen Threadripper Pro 7985WX Oem Op...
+
+[055/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_7995wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 7995wx'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 7995WX 100-100000884 OEM OPEN Processor
+       - AMD Ryzen Threadripper Pro 7995WX 7th Generation OEM Processor ( 5.1GHz / 96 Cores / 192 Threads )
+       - AMD Ryzen Threadripper Pro 7995WX Open Box OEM Processor
+       - Amd Ryzen Threadripper Pro 7995WX Oem Op...
+
+[056/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_9955wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 9955wx'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 9955WX 16 Core 32 Thread 4.5GHz Workstation Processor (TRAY)
+       - AMD Ryzen Threadripper PRO 9955WX 16 Cores sTR5 Processor
+       - AMD Ryzen Threadripper PRO 9955WX 4.5 GHz 16-Core sTR5 Processor Tray
+       - AMD Ryzen Threadripper Pro 9955WX Workst...
+
+[057/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_9965wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 9965wx'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 9965WX 24 Core 48 Thread 5.4GHz Workstation Processor (TRAY)
+       - AMD Ryzen Threadripper PRO 9965WX 4.2 GHz 24-Core sTR5 Processor (100-100000724WOF)
+       - AMD Ryzen Threadripper PRO 9965WX 4.2 GHz 24-Core sTR5 Processor Tray (100-100000724)
+       - AMD Ryzen Threadripper PRO 9965WX 4.2 GHz 24-Core sTR5 Processor Tray 100-100000724
+       - AMD Ryzen Threadripper Pro 9965WX Workst...
+
+[058/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_9975wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 9975wx'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 9975WX 4.0 GHz 32-Core sTR5 Processor Tray
+       - AMD Ryzen Threadripper PRO 9975WX 4.0 GHz 32-Core sTR5 Processor Tray 100-100000723
+       - AMD Ryzen Threadripper Pro 9975WX Workst...
+
+[059/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_9985wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 9985wx'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 9985WX 3.2 GHz 64-Core sTR5 Processor Tray
+       - AMD Ryzen Threadripper PRO 9985WX 3.2 GHz 64-Core sTR5 Processor Tray 100-000000722
+       - AMD Ryzen Threadripper PRO 9985WX 64 Cores sTR5 Processor
+       - AMD Ryzen Threadripper PRO 9985WX 64-Core 128-Thread 5.4GHz Workstation Processor (TRAY)
+       - AMD Ryzen Threadripper Pro 9985WX Workst...
+
+[060/131] Canonical Key: 'cpu:amd:ryzen_threadripper_pro_9995wx'
+     Brand: AMD | Key Fields: {'brand': 'AMD', 'category': 'cpu', 'model_number': 'ryzen threadripper pro 9995wx'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - AMD Ryzen Threadripper PRO 9995WX 2.5 GHz 96-Core sTR5 Processor Tray
+       - AMD Ryzen Threadripper PRO 9995WX 2.5 GHz 96-Core sTR5 Processor Tray 100-100001361
+       - AMD Ryzen Threadripper Pro 9995WX Workst...
+
+[061/131] Canonical Key: 'cpu:asus:1200w'
+     Brand: ASUS | Key Fields: {'brand': 'ASUS', 'category': 'cpu', 'model_number': '1200w'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - ASUS TUF Gaming 1200W 80 Plus Gold Full Modular CPU Power Supply
+
+[062/131] Canonical Key: 'cpu:consistent:consistent_nexus_gaming_cabinet_2003_|_slots_-_4full_slot_|_vga_max-_250mm_|_cpu_max-150_mm_|_usb_-1.1_x_2_audio'
+     Brand: Consistent | Key Fields: {'brand': 'Consistent', 'category': 'cpu', 'model_number': 'consistent nexus gaming cabinet 2003 | slots - 4full slot | vga max- 250mm | cpu max-150 mm | usb -1.1 x 2 audio'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Consistent Nexus Gaming Cabinet 2003 | Slots - 4Full Slot | VGA Max- 250mm | CPU Max-150 mm | USB -1.1 x 2 Audio
+
+[063/131] Canonical Key: 'cpu:intel:12400f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '12400f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 12th Gen i5-12400F LGA1700 Desktop Processor 6 Cores up to 4.4GHz 18MB Cache
+
+[064/131] Canonical Key: 'cpu:intel:12700f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '12700f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 12th Gen i7-12700F LGA1700 Desktop Processor 12 Cores up to 4.9GHz 25MB Cache
+
+[065/131] Canonical Key: 'cpu:intel:13900k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '13900k'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 13th Gen i9-13900K LGA1700 Unlocked Desktop Processor 24 Cores up to 5.8GHz 36MB Cache
+
+[066/131] Canonical Key: 'cpu:intel:13900ks'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '13900ks'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 13th Gen i9-13900KS LGA1700 Unlocked Desktop Processor 24 Cores up to 6.0GHz 36MB Cache
+
+[067/131] Canonical Key: 'cpu:intel:14400f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '14400f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i5 Processor - 14400F (20M Cache, up to 4.70 GHz)
+
+[068/131] Canonical Key: 'cpu:intel:14700f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '14700f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7 Processor - 14700F (33M Cache, up to 5.40 GHz)
+
+[069/131] Canonical Key: 'cpu:intel:14700k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '14700k'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7 Processor - 14700K (33M Cache, up to 5.60 GHz)
+
+[070/131] Canonical Key: 'cpu:intel:14900f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '14900f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9 Processor - 14900F (36M Cache, up to 5.80 GHz)
+
+[071/131] Canonical Key: 'cpu:intel:14900k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '14900k'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9 Processor - 14900K (36M Cache, up to 6.00 GHz)
+
+[072/131] Canonical Key: 'cpu:intel:14900ks'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': '14900ks'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9 Processor - 14900KS (36M Cache, up to 6.20 GHz)
+
+[073/131] Canonical Key: 'cpu:intel:core_i3-10105'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-10105'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - INTEL Core i3 10105 10th Generation Processor ( 4.4 GHz / 4 Cores / 8 Threads )
+       - Intel Core i3-10105 LGA1200 Desktop Processor (4.40 GHz / 4 Cores / 8 Threads)
+
+[074/131] Canonical Key: 'cpu:intel:core_i3-10105f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-10105f'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - INTEL Core i3 10105F 10th Generation Processor ( 4.4 GHz / 4 Cores / 8 Threads )
+       - Intel Core I3-10105F Processor
+       - Intel Core i3-10105F LGA1200 Desktop Processor (4.40 GHz / 4 Cores / 8 Threads)
+
+[075/131] Canonical Key: 'cpu:intel:core_i3-12100'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-12100'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - Intel Core I3-12100 Desktop Processor (B...
+       - Intel Core i3-12100 12th Gen Alder Lake Quad-Core Desktop Processor BX8071512100
+       - Intel Core i3-12100 LGA1700 Desktop Processor (4.30 GHz / 4 Cores / 8 Threads)
+       - Intel Core i3-12100 Processor
+
+[076/131] Canonical Key: 'cpu:intel:core_i3-12100f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-12100f'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - INTEL Core i3 12100F 12th Generation Processor ( 4.3 GHz / 4 Cores / 8 Threads )
+       - Intel Core I3-12100F Desktop Processor (...
+       - Intel Core i3-12100F LGA1700 Desktop Processor (4.30 GHz / 4 Cores / 8 Threads)
+       - Intel Core i3-12100F Processor
+
+[077/131] Canonical Key: 'cpu:intel:core_i3-14100'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-14100'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - INTEL Core i3 14100 14th Generation Processor ( 4.7 GHz / 4 Cores / 8 Threads )
+       - Intel Core I3 14100 14th Gen LGA 1700 Desktop Processor
+       - Intel Core I3-14100 Intel Processor
+       - Intel Core i3-14100 3.5 GHz 4-Core LGA 1700 Processor BX8071514100
+       - Intel Core i3-14100 Desktop Processor (B...
+       - Intel Core i3-14100 LGA1700 Desktop Processor (4.7 GHz / 4 Cores / 8 Threads)
+       - Intel Core i3-14100 Processor
+       - Intel Core i3-14100 up to 4.70 GHz LGA1700 Socket 4 Cores 8 Threads 12 MB Smart Cache Desktop Processor
+
+[078/131] Canonical Key: 'cpu:intel:core_i3-14100f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-14100f'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - INTEL Core i3 14100F 14th Generation Processor ( 4 GHz / 4 Cores / 8 Threads )
+       - Intel Core I3 14100F 14th Gen LGA 1700 Desktop Processor
+       - Intel Core i3-14100F Desktop Processor (...
+       - Intel Core i3-14100F LGA1700 Desktop Processor (4.7 GHz / 4 Cores / 8 Threads)
+       - Intel Core i3-14100F Processor
+       - Intel Core i3-14100F up to 4.70 GHz LGA1700 Socket 4 Cores 8 Threads 12 MB Smart Cache Desktop Processor
+
+[079/131] Canonical Key: 'cpu:intel:core_i3-9350kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i3-9350kf'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - INTEL Core i3 9350KF 9th Generation Processor ( 4.6 GHz / 4 Cores / 4 Threads )
+       - Intel Core i3-9350KF Processor
+
+[080/131] Canonical Key: 'cpu:intel:core_i5-10400'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-10400'}
+     Mapped Listings Count: 6
+     Mapped Raw Titles:
+       - INTEL Core i5 10400 10th Generation Processor ( 4.3 GHz / 6 Cores / 12 Threads )
+       - Intel Core i5-10400 LGA1200 Desktop Processor (4.30 GHz / 6 Cores / 12 Threads)
+       - Intel Core i5-10400 LGA1200 Desktop Processor 6 Cores up to 4.30GHz 12MB Cache
+       - Intel Core i5-10400 Processor
+       - Intel Core i5-10400 Processor (12M Cache, up to 4.30 GHz)
+
+[081/131] Canonical Key: 'cpu:intel:core_i5-10400f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-10400f'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - Intel Core i5-10400F LGA1200 Desktop Processor (4.30 GHz / 6 Cores / 12 Threads)
+       - Intel Core i5-10400F Processor
+
+[082/131] Canonical Key: 'cpu:intel:core_i5-12400'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-12400'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - INTEL Core i5 12400 12th Generation Processor ( 4.4 GHz / 6 Cores / 12 Threads )
+       - Intel Core I5-12400 12th Gen 6-core Alder Lake Desktop Processor
+       - Intel Core i5-12400 12th Gen Alder Lake Processor
+       - Intel Core i5-12400 Desktop Processor
+       - Intel Core i5-12400 Desktop Processor (C...
+       - Intel Core i5-12400 LGA1700 Desktop Processor (4.40 GHz / 6 Cores / 12 Threads)
+       - Intel Core i5-12400 Processor (18M Cache, up to 4.40 GHz)
+
+[083/131] Canonical Key: 'cpu:intel:core_i5-12400f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-12400f'}
+     Mapped Listings Count: 9
+     Mapped Raw Titles:
+       - INTEL Core i5 12400F 12th Generation Processor ( 4.4 GHz / 6 Cores / 12 Threads )
+       - Intel Core I5-12400F 12th Gen 6-core 12-threads 2.5ghz Alder Lake Desktop Processor (BX8071512400F)
+       - Intel Core I5-12400F Processor
+       - Intel Core i5-12400F 12th Gen Alder Lake 6-Core 2.5 GHz LGA 1700 Desktop Processor BX8071512400F
+       - Intel Core i5-12400F LGA1700 Desktop Processor (4.40 GHz / 6 Cores / 12 Threads)
+       - Intel Core i5-12400F Processor
+       - Intel Core i5-12400F Processor (18M Cache, up to 4.40 GHz)
+       - Intel core i5 12400F
+
+[084/131] Canonical Key: 'cpu:intel:core_i5-12600k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-12600k'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i5-12600K 12th Generation (10...
+
+[085/131] Canonical Key: 'cpu:intel:core_i5-12600kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-12600kf'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i5 12600KF Processor
+
+[086/131] Canonical Key: 'cpu:intel:core_i5-13400'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-13400'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i5-13400 LGA1700 Desktop Processor (4.60 GHz / 10 Cores / 16 Threads)
+
+[087/131] Canonical Key: 'cpu:intel:core_i5-13400f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-13400f'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - Intel Core i5-13400F LGA1700 Desktop Processor (4.60 GHz / 10 Cores / 16 Threads)
+       - Intel Core i5-13400F Processor
+
+[088/131] Canonical Key: 'cpu:intel:core_i5-14400'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-14400'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - Intel Core I5 14400 14th Gen LGA 1700 Desktop Processor
+       - Intel Core I5 14400 14th Generation Processor ( 4.7 GHz / 10 Cores / 16 Threads )
+       - Intel Core i5-14400 10-Core LGA 1700 Processor BX8071514400
+       - Intel Core i5-14400 Desktop Processor (i...
+       - Intel Core i5-14400 Desktop Processor 10-Core LGA1700 (TRAY)
+       - Intel Core i5-14400 LGA1700 Desktop Processor (4.7 GHz / 10 Cores / 16 Threads)
+       - Intel Core i5-14400 Processor
+
+[089/131] Canonical Key: 'cpu:intel:core_i5-14400f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-14400f'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - INTEL Core i5 14400F 14th Generation Processor ( 4.7 GHz / 10 Cores / 16 Threads )
+       - Intel Core I5 14400F 14th Gen LGA 1700 Desktop Processor
+       - Intel Core I5-14400F Processor
+       - Intel Core I5-14400F Processor BX8071514400F
+       - Intel Core i5-14400F Desktop Processor (...
+       - Intel Core i5-14400F LGA1700 Desktop Processor (4.7 GHz / 10Cores / 16 Threads)
+       - Intel Core i5-14400F Processor
+       - Intel Core i5-14400F up to 4.70 GHz LGA1700 Socket 10 Cores 20M Cache 14th Gen Desktop Processor
+
+[090/131] Canonical Key: 'cpu:intel:core_i5-14600k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-14600k'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - INTEL Core i5 14600K 14th Generation Processor ( 5.3 GHz / 14 Cores / 20 Threads )
+       - Intel Core I5-14600K Raptor Lake 14 Core LGA 1700 Desktop Processor
+       - Intel Core i5 14600K 14th Gen Desktop Pr...
+       - Intel Core i5-14600K LGA1700 Desktop Processor (5.3 GHz / 14 Cores / 20 Threads)
+       - Intel Core i5-14600K Processor
+
+[091/131] Canonical Key: 'cpu:intel:core_i5-9500t'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i5-9500t'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i5-9500T 9M Cache 6 Cores 6 Threads 3.7 GHz LGA 1151 Desktop Processor (Pulled Out)
+
+[092/131] Canonical Key: 'cpu:intel:core_i7-10700k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-10700k'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7-10700K LGA1200 Desktop Processor (5.10 GHz / 8 Cores / 16 Threads)
+
+[093/131] Canonical Key: 'cpu:intel:core_i7-12700'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-12700'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - INTEL Core i7 12700 12th Generation Processor ( 4.9 GHz / 12 Cores / 20 Threads )
+       - Intel Core I7-12700 12Th Generation Proc...
+       - Intel Core I7-12700 12th Gen Alder Lake 12-core LGA1700 Desktop Processor
+       - Intel Core i7 12700 Processor
+       - Intel Core i7-12700 12 Core 2.10GHz 10nm Alder Lake LGA1700 Desktop Processor BX8071512700
+       - Intel Core i7-12700 Processor
+       - Intel Core i7-12700 Processor (25M Cache, up to 4.90 GHz)
+
+[094/131] Canonical Key: 'cpu:intel:core_i7-12700f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-12700f'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - Intel Core I7-12700F 12Th Gen Desktop Pr...
+       - Intel Core i7-12700F 12th Gen Alder Lake 12-core LGA1700 Desktop Processor
+       - Intel Core i7-12700F LGA1700 Desktop Processor (4.90 GHz / 12 Cores / 20 Threads)
+       - Intel Core i7-12700F Processor
+       - Intel Core i7-12700F Processor (25M Cache, up to 4.90 GHz)
+
+[095/131] Canonical Key: 'cpu:intel:core_i7-12700k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-12700k'}
+     Mapped Listings Count: 4
+     Mapped Raw Titles:
+       - INTEL Core i7 12700K 12th Generation Processor ( 5 GHz / 12 Cores / 20 Threads )
+       - Intel Core I7-12700K 12Th Gen Alder Lake...
+       - Intel Core i7-12700K Desktop Processor 12-Core High-Performance LGA1700 (TRAY)
+       - Intel Core i7-12700K Processor
+
+[096/131] Canonical Key: 'cpu:intel:core_i7-12700kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-12700kf'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7-12700KF Processor
+
+[097/131] Canonical Key: 'cpu:intel:core_i7-13700k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-13700k'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7-13700K LGA1700 Desktop Processor (5.40 GHz / 16 Cores / 24 Threads)
+
+[098/131] Canonical Key: 'cpu:intel:core_i7-14700'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-14700'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - INTEL Core i7 14700 14th Generation Processor ( 5.4 GHz / 20 Cores / 28 Threads )
+       - Intel Core I7 14700 14th Gen LGA 1700 Desktop Processor
+       - Intel Core I7-14700 Processor (33M Cache, up to 5.40 GHz) BX8071514700
+       - Intel Core i7-14700 20 Cores 28 Threads 33MB Cache 5.4 GHz LGA 1700 14th Gen Desktop Processor
+       - Intel Core i7-14700 Desktop Processor (i...
+       - Intel Core i7-14700 Desktop Processor 20-Core 5.4GHz LGA1700 (TRAY)
+       - Intel Core i7-14700 LGA1700 Desktop Processor (5.4 GHz / 20 Cores / 28 Threads)
+       - Intel Core i7-14700 Processor
+
+[099/131] Canonical Key: 'cpu:intel:core_i7-14700f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-14700f'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - INTEL Core i7 14700F 14th Generation Processor ( 5.4 GHz / 20 Cores / 28 Threads )
+       - Intel Core I7 14700F 14th Gen LGA 1700 Desktop Processor
+       - Intel Core I7-14700F Processor
+       - Intel Core i7-14700F 2.1 GHz 20-Core LGA 1700 Processor BX8071514700F
+       - Intel Core i7-14700F 20 Cores 28 Threads 33MB Cache 5.4 GHz LGA1700 14th Gen Desktop Processor
+       - Intel Core i7-14700F Desktop Processor (...
+       - Intel Core i7-14700F LGA1700 Desktop Processor (5.4 GHz / 20 Cores / 28 Threads)
+       - Intel Core i7-14700F Processor
+
+[100/131] Canonical Key: 'cpu:intel:core_i7-14700k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-14700k'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - INTEL Core i7 14700K 14th Generation Processor ( 5.6 GHz / 20 Cores / 28 Threads )
+       - Intel Core I7-14700K Processor
+       - Intel Core i7-14700K 3.4 GHz 20-Core LGA 1700 Processor BX8071514700K
+       - Intel Core i7-14700K LGA1700 Desktop Processor (5.6 GHz / 20 Cores / 28 Threads)
+       - Intel Core i7-14700K Processor
+
+[101/131] Canonical Key: 'cpu:intel:core_i7-14700kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-14700kf'}
+     Mapped Listings Count: 6
+     Mapped Raw Titles:
+       - INTEL Core i7 14700KF 14th Generation Processor ( 5.6 GHz / 20 Cores / 28 Threads )
+       - Intel Core i7 14700KF 14th Gen Desktop P...
+       - Intel Core i7-14700KF 14th Gen 20-Core (8P+12E) LGA 1700 Desktop Processor
+       - Intel Core i7-14700KF 20 Cores 28 Threads 33MB Cache 5.6 GHz LGA 1700 14th Gen RAPTOR LAKE Desktop Processor
+       - Intel Core i7-14700KF LGA1700 Desktop Processor (5.6 GHz / 20 Cores / 28 Threads)
+       - Intel Core i7-14700KF Processor
+
+[102/131] Canonical Key: 'cpu:intel:core_i7-9700'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i7-9700'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7 9700 9th Gen 8 Cores 8 Threads 3.0GHz 12MB Cache Desktop Processor (Pulled Out)
+
+[103/131] Canonical Key: 'cpu:intel:core_i9-10900x'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-10900x'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-10900X X-Series LGA2066 Desktop Processor (4.50 GHz / 10 Cores / 20 Threads)
+
+[104/131] Canonical Key: 'cpu:intel:core_i9-10940x'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-10940x'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-10940X LGA2066 Desktop Processor (4.60 GHz / 14 Cores / 28 Threads)
+
+[105/131] Canonical Key: 'cpu:intel:core_i9-10980xe'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-10980xe'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-10980XE Extreme LGA2066 Desktop Processor (4.60 GHz / 18 Cores / 36 Threads)
+
+[106/131] Canonical Key: 'cpu:intel:core_i9-12900f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-12900f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-12900F LGA1700 Desktop Processor (5.10 GHz / 16 Cores / 24 Threads)
+
+[107/131] Canonical Key: 'cpu:intel:core_i9-13900'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-13900'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-13900 LGA1700 Desktop Processor (5.60 GHz / 24 Cores / 32 Threads)
+
+[108/131] Canonical Key: 'cpu:intel:core_i9-13900f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-13900f'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-13900F LGA1700 Desktop Processor (5.60 GHz / 24 Cores / 32 Threads)
+
+[109/131] Canonical Key: 'cpu:intel:core_i9-13900kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-13900kf'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-13900KF LGA1700 Desktop Processor (5.80 GHz / 24 Cores / 32 Threads)
+
+[110/131] Canonical Key: 'cpu:intel:core_i9-14900'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-14900'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i9-14900 LGA1700 Desktop Processor (5.8 GHz / 24 Cores / 32 Threads)
+
+[111/131] Canonical Key: 'cpu:intel:core_i9-14900f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-14900f'}
+     Mapped Listings Count: 2
+     Mapped Raw Titles:
+       - Intel Core i9 14900F 24 Cores 32 Threads Desktop Processor
+       - Intel Core i9-14900F LGA1700 Desktop Processor (5.8 GHz / 24 Cores / 32 Threads)
+
+[112/131] Canonical Key: 'cpu:intel:core_i9-14900k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-14900k'}
+     Mapped Listings Count: 8
+     Mapped Raw Titles:
+       - INTEL Core i9 14900K 14th Generation Processor ( 6.2 GHz / 24 Cores / 32 Threads )
+       - Intel Core I9-14900K Intel Processor
+       - Intel Core i9 14900K Desktop Processor
+       - Intel Core i9-14900K 14th Gen 24-Core (8P+16E) LGA 1700 desktop processor with Intel UHD 770 graphics
+       - Intel Core i9-14900K 3.2 GHz 24-Core LGA 1700 Processor BX8071514900K
+       - Intel Core i9-14900K LGA1700 14th Gen Desktop Processor 24 Cores up to 6.0 GHz 36MB Cache
+       - Intel Core i9-14900K LGA1700 Desktop Processor (6 GHz / 24 Cores / 32 Threads)
+       - Intel Core i9-14900K Processor
+
+[113/131] Canonical Key: 'cpu:intel:core_i9-14900kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-14900kf'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - INTEL Core i9 14900KF 14th Generation Processor ( 6 GHz / 24 Cores / 32 Threads )
+       - Intel Core i9-14900KF LGA1700 Desktop Processor (6 GHz / 24 Cores / 32 Threads)
+       - Intel Core i9-14900KF Processor
+
+[114/131] Canonical Key: 'cpu:intel:core_i9-14900ks'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core i9-14900ks'}
+     Mapped Listings Count: 5
+     Mapped Raw Titles:
+       - INTEL Core i9 14900KS 14th Generation Processor ( 6.2 GHz / 24 Cores / 32 Threads )
+       - Intel Core I9 14900KS 14th Gen Desktop P...
+       - Intel Core i9-14900KS Desktop Processor
+       - Intel Core i9-14900KS LGA1700 14th Gen Desktop Processor 24 Cores up to 6.20 GHz 36MB Cache
+       - Intel Core i9-14900KS LGA1700 Desktop Processor (6.2 GHz / 24 Cores / 32 Threads)
+
+[115/131] Canonical Key: 'cpu:intel:core_ultra_5_225'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 5 225'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - INTEL Core Ultra 5 225 Processor ( 4.9 GHz / 10 Core?/?10?Threads?)
+       - Intel Core Ultra 5 225
+       - Intel Core Ultra 5 225 10 Core 10 Threads LGA 1851 Desktop Prosser
+       - Intel Core Ultra 5 225 Desktop Processor 10 cores up to 4.9 GHz
+       - Intel Core Ultra 5 225 Desktop Processor...
+       - Intel Core Ultra 5 225 LGA1851 10 Cores Up to 4.9GHz 20MB Cache Desktop Processor
+       - Intel Core Ultra 5 225 LGA1851 Desktop Processor (4.9 GHz / 10 Cores / 10 Threads)
+       - Intel Core Ultra 5 225 Processor
+       - Intel Core Ultra 5 Processor 225 (20M Cache, up to 4.90 GHz)
+
+[116/131] Canonical Key: 'cpu:intel:core_ultra_5_225f'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 5 225f'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - INTEL Core Ultra 5 225F Processor ( 4.9GHz / 10 Cores / 10 Threads )
+       - Intel Core Ultra 5 225F 10 Core 10 Threads LGA 1851 Desktop Prosser
+       - Intel Core Ultra 5 225F Desktop Processo...
+       - Intel Core Ultra 5 225F LGA1851 Desktop Processor (4.9 GHz/ 10 Cores / 10 Threads)
+       - Intel Core Ultra 5 225F Processor
+       - Intel Core Ultra 5 225F Processor (BX80768225F)
+       - Intel Core Ultra 5 Processor 225F (20M Cache, up to 4.90 GHz)
+       - Intel? Core Ultra 5 225F LGA1851 10 Cores Up to 4.9 GHz 20MB Cache Desktop Processor
+
+[117/131] Canonical Key: 'cpu:intel:core_ultra_5_245k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 5 245k'}
+     Mapped Listings Count: 12
+     Mapped Raw Titles:
+       - INTEL Core Ultra 5 245K Processor ( 5.2 GHz / 14 Cores / 14 Threads )
+       - Intel Core Ultra 5 245K
+       - Intel Core Ultra 5 245K 14 Cores 14 Threads 3.6GHz LGA1851 Socket 24MB Cache Desktop Processor
+       - Intel Core Ultra 5 245K 14 Cores 14 Threads 3.6GHz LGA1851 Socket 24MB Cache Desktop Processor (TRAY)
+       - Intel Core Ultra 5 245K 4.2 GHz 14-Core LGA 1851 Processor BX80768245K
+       - Intel Core Ultra 5 245K Desktop Processo...
+       - Intel Core Ultra 5 245K LGA1851 Desktop Processor (5.2 GHz / 14 Cores / 14 Threads)
+       - Intel Core Ultra 5 245K LGA1851 OEM Desktop Processor (5.2 GHz / 14 Cores / 14 Threads)
+       - Intel Core Ultra 5 245K Processor
+       - Intel Core Ultra 5 Processor 245K (24M Cache, up to 5.20 GHz)
+       - Intel Core Ultra 5-245K 14-Core 14-Threads Desktop Processor
+
+[118/131] Canonical Key: 'cpu:intel:core_ultra_5_245kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 5 245kf'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core Ultra 5 245KF LGA1851 Desktop Processor (5.2 GHz / 14 Cores / 14 Threads)
+
+[119/131] Canonical Key: 'cpu:intel:core_ultra_5_250k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 5 250k'}
+     Mapped Listings Count: 6
+     Mapped Raw Titles:
+       - INTEL Core Ultra 5 250K Plus Processor ( 5.3 GHz / 18 Core / 18 Threads )
+       - Intel Core Ultra 5 250K Plus Processor
+       - Intel Core Ultra 5 250K Plus Processor (...
+       - Intel Core Ultra 5 250K Plus Processor BX80768250K
+       - Intel Core Ultra 5 Processor 250K Plus (30M Cache, up to 5.30 GHz)
+
+[120/131] Canonical Key: 'cpu:intel:core_ultra_5_250kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 5 250kf'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - INTEL Core Ultra 5 250KF Plus Processor ( 5.3 GHz / 18 Core / 18 Threads )
+       - Intel Core Ultra 5 250KF Plus Processor
+       - Intel Core Ultra 5 250KF Plus Processor ...
+
+[121/131] Canonical Key: 'cpu:intel:core_ultra_7_265k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 7 265k'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - INTEL Core Ultra 7 265K Processor ( 5.5 GHz / 20 Cores / 20 Threads )
+       - Intel Core Ultra 7 265K
+       - Intel Core Ultra 7 265K 20 Cores 20 Threads 3.9GHz LGA1851 Socket 30MB Cache Desktop Processor
+       - Intel Core Ultra 7 265K 3.9 GHz 20-Core LGA 1851 Processor BX80768265K
+       - Intel Core Ultra 7 265K Desktop Processo...
+       - Intel Core Ultra 7 265K LGA1851 Desktop Processor (5.5 GHz / 20 Cores / 20 Threads)
+       - Intel Core Ultra 7 265K Processor
+       - Intel Core Ultra 7 Processor 265K (30M Cache, up to 5.50 GHz)
+       - Intel Core Ultra 7-265K 20-Core 20-Threads Desktop Processor
+
+[122/131] Canonical Key: 'cpu:intel:core_ultra_7_265kf'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 7 265kf'}
+     Mapped Listings Count: 3
+     Mapped Raw Titles:
+       - INTEL Core Ultra 7 265KF Processor ( 5.50 GHz / 20 Core / 20 Threads )
+       - Intel Core Ultra 7 265KF LGA1851 Desktop Processor (5.5 GHz / 20 Cores / 20 Threads)
+       - Intel Core Ultra 7 265KF Processor
+
+[123/131] Canonical Key: 'cpu:intel:core_ultra_7_270k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 7 270k'}
+     Mapped Listings Count: 7
+     Mapped Raw Titles:
+       - INTEL Core Ultra 7 270K Plus Processor ( 5.5 GHz / 24 Core / 24 Threads )
+       - Intel Core Ultra 7 270K Plus Desktop Pro...
+       - Intel Core Ultra 7 270K Plus Processor
+       - Intel Core Ultra 7 270K Plus Processor BX80768270K
+       - Intel Core Ultra 7 Processor 270K Plus (40M Cache, up to 5.50 GHz)
+
+[124/131] Canonical Key: 'cpu:intel:core_ultra_9_285k'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'core ultra 9 285k'}
+     Mapped Listings Count: 10
+     Mapped Raw Titles:
+       - INTEL Core Ultra 9 285K Processor ( 5.7 GHz / 24 Core / 24 Threads )
+       - Intel Core Ultra 9 285K
+       - Intel Core Ultra 9 285K 3.7 GHz 24-Core LGA 1851 Processor BX80768285K
+       - Intel Core Ultra 9 285K Desktop Processo...
+       - Intel Core Ultra 9 285K LGA1851 24 Cores 24 Threads 5.7GHz 36MB Cache Desktop Processor
+       - Intel Core Ultra 9 285K LGA1851 Desktop Processor (5.7 GHz / 24 Cores / 24 Threads)
+       - Intel Core Ultra 9 285K Processor
+       - Intel Core Ultra 9 Processor 285K (36M Cache, up to 5.70 GHz)
+       - Intel Core Ultra 9-285K 24-Core 24-Threads Desktop Processor
+
+[125/131] Canonical Key: 'cpu:intel:intel_core_12th_gen_i3-12100_lga1700_unlocked_desktop_processor_4_cores_up_to_4.3ghz_12mb_cache(tray_edition_)'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'intel core 12th gen i3-12100 lga1700 unlocked desktop processor 4 cores up to 4.3ghz 12mb cache(tray edition )'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 12th Gen i3-12100 LGA1700 Unlocked Desktop Processor 4 Cores up to 4.3GHz 12MB Cache(TRAY Edition )
+
+[126/131] Canonical Key: 'cpu:intel:intel_core_12th_gen_i5-12400_lga1700_desktop_processor_6_cores_up_to_4.4ghz_18mb_cache'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'intel core 12th gen i5-12400 lga1700 desktop processor 6 cores up to 4.4ghz 18mb cache'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 12th Gen i5-12400 LGA1700 Desktop Processor 6 Cores up to 4.4GHz 18MB Cache
+
+[127/131] Canonical Key: 'cpu:intel:intel_core_12th_gen_i7-12700_lga1700_desktop_processor_12_cores_up_to_4.9ghz_25mb_cache'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'intel core 12th gen i7-12700 lga1700 desktop processor 12 cores up to 4.9ghz 25mb cache'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core 12th Gen i7-12700 LGA1700 Desktop Processor 12 Cores up to 4.9GHz 25MB Cache
+
+[128/131] Canonical Key: 'cpu:intel:intel_core_i5_processor_-_14400_(20m_cache,_up_to_4.70_ghz)'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'intel core i5 processor - 14400 (20m cache, up to 4.70 ghz)'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i5 Processor - 14400 (20M Cache, up to 4.70 GHz)
+
+[129/131] Canonical Key: 'cpu:intel:intel_core_i7_processor_-_14700_(33m_cache,_up_to_5.40_ghz)'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'intel core i7 processor - 14700 (33m cache, up to 5.40 ghz)'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Core i7 Processor - 14700 (33M Cache, up to 5.40 GHz)
+
+[130/131] Canonical Key: 'cpu:intel:pentium_g4560'
+     Brand: Intel | Key Fields: {'brand': 'Intel', 'category': 'cpu', 'model_number': 'pentium g4560'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - Intel Pentium G4560 LGA1151 2 Cores Desktop Processor
+
+[131/131] Canonical Key: 'cpu:nzxt:nzxt_kraken_elite_420_rgb_420mm_all_in_one_liquid_cpu_cooling_kit_(black)'
+     Brand: NZXT | Key Fields: {'brand': 'NZXT', 'category': 'cpu', 'model_number': 'nzxt kraken elite 420 rgb 420mm all in one liquid cpu cooling kit (black)'}
+     Mapped Listings Count: 1
+     Mapped Raw Titles:
+       - NZXT Kraken Elite 420 RGB 420mm All in One Liquid CPU Cooling Kit (Black)
+
+================================================================================
+AUDIT SUMMARY:
+  • Total Scraped Raw CPU Listings:      580
+  • Total Unique Canonical CPU Parts:    131
+  • Singleton Groups (1 Listing):        45
+  • Deduplication Collapse Ratio:        580 raw titles -> 131 canonical parts
+================================================================================
