@@ -17,9 +17,12 @@ const state = {
         ram: null,
         storage: null,
         psu: null,
-        case: null
+        case: null,
+        cooler: null,
+        monitor: null
     },
-    activeSlotKey: null
+    activeSlotKey: null,
+    activeSlotName: null
 };
 
 // Initialize Application
@@ -127,7 +130,7 @@ function renderProducts(products) {
                     ${p.current_mrp ? `<span class="product-mrp">₹${Number(p.current_mrp).toLocaleString('en-IN')}</span>` : ''}
                 </div>
                 <div class="card-actions">
-                    <button class="btn-secondary" onclick="openCompareModal('${escapeHtml(p.name)}')">Compare</button>
+                    <button class="btn-secondary" onclick="openCompareModal('${escapeHtml(p.name)}', ${p.id})">Compare</button>
                     <button class="btn-secondary" onclick="openHistoryModal(${p.id})">History</button>
                 </div>
             </div>
@@ -144,7 +147,9 @@ function initBuilder() {
         { key: 'ram', name: 'Memory (RAM)' },
         { key: 'storage', name: 'Storage (SSD/HDD)' },
         { key: 'psu', name: 'Power Supply (PSU)' },
-        { key: 'case', name: 'Cabinet / Case' }
+        { key: 'case', name: 'Cabinet / Case' },
+        { key: 'cooler', name: 'CPU Cooler' },
+        { key: 'monitor', name: 'Monitor' }
     ];
 
     const container = document.getElementById('slots-container');
@@ -311,7 +316,7 @@ async function validateBuild() {
 }
 
 // Compare Modal
-async function openCompareModal(productName) {
+async function openCompareModal(productName, productId) {
     const modal = document.getElementById('compare-modal');
     const content = document.getElementById('compare-modal-content');
     modal.classList.add('active');
@@ -319,14 +324,22 @@ async function openCompareModal(productName) {
     content.innerHTML = '<div>Loading price comparison across retailer stores...</div>';
 
     try {
-        const res = await fetch(`${API_BASE}/compare?q=${encodeURIComponent(productName)}`);
+        const url = `${API_BASE}/compare?q=${encodeURIComponent(productName)}`
+            + (productId ? `&product_id=${productId}` : '');
+        const res = await fetch(url);
         const data = await res.json();
 
         content.innerHTML = `
             <h2>${escapeHtml(data.query)}</h2>
-            <div style="margin: 1rem 0; display: flex; gap: 1rem;">
+            <div style="margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <div>Lowest: <strong style="color: var(--accent-cyan);">₹${Number(data.lowest_price || 0).toLocaleString('en-IN')}</strong></div>
                 <div>Highest: <strong>₹${Number(data.highest_price || 0).toLocaleString('en-IN')}</strong></div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">
+                    ${data.total_offers} offer${data.total_offers === 1 ? '' : 's'} ·
+                    ${data.matched_by === 'canonical_id'
+                        ? 'matched as the same product across stores'
+                        : 'matched by title text only'}
+                </div>
             </div>
             <table class="compare-table">
                 <thead>

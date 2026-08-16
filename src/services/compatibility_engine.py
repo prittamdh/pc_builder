@@ -175,7 +175,11 @@ class CompatibilityEngine:
                 for p in products
             ]
 
-        return []
+        # Slots with no spec resolver (e.g. monitor, which has no compatibility rules)
+        # still owe one view per product: filter_candidates zips this against the
+        # candidate list, and an empty list would silently zip to nothing and discard
+        # every candidate rather than keeping them all unconstrained.
+        return [SimpleNamespace() for _ in products]
 
     def _group_selections(self, product_ids: list[int]) -> dict[str, list]:
         """Group selected products by builder slot key and resolve each to its merged spec view."""

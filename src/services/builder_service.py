@@ -19,6 +19,10 @@ SLOTS = [
     ComponentSlot(key="storage", name="Storage (SSD/HDD)", required=True),
     ComponentSlot(key="psu", name="Power Supply (PSU)", required=True),
     ComponentSlot(key="case", name="Cabinet / Case", required=False),
+    ComponentSlot(key="cooler", name="CPU Cooler", required=False),
+    # A monitor carries no compatibility constraints against the other parts, but it
+    # belongs in the build's cost and store breakdown - people buy one with the machine.
+    ComponentSlot(key="monitor", name="Monitor", required=False),
 ]
 
 

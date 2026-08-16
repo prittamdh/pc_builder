@@ -21,6 +21,7 @@ SLOT_CATEGORY = {
     "psu": "Power Supply",
     "case": "Cabinet",
     "cooler": "CPU Cooler",
+    "monitor": "Monitor",
 }
 
 
