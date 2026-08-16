@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db
 from db.models.product import Product
+from db.models.category_specs import PSUSpecs
 from db.models.saved_build import SavedBuild
 from domain.builder import BuildSelection, BuildSummary, ComponentSlot
 from services.builder_service import BuilderService
@@ -58,6 +59,43 @@ def validate_build(
     return service.validate_and_calculate_build(selection.selected_product_ids)
 
 
+# Best-to-worst efficiency. An uncertified unit ranks below every certified one.
+_PSU_TIER_ORDER = {
+    "80+ Titanium": 0, "80+ Platinum": 1, "80+ Gold": 2,
+    "80+ Silver": 3, "80+ Bronze": 4, "80+ White": 5,
+}
+
+
+def _rank_candidates(db: Session, slot: str, candidates: list[Product]) -> list[Product]:
+    """Order a slot's candidates so the better options surface first.
+
+    For power supplies this means certified units ahead of uncertified ones. A PSU with
+    no 80 PLUS certification is the riskiest part in a build - it's the component whose
+    failure can take others with it - and the uncertified units here are budget models
+    that no certification body lists. Ranking by certification rather than by a brand
+    blocklist keeps the judgement about the product, not the manufacturer, and any unit
+    that later gains a verified rating rises automatically.
+    """
+    if slot != "psu" or not candidates:
+        return candidates
+
+    ratings = {
+        row.canonical_id: row.efficiency_rating
+        for row in db.scalars(
+            select(PSUSpecs).where(
+                PSUSpecs.canonical_id.in_([c.canonical_id for c in candidates if c.canonical_id])
+            )
+        )
+    }
+
+    def sort_key(product: Product):
+        tier = ratings.get(product.canonical_id)
+        # 99 keeps unrated units last without discarding them - they remain selectable.
+        return (_PSU_TIER_ORDER.get(tier, 99), product.name or "")
+
+    return sorted(candidates, key=sort_key)
+
+
 @router.post("/candidates")
 def list_slot_candidates(
     req: CandidateRequest,
@@ -95,6 +133,7 @@ def list_slot_candidates(
         others = [pid for pid in req.selected_product_ids if pid not in {c.id for c in candidates}]
         candidates = engine.filter_candidates(req.slot, others, candidates)
 
+    candidates = _rank_candidates(db, req.slot, candidates)
     kept = candidates[:limit]
     return {
         "items": [

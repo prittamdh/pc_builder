@@ -59,15 +59,31 @@ def classify(dry_run: bool = False) -> None:
             if is_ram_legacy(mem):
                 legacy_ram_products.add(ext.product_id)
 
-        counts = {"CPU": 0, "Motherboard": 0, "RAM": 0}
+        # PSUs whose brand couldn't be resolved. Two of these turned out not to be
+        # power supplies at all (a soundbar and a speaker), and an unidentifiable PSU is
+        # the one part you least want in a build - it's the component whose failure can
+        # damage everything attached to it. Hidden until identity extraction can name
+        # the brand; several are real regional makes (Dawg, Coconut) the model doesn't
+        # recognise yet, so this is a recognition gap rather than a judgement on them.
+        unbranded_psu_products = set()
+        for cp in session.scalars(select(CanonicalPart).where(CanonicalPart.category == "psu")):
+            brand = (cp.brand or "").strip()
+            if not brand or brand.upper() == "UNKNOWN":
+                for prod in session.scalars(select(Product).where(Product.canonical_id == cp.canonical_id)):
+                    unbranded_psu_products.add(prod.id)
+
+        counts = {"CPU": 0, "Motherboard": 0, "RAM": 0, "PSU (no brand)": 0}
         cleared = 0
 
         products = session.scalars(
-            select(Product).where(Product.p_category.in_(["CPU", "Motherboard", "RAM"]))
+            select(Product).where(Product.p_category.in_(["CPU", "Motherboard", "RAM", "Power Supply"]))
         ).all()
 
         for p in products:
-            if p.p_category == "CPU":
+            if p.p_category == "Power Supply":
+                legacy = p.id in unbranded_psu_products
+                bucket = "PSU (no brand)"
+            elif p.p_category == "CPU":
                 legacy = p.canonical_id in legacy_cpu_ids
                 bucket = "CPU"
             elif p.p_category == "Motherboard":
@@ -91,7 +107,7 @@ def classify(dry_run: bool = False) -> None:
         if not dry_run:
             session.commit()
 
-        print(f"  Scanned:            {len(products)} products across CPU/Motherboard/RAM")
+        print(f"  Scanned:            {len(products)} products across CPU/Motherboard/RAM/PSU")
         print(f"  Flagged legacy:     {counts}  (total {sum(counts.values())})")
         print(f"  Un-flagged:         {cleared}")
         print(f"  Mode:               {'DRY RUN (no writes)' if dry_run else 'committed'}")

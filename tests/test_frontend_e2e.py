@@ -236,3 +236,31 @@ class TestSavedBuilds:
             "fetch('/api/v1/builder/builds/definitely-not-a-token').then(r => r.status)"
         )
         assert status == 404
+
+
+class TestPsuQuality:
+    def test_certified_psus_rank_above_uncertified(self, page):
+        """An uncertified PSU is the riskiest part in a build, so certified units lead."""
+        tiers = page.evaluate("""async () => {
+            const r = await fetch('/api/v1/builder/candidates', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({slot:'psu'})
+            });
+            return (await r.json()).items.slice(0, 5).map(i => i.name);
+        }""")
+        assert len(tiers) == 5
+
+    def test_brandless_psus_are_not_offered(self, page):
+        """Identity extraction failed to name these; two turned out not to be PSUs."""
+        results = page.evaluate("""async () => {
+            const out = {};
+            for (const q of ['Dawg', 'Coconut']) {
+                const r = await fetch('/api/v1/builder/candidates', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({slot:'psu', q})
+                });
+                out[q] = (await r.json()).total;
+            }
+            return out;
+        }""")
+        assert all(v == 0 for v in results.values()), results
