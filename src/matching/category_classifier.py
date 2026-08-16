@@ -114,11 +114,25 @@ CPU_BRAND_INDICATORS = (
 )
 
 
+# Thermal interface material sold alongside coolers. It ships under the cooler
+# category at several stores, but it is a consumable, not a mountable cooler - and a
+# builder offering "Noctua NT-H2 AM5 Edition" as a CPU cooler is plainly wrong.
+THERMAL_MATERIAL_INDICATORS = (
+    "thermal paste", "thermal grease", "thermal compound", "thermal pad",
+    "thermal putty", "nt-h1", "nt-h2",
+)
+
+
 def _title_indicates_discrete_gpu(title: str | None) -> bool:
     t = f" {(title or '').lower()} "
     if not any(marker in t for marker in GPU_TITLE_INDICATORS):
         return False
     return not any(marker in t for marker in CPU_BRAND_INDICATORS)
+
+
+def _title_indicates_thermal_material(title: str | None) -> bool:
+    t = f" {(title or '').lower()} "
+    return any(marker in t for marker in THERMAL_MATERIAL_INDICATORS)
 
 
 class CategoryClassifier:
@@ -145,6 +159,11 @@ class CategoryClassifier:
         # describes a standalone graphics card, trust the title instead.
         if p_cat == "CPU" and _title_indicates_discrete_gpu(title):
             return "GPU"
+
+        # Thermal paste and pads ship under the cooler category but are consumables,
+        # not coolers, and must never be offered to fill a build's cooler slot.
+        if p_cat == "CPU Cooler" and _title_indicates_thermal_material(title):
+            return "Accessories"
 
         return p_cat
 

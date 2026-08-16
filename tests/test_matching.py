@@ -81,3 +81,19 @@ def test_cpu_suffix_preservation_distinct_keys():
     assert ak1 == "cpu:amd:ryzen_7_9800x"
     assert ak2 == "cpu:amd:ryzen_7_9800x3d"
     assert ak1 != ak2
+
+
+class TestThermalMaterialNotACooler:
+    """Thermal paste ships under the cooler category at several stores, but it can't
+    fill a build's cooler slot."""
+
+    def test_thermal_paste_is_accessory(self):
+        from matching.category_classifier import CategoryClassifier as C
+        assert C.get_p_category("CPU Cooler", "Noctua NT-H2 3.5g AM5 Edition Thermal Paste") == "Accessories"
+        assert C.get_p_category("CPU Cooler", "Arctic MX-6 Thermal Compound 4g") == "Accessories"
+        assert C.get_p_category("CPU Cooler", "Thermalright Thermal Pad 12.8 W/mK") == "Accessories"
+
+    def test_real_coolers_unaffected(self):
+        from matching.category_classifier import CategoryClassifier as C
+        assert C.get_p_category("CPU Cooler", "Deepcool AK620 Dual Tower CPU Air Cooler") == "CPU Cooler"
+        assert C.get_p_category("CPU Cooler", "ZEBRONICS AIO240TW 240mm AIO Liquid Cooler") == "CPU Cooler"
