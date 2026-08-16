@@ -168,51 +168,83 @@ function initBuilder() {
 
 async function openSelectModal(slotKey, slotName) {
     state.activeSlotKey = slotKey;
+    state.activeSlotName = slotName;
     const modal = document.getElementById('select-modal');
     const title = document.getElementById('select-modal-title');
-    const list = document.getElementById('select-modal-list');
 
     title.innerText = `Select ${slotName}`;
     modal.classList.add('active');
 
-    // Slot -> normalized p_category. Previously this filtered whatever the Catalog
-    // tab happened to have loaded, matching on the RAW store category, so opening
-    // the builder and clicking Select almost always showed an empty list (the
-    // catalog's first page is rarely the slot you want). Fetch per slot instead.
-    const catMap = {
-        cpu: 'CPU',
-        gpu: 'GPU',
-        motherboard: 'Motherboard',
-        ram: 'RAM',
-        storage: 'Storage',
-        psu: 'Power Supply',
-        case: 'Cabinet'
-    };
-    const targetCat = catMap[slotKey];
+    const searchBox = document.getElementById('select-modal-search');
+    if (searchBox) searchBox.value = '';
+    const compatToggle = document.getElementById('select-modal-compatible-only');
+    if (compatToggle) compatToggle.checked = true;
+
+    await loadSlotCandidates();
+}
+
+// Debounced so typing doesn't fire a request per keystroke.
+let slotSearchTimer = null;
+function onSlotSearchInput() {
+    clearTimeout(slotSearchTimer);
+    slotSearchTimer = setTimeout(loadSlotCandidates, 250);
+}
+
+async function loadSlotCandidates() {
+    const slotKey = state.activeSlotKey;
+    const slotName = state.activeSlotName || slotKey;
+    const list = document.getElementById('select-modal-list');
+    const countEl = document.getElementById('select-modal-count');
+    const q = (document.getElementById('select-modal-search')?.value || '').trim();
+    const compatibleOnly = document.getElementById('select-modal-compatible-only')?.checked !== false;
 
     list.innerHTML = '<div style="color: var(--text-secondary);">Loading components...</div>';
+    if (countEl) countEl.innerText = '';
 
-    let matching = [];
+    const selectedIds = Object.entries(state.builderSelections)
+        .filter(([k, v]) => v && k !== slotKey)
+        .map(([, v]) => v.id);
+
+    let data;
     try {
-        const res = await fetch(`${API_BASE}/products?p_category=${encodeURIComponent(targetCat)}&in_stock=true&size=100`);
-        if (!res.ok) throw new Error(`${res.status}`);
-        const data = await res.json();
-        matching = data.items || [];
-        // Keep them available to selectComponentForSlot(), which looks up by id.
-        matching.forEach(p => {
-            if (!state.products.some(existing => existing.id === p.id)) state.products.push(p);
+        const res = await fetch(`${API_BASE}/builder/candidates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                slot: slotKey,
+                selected_product_ids: selectedIds,
+                q: q || null,
+                compatible_only: compatibleOnly
+            })
         });
+        if (!res.ok) throw new Error(`${res.status}`);
+        data = await res.json();
     } catch (err) {
-        list.innerHTML = `<div style="color: var(--danger);">Could not load ${slotName}: ${err.message}</div>`;
+        list.innerHTML = `<div style="color: var(--danger);">Could not load ${escapeHtml(slotName)}: ${escapeHtml(err.message)}</div>`;
         return;
     }
 
-    if (matching.length === 0) {
-        list.innerHTML = `<div style="color: var(--text-secondary);">No in-stock ${slotName} found.</div>`;
+    const items = data.items || [];
+    items.forEach(p => {
+        if (!state.products.some(existing => existing.id === p.id)) state.products.push(p);
+    });
+
+    if (countEl) {
+        const hidden = data.filtered_out || 0;
+        countEl.innerText = hidden > 0
+            ? `${items.length} shown · ${hidden} hidden as incompatible with your current build`
+            : `${items.length} shown`;
+    }
+
+    if (items.length === 0) {
+        list.innerHTML = `<div style="color: var(--text-secondary);">
+            No ${escapeHtml(slotName)} matches${q ? ` "${escapeHtml(q)}"` : ''}${compatibleOnly ? ' that fit your current build' : ''}.
+            ${compatibleOnly ? '<br>Untick "Compatible only" to see everything.' : ''}
+        </div>`;
         return;
     }
 
-    list.innerHTML = matching.map(p => `
+    list.innerHTML = items.map(p => `
         <div class="slot-card" style="margin-bottom: 0.75rem; cursor: pointer;" onclick="selectComponentForSlot('${slotKey}', ${p.id}, '${escapeHtml(p.name)}')">
             <div>
                 <div style="font-weight: 600;">${escapeHtml(p.name)}</div>

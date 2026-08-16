@@ -121,6 +121,16 @@ class Product(Base, TimestampMixin):
         index=True,
     )
 
+    # Off the supported-platform policy (see matching/legacy_policy.py): still
+    # price-tracked, but hidden from the PC Builder's component pickers.
+    is_legacy: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+        index=True,
+    )
+
     canonical_part = relationship(
         "CanonicalPart",
         back_populates="listings",
