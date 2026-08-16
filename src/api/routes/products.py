@@ -20,10 +20,10 @@ def list_products(
     p_category: str | None = Query(None, description="Filter by standardized production category"),
     in_stock: bool | None = Query(None, description="Filter by in-stock status"),
     include_legacy: bool = Query(
-        True,
+        False,
         description="Include off-policy legacy parts (pre-10th-gen Intel, pre-3000 Ryzen, "
-                    "retired sockets, pre-DDR4 memory). The PC Builder passes false; the "
-                    "catalog defaults to true so price history stays browsable.",
+                    "retired sockets, pre-DDR4 memory). Hidden everywhere by default; pass "
+                    "true to browse them. Their price history is unaffected either way.",
     ),
     min_price: Decimal | None = Query(None, description="Minimum current price"),
     max_price: Decimal | None = Query(None, description="Maximum current price"),
