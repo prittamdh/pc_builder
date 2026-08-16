@@ -111,6 +111,80 @@ The remaining 7 `*_specs` tables (`gpu`, `motherboard`, `ram`, `psu`, `cabinet`,
 - **GPU ↔ PSU**: RTX 5090 (950W recommended) + 450W PSU → correctly warns; + 550W PSU → correctly warns.
 - **GPU ↔ Cabinet**: RTX 5090 (304mm) + case with 250mm clearance → correctly **blocks** with `GPU Clearance Error`; same GPU + Fractal Torrent Compact (445mm) → passes.
 - **CPU ↔ Motherboard** and **RAM ↔ Motherboard**: verified earlier (above), still passing.
+- **Motherboard ↔ Cabinet**: EATX board in a MATX case → correctly blocks with `Case Fit Error` (only started working once form factors were normalized — see below).
+
+---
+
+## Frontend exercised for the first time (2026-08-16)
+
+Everything above had been verified through SQL and Python only. Driving the actual
+page surfaced a set of failures that no backend test could have caught, because in
+each case the backend was correct.
+
+**The PC Builder's compatibility checking had never worked in a browser.** `app.js`
+posted `product_ids` while the API expects `selected_product_ids`, so every call to
+`/builder/validate` returned 422. The response status was never checked, so the
+failure was swallowed and the summary sidebar stayed pinned to "Incompatibilities
+Detected" for every build, including an empty one. The engine was right the whole
+time; nothing it produced ever reached the screen.
+
+**`src/static/index.html` was never in git.** A blanket `*.html` ignore rule, meant
+for scraped page fixtures, also matched the app's own UI markup — so a fresh clone
+had no frontend at all.
+
+**The component picker was effectively unusable.** It filtered whatever the Catalog
+tab happened to have loaded and matched on the raw store category, so opening the
+builder and clicking Select showed "No matching components loaded" almost every
+time. It now fetches per slot, with a search box (the 7800X3D was previously
+unreachable past the first page) and a "Compatible only" toggle.
+
+**A silent data-loss bug, exposed by adding the Monitor slot.** `_resolve_slot`
+returned `[]` for any slot without a spec resolver, and `filter_candidates` zipped
+that against the candidate list — the zip truncated to zero, discarding every
+candidate with no error raised anywhere. The slot simply appeared to have no
+products. Covered by `tests/test_compatibility_filtering.py`.
+
+Also: removed the dead "Canonical Match (Test)" tab (a regression from deleting the
+experimental subsystem — the nav button survived its API), added the CPU Cooler and
+Monitor slots, and versioned the script tag so browsers stop running cached JS.
+
+### Compare now matches on canonical id
+Compare was using a name substring search — precisely what the canonical identity
+work exists to replace. Retailers title the same part very differently, so it only
+found listings that happened to share wording: for the Ryzen 7 7800X3D it returned
+**3 offers from one store**, when the canonical group holds **12 across nine stores**
+spanning ₹7,800–₹68,075. It now compares the canonical group, sorts cheapest-first,
+and reports which method matched.
+
+### Supported-platform policy (`src/matching/legacy_policy.py`, 26 tests)
+Set by the project owner: Intel Core 10th gen and newer (Core Ultra always current),
+AMD Ryzen 3000 and newer, motherboards limited to sockets that can host such a CPU,
+memory DDR4 and newer. Products carry an `is_legacy` flag rather than being deleted,
+so price history stays intact; they're hidden from both the catalog and the builder.
+
+Intel generation parsing is width-sensitive because Intel encodes it inconsistently
+(`9350KF` is 9th gen, `10105` is 10th), and listings that spell it out — "Core i7 8th
+Gen", "3rd Gen 4 Cores" — are read from the words, since they previously parsed to a
+bare leading digit and slipped through. Anything genuinely unidentifiable stays
+visible: hiding a part we merely failed to classify would quietly shrink the catalog,
+the worse error.
+
+GPUs are deliberately **not** age-filtered — a GT 710 works in any modern board, so
+compatibility already governs whether it belongs in a build.
+
+### Catalog data-quality fixes (survey-driven, 2026-08-16)
+A survey of storage/PSU/cabinet/cooler found three problems, none about age:
+- **Cabinet form factors** were stored in ten spellings ("E-ATX" vs "EATX", "mATX" vs
+  "Micro ATX") and sometimes held a chassis *size* ("Mid Tower", "SFF"). The case-fit
+  rule compares strings, so it was silently dead. 752 normalized to ITX/MATX/ATX/EATX,
+  13 recovered from titles, 35 cleared — a mid-tower label says nothing about which
+  board fits, and assuming ATX would be wrong for a micro-ATX-only chassis.
+- **4 coolers support only retired sockets** and can't mount on anything buildable;
+  2 more named no socket at all ("Intel/AMD") and were cleared.
+- **276 external USB drives** were offered as a build's internal drive. Interface
+  alone was insufficient — a portable SSD is often an NVMe drive in a USB enclosure,
+  so `interface = "NVMe"` is honest while still being external — so titles are matched
+  too. Verified no internal drive was caught.
 
 ### Wired into the live scraping DAG (2026-08-16)
 Extraction was previously run only via manual one-off script invocations. `dags/scheduled_scraper_dag.py` now has a second task, `extract_canonical_identities`, chained after `process_due_targets`, which calls each category's already-incremental extractor (`reprocess_all=False` default → only products missing `canonical_id`) with a small per-category limit (15) every 15-minute cycle — comfortably under Mistral's free-tier 50 RPM. New products scraped by the DAG now get canonical identity extraction automatically; no more manual script runs needed for steady-state operation. Verified by nulling a real product's `canonical_id` and confirming `airflow tasks test` re-extracted it correctly inside the actual container (not just a clean import).
@@ -169,4 +243,6 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 5. **GPU listings mistagged as CPU category** — ~78 products with `p_category='CPU'` are actually graphics cards (e.g. "AMD Radeon Pro W7700... Graphics Card"), a `CategoryClassifier` leak found while spot-checking the DAG wiring. Flagged as a separate background task (spawned 2026-08-16) rather than fixed inline. The 2 thermal-paste-as-cooler products are the same class of issue.
 6. **Cabinet clearance data needs a non-LLM source** — `max_gpu_length_mm` is populated for only 5/1,405 models because those numbers aren't in retailer titles and must not be guessed. This is the one remaining spec gap where an external dataset (or scraping manufacturer product pages) would add real value, and it directly limits how often the GPU-clearance rule can fire.
 7. **`CategoryClassifier.get_p_category()` title fallback** — currently a dead parameter; unrecognized raw categories silently dump into "Accessories" regardless of title content. Worth fixing once more scrape-source categories are seen in practice.
-8. **Wire the new Stage-2 spec extractors into the DAG** — `extract_canonical_identities` currently runs only the Stage-1 identity extractors. The 7 new `*_specs` scripts (plus the two zero-API `populate_*_from_extractions.py` scripts) should run after it so newly-scraped models get physical specs automatically.
+8. **Wire the new Stage-2 spec extractors into the DAG** — `extract_canonical_identities` currently runs only the Stage-1 identity extractors. The 7 new `*_specs` scripts (plus the two zero-API `populate_*_from_extractions.py` scripts) should run after it so newly-scraped models get physical specs automatically. `scripts/classify_legacy_products.py` and `scripts/fix_catalog_data_quality.py` are both idempotent and belong in the same task, otherwise newly-scraped legacy or external parts reappear in the builder.
+9. **Frontend surfaces still untested** — Compare, History and the Stores tab were exercised and work, but nothing has been checked on a narrow viewport, and there are no automated frontend tests at all. Every frontend bug found on 2026-08-16 was silent (a swallowed 422, an empty list, a `zip()` truncation), so the absence of errors in the console is not evidence the UI is behaving.
+10. **PSU efficiency gap** — 78 PSUs have no `efficiency_rating` because their titles don't state one and Cybenetics doesn't cover the budget Indian brands. Not wrong, just missing; a second certification source would close it.
