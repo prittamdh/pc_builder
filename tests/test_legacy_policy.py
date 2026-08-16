@@ -9,6 +9,7 @@ from matching.legacy_policy import (
     is_cpu_legacy,
     is_motherboard_legacy,
     is_ram_legacy,
+    is_cooler_legacy,
 )
 
 
@@ -101,6 +102,28 @@ class TestMotherboardPolicy:
 
     def test_unknown_socket_is_kept(self):
         assert is_motherboard_legacy(None) is False
+
+
+class TestCoolerPolicy:
+    def test_only_retired_sockets_is_legacy(self):
+        assert is_cooler_legacy("LGA115X") is True
+        assert is_cooler_legacy("TR4") is True
+        assert is_cooler_legacy("TR4-SP3") is True
+        assert is_cooler_legacy("TRX40") is True
+        assert is_cooler_legacy("LGA775,LGA1150,LGA1151,LGA1200") is False  # LGA1200 is current
+
+    def test_any_current_socket_keeps_it(self):
+        assert is_cooler_legacy("LGA1700,LGA1200,LGA115X,AM4,AM5") is False
+        assert is_cooler_legacy("AM5") is False
+        assert is_cooler_legacy("775,115x,1200") is False  # 1200 still current
+
+    def test_vague_value_is_not_evidence_of_age(self):
+        # "Intel/AMD" names no socket; unusable for the fit rule, but not legacy.
+        assert is_cooler_legacy("Intel/AMD") is False
+
+    def test_missing_value(self):
+        assert is_cooler_legacy(None) is False
+        assert is_cooler_legacy("") is False
 
 
 class TestRamPolicy:

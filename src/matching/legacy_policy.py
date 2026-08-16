@@ -139,6 +139,36 @@ def is_motherboard_legacy(socket: str | None) -> bool:
     return norm not in CURRENT_SOCKETS
 
 
+def is_cooler_legacy(supported_sockets: str | None) -> bool:
+    """True when a cooler's every supported socket is retired.
+
+    Coolers list several sockets, so a single retired entry means nothing - an
+    LGA1700/AM5 cooler that also lists AM4 is entirely current. Only a cooler whose
+    complete list is obsolete (an LGA115X-only tower, a TR4-only workstation block)
+    cannot mount on anything buildable today.
+
+    Vague values like "Intel/AMD" name no socket at all; those are unusable for the
+    cooler-fit rule but aren't evidence of age, so they are not treated as legacy.
+    """
+    if not supported_sockets:
+        return False
+
+    tokens = [t.strip() for t in re.split(r"[,/;|]", supported_sockets) if t.strip()]
+    if not tokens:
+        return False
+
+    recognized = 0
+    for token in tokens:
+        norm = _normalize_socket(token)
+        if norm in CURRENT_SOCKETS or any(cur in norm for cur in ("1700", "1851", "1200", "AM4", "AM5", "TR5", "SP5", "SP6", "4677", "4189")):
+            return False  # at least one current mount - keep it
+        if norm in LEGACY_SOCKETS or any(old in norm for old in ("775", "115", "1150", "1155", "1156", "1366", "2011", "2066", "TR4", "TRX4", "TRX40")):
+            recognized += 1
+
+    # Legacy only when every token we could recognize was a retired socket.
+    return recognized > 0 and recognized == len(tokens)
+
+
 def is_ram_legacy(memory_type: str | None) -> bool:
     if not memory_type:
         return False
