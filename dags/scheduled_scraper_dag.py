@@ -116,6 +116,81 @@ def execute_canonical_extraction(limit_per_category: int = 15):
         print(f"[Canonical Extraction] RAM failed: {e}")
 
 
+def execute_physical_spec_extraction(limit_per_category: int = 10):
+    """Stage 2: fill physical specs for canonical models that don't have them yet.
+
+    Runs after identity extraction, since every one of these keys off canonical_id.
+    Each extractor skips models that already have a spec row, so a steady-state cycle
+    does almost nothing; the small per-category limit keeps a burst of newly-scraped
+    products from overrunning Mistral's free tier.
+
+    RAM and Storage need no API calls at all - their identity extraction already
+    captures everything their spec tables hold - so they run unlimited.
+    """
+    scripts_path = Path(__file__).resolve().parent.parent / "scripts"
+    if str(scripts_path) not in sys.path:
+        sys.path.insert(0, str(scripts_path))
+
+    from extract_cpu_specs_groq import extract_cpu_specs
+    from extract_monitor_specs_groq import extract_monitor_specs
+    from extract_gpu_specs_groq import extract_gpu_specs
+    from extract_motherboard_specs_groq import extract_motherboard_specs
+    from extract_psu_specs_groq import extract_psu_specs
+    from extract_cooler_specs_groq import extract_cooler_specs
+    from extract_cabinet_specs_groq import extract_cabinet_specs
+    from populate_ram_specs_from_extractions import populate_ram_specs
+    from populate_ssd_specs_from_extractions import populate_ssd_specs
+
+    llm_runners = [
+        ("CPU", extract_cpu_specs),
+        ("Monitor", extract_monitor_specs),
+        ("GPU", extract_gpu_specs),
+        ("Motherboard", extract_motherboard_specs),
+        ("Power Supply", extract_psu_specs),
+        ("CPU Cooler", extract_cooler_specs),
+        ("Cabinet", extract_cabinet_specs),
+    ]
+    for label, fn in llm_runners:
+        try:
+            fn(limit=limit_per_category)
+        except Exception as e:
+            print(f"[Spec Extraction] {label} failed: {e}")
+
+    for label, fn in (("RAM", populate_ram_specs), ("Storage", populate_ssd_specs)):
+        try:
+            fn()
+        except Exception as e:
+            print(f"[Spec Extraction] {label} failed: {e}")
+
+
+def execute_catalog_policy():
+    """Re-apply the supported-platform policy and the catalog data-quality fixes.
+
+    Without this the cleanup decays: every scrape can introduce a pre-10th-gen CPU, a
+    DDR3 kit, an external USB drive or a cabinet whose form factor reads "Mid Tower",
+    and each would be offered in the builder until someone re-ran these by hand. Both
+    scripts are idempotent and make no API calls, so running them every cycle is cheap.
+
+    Runs last because it reads the spec fields the two stages above populate.
+    """
+    scripts_path = Path(__file__).resolve().parent.parent / "scripts"
+    if str(scripts_path) not in sys.path:
+        sys.path.insert(0, str(scripts_path))
+
+    from classify_legacy_products import classify
+    from fix_catalog_data_quality import main as fix_data_quality
+
+    try:
+        classify(dry_run=False)
+    except Exception as e:
+        print(f"[Catalog Policy] legacy classification failed: {e}")
+
+    try:
+        fix_data_quality(dry_run=False)
+    except Exception as e:
+        print(f"[Catalog Policy] data-quality fixes failed: {e}")
+
+
 # Airflow DAG Definition (evaluated when apache-airflow is installed)
 try:
     from airflow import DAG
@@ -151,6 +226,20 @@ try:
         dag=dag,
     )
 
-    process_targets_task >> canonical_extraction_task
+    physical_specs_task = PythonOperator(
+        task_id="extract_physical_specs",
+        python_callable=execute_physical_spec_extraction,
+        dag=dag,
+    )
+
+    catalog_policy_task = PythonOperator(
+        task_id="apply_catalog_policy",
+        python_callable=execute_catalog_policy,
+        dag=dag,
+    )
+
+    # Strictly ordered: identities key the spec tables, and the policy reads the spec
+    # fields, so each stage depends on the one before it.
+    process_targets_task >> canonical_extraction_task >> physical_specs_task >> catalog_policy_task
 except ImportError:
     pass
