@@ -48,6 +48,13 @@ class SearchService:
             if hard_category:
                 update_fields["category"] = hard_category
 
+            # A changed title or category invalidates any prior extraction (it was
+            # derived from the old text) - force it back into the re-processing queue.
+            name_changed = product.name != result.name
+            category_changed = p_category != product.p_category
+            if (name_changed or category_changed) and product.spec_status != "pending":
+                update_fields["spec_status"] = "pending"
+
             self.product_repository.update(product, **update_fields)
 
         if target_id is not None:

@@ -13,6 +13,7 @@ from scrapers.http_client import HttpClient
 from services.scrape_target_service import ScrapeTargetService
 from services.search_service import SearchService
 from services.store_service import StoreService
+from common.enums.target_type import TargetType
 
 
 def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
@@ -40,8 +41,11 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
                 try:
                     scraper = GenericScraper(client, store)
 
-                    # Check if target is CATEGORY catalog URL vs SEARCH query
-                    is_category = target.target_type == 2 or "catalog/" in target.target_value
+                    # target_type is a TargetType enum value (SEARCH=0, CATEGORY=1, PRODUCT=2,
+                    # CUSTOM_URL=3). Previously this compared against 2 (PRODUCT) instead of 1
+                    # (CATEGORY), so ~87% of targets - all correctly tagged CATEGORY - were
+                    # incorrectly routed through search-query scraping.
+                    is_category = target.target_type == int(TargetType.CATEGORY)
                     target_max_pages = target.schedule_config.get("max_pages", max_pages) if isinstance(target.schedule_config, dict) else max_pages
                     hard_category = target.schedule_config.get("category") if isinstance(target.schedule_config, dict) else None
 
@@ -67,44 +71,49 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
                     print(f"[Scheduled Scraper Error] Failed scraping target '{target_val}': {e}")
 
 
-def execute_unscraped_product_enrichment(limit: int = 10):
-    """Enriches static metadata for unique products missing details."""
-    from services.product_service import ProductService
+def execute_canonical_extraction(limit_per_category: int = 15):
+    """Runs incremental LLM-based canonical identity extraction (Mistral) for newly-scraped
+    products across all 9 tracked categories. Each extractor already defaults to processing
+    only products missing a canonical_id, so this is safe to run every DAG cycle without
+    reprocessing existing work or overrunning the free-tier rate limit (~9 categories x a
+    couple of small batches per run, well under Mistral's 50 RPM)."""
+    scripts_path = Path(__file__).resolve().parent.parent / "scripts"
+    if str(scripts_path) not in sys.path:
+        sys.path.insert(0, str(scripts_path))
 
-    with SessionLocal() as session:
-        product_service = ProductService(session)
-        store_service = StoreService(session)
+    from extract_cpu_titles_groq import extract_cpu_identity
+    from extract_motherboard_titles_groq import extract_motherboard_identity
+    from extract_gpu_titles_groq import extract_gpu_identity
+    from extract_storage_titles_groq import extract_storage_identity
+    from extract_psu_titles_groq import extract_psu_identity
+    from extract_cooler_titles_groq import extract_cooler_identity
+    from extract_cabinet_titles_groq import extract_cabinet_identity
+    from extract_monitor_titles_groq import extract_monitor_identity
+    from extract_ram_titles_groq import extract_ram_titles
+    from wire_ram_canonical import wire_ram_canonical
 
-        unscraped_products = product_service.get_unscraped_products(limit=limit)
-        print(f"[Product Scraper] Found {len(unscraped_products)} unscraped products to enrich.")
+    runners = [
+        ("CPU", extract_cpu_identity),
+        ("Motherboard", extract_motherboard_identity),
+        ("GPU", extract_gpu_identity),
+        ("Storage", extract_storage_identity),
+        ("Power Supply", extract_psu_identity),
+        ("CPU Cooler", extract_cooler_identity),
+        ("Cabinet", extract_cabinet_identity),
+        ("Monitor", extract_monitor_identity),
+    ]
 
-        if not unscraped_products:
-            return
+    for label, fn in runners:
+        try:
+            fn(limit=limit_per_category)
+        except Exception as e:
+            print(f"[Canonical Extraction] {label} failed: {e}")
 
-        with HttpClient() as client:
-            for db_product in unscraped_products:
-                store = store_service.get(db_product.sid)
-                if not store or not store.active:
-                    continue
-
-                try:
-                    scraper = GenericScraper(client, store)
-                    p_details = scraper.scrape_product(db_product.product_url)
-                    if p_details:
-                        product_service.save(p_details)
-                        print(f"[Product Scraper] Enriched static metadata for '{db_product.name}'")
-                except Exception as e:
-                    print(f"[Product Scraper Error] Failed '{db_product.name}': {e}")
-
-
-def execute_catalog_normalization(limit: int = 50):
-    """Normalizes specifications and populates category tables for scraped products."""
-    from services.normalization_service import NormalizationService
-
-    with SessionLocal() as session:
-        service = NormalizationService(session)
-        count = service.normalize_all_unclassified(limit=limit)
-        print(f"[Normalizer Task] Normalized and populated category specs for {count} products.")
+    try:
+        extract_ram_titles(limit=limit_per_category)
+        wire_ram_canonical()
+    except Exception as e:
+        print(f"[Canonical Extraction] RAM failed: {e}")
 
 
 # Airflow DAG Definition (evaluated when apache-airflow is installed)
@@ -136,18 +145,12 @@ try:
         dag=dag,
     )
 
-    enrich_products_task = PythonOperator(
-        task_id="enrich_unscraped_products",
-        python_callable=execute_unscraped_product_enrichment,
+    canonical_extraction_task = PythonOperator(
+        task_id="extract_canonical_identities",
+        python_callable=execute_canonical_extraction,
         dag=dag,
     )
 
-    normalize_catalog_task = PythonOperator(
-        task_id="normalize_catalog_specs",
-        python_callable=execute_catalog_normalization,
-        dag=dag,
-    )
-
-    process_targets_task >> enrich_products_task >> normalize_catalog_task
+    process_targets_task >> canonical_extraction_task
 except ImportError:
     pass

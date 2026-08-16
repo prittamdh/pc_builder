@@ -56,6 +56,10 @@ LOG_FILE = LOG_DIR / "pc_builder.log"
 # ---------------------------------------------------------------------
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 
 # ---------------------------------------------------------------------
 # Matching Pipeline Configuration

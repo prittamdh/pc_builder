@@ -111,6 +111,16 @@ class Product(Base, TimestampMixin):
         index=True,
     )
 
+    # Traceability: whether this product has been through spec/title extraction.
+    # 'pending' (default, new/unprocessed) | 'extracted' | 'needs_review' (low confidence) | 'failed'
+    spec_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+        index=True,
+    )
+
     canonical_part = relationship(
         "CanonicalPart",
         back_populates="listings",

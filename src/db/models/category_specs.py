@@ -4,7 +4,8 @@ Dedicated 1-to-1 tables storing normalized specs referencing products.id.
 """
 from typing import Any
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 try:
@@ -19,14 +20,16 @@ from db.base import Base
 
 
 class CPUSpecs(Base):
+    """
+    One row per unique real-world CPU model (keyed by canonical_id), not per listing -
+    physical specs are a property of the model, so many products.canonical_id rows
+    point at a single CPUSpecs row instead of each listing extracting its own copy.
+    """
     __tablename__ = "cpu_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     socket: Mapped[str | None] = mapped_column(String(50), index=True)
@@ -38,16 +41,36 @@ class CPUSpecs(Base):
     integrated_graphics: Mapped[bool | None] = mapped_column(Boolean, default=False)
     architecture: Mapped[str | None] = mapped_column(String(100))
 
+    # Identity + LLM extraction metadata.
+    brand: Mapped[str | None] = mapped_column(String(50), index=True)
+    series: Mapped[str | None] = mapped_column(String(100), index=True)
+    model_number: Mapped[str | None] = mapped_column(String(100), index=True)
+    confidence: Mapped[str | None] = mapped_column(String(20))
+    notes: Mapped[str | None] = mapped_column(Text)
+    llm_model: Mapped[str | None] = mapped_column(String(100))
+    raw_response: Mapped[dict | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
+    error: Mapped[str | None] = mapped_column(Text)
 
-class GPUSpecs(Base):
+
+class _SpecsMetadataMixin:
+    """LLM extraction metadata shared by every canonical_id-keyed specs table."""
+    brand: Mapped[str | None] = mapped_column(String(50), index=True)
+    confidence: Mapped[str | None] = mapped_column(String(20))
+    notes: Mapped[str | None] = mapped_column(Text)
+    llm_model: Mapped[str | None] = mapped_column(String(100))
+    raw_response: Mapped[dict | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
+    error: Mapped[str | None] = mapped_column(Text)
+
+
+class GPUSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world GPU model (keyed by canonical_id), not per listing."""
     __tablename__ = "gpu_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     chipset: Mapped[str | None] = mapped_column(String(100), index=True)
@@ -59,15 +82,13 @@ class GPUSpecs(Base):
     slot_width: Mapped[float | None] = mapped_column(Numeric(3, 1))
 
 
-class MotherboardSpecs(Base):
+class MotherboardSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world motherboard model (keyed by canonical_id), not per listing."""
     __tablename__ = "motherboard_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     socket: Mapped[str | None] = mapped_column(String(50), index=True)
@@ -79,15 +100,13 @@ class MotherboardSpecs(Base):
     m2_slots: Mapped[int | None] = mapped_column(Integer)
 
 
-class RAMSpecs(Base):
+class RAMSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world RAM model (keyed by canonical_id), not per listing."""
     __tablename__ = "ram_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     memory_type: Mapped[str | None] = mapped_column(String(20), index=True)
@@ -97,15 +116,13 @@ class RAMSpecs(Base):
     latency_cl: Mapped[int | None] = mapped_column(Integer)
 
 
-class SSDSpecs(Base):
+class SSDSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world storage model (keyed by canonical_id), not per listing."""
     __tablename__ = "ssd_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     capacity_gb: Mapped[int | None] = mapped_column(Integer)
@@ -115,15 +132,13 @@ class SSDSpecs(Base):
     write_speed_mbps: Mapped[int | None] = mapped_column(Integer)
 
 
-class PSUSpecs(Base):
+class PSUSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world PSU model (keyed by canonical_id), not per listing."""
     __tablename__ = "psu_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     wattage: Mapped[int | None] = mapped_column(Integer, index=True)
@@ -132,15 +147,13 @@ class PSUSpecs(Base):
     form_factor: Mapped[str | None] = mapped_column(String(50))
 
 
-class CabinetSpecs(Base):
+class CabinetSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world cabinet model (keyed by canonical_id), not per listing."""
     __tablename__ = "cabinet_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     form_factor: Mapped[str | None] = mapped_column(String(50))
@@ -149,15 +162,13 @@ class CabinetSpecs(Base):
     max_psu_length_mm: Mapped[int | None] = mapped_column(Integer)
 
 
-class CoolerSpecs(Base):
+class CoolerSpecs(Base, _SpecsMetadataMixin):
+    """One row per unique real-world cooler model (keyed by canonical_id), not per listing."""
     __tablename__ = "cooler_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     cooler_type: Mapped[str | None] = mapped_column(String(50))
@@ -168,14 +179,12 @@ class CoolerSpecs(Base):
 
 
 class MonitorSpecs(Base):
+    """One row per unique real-world monitor model (keyed by canonical_id), not per listing."""
     __tablename__ = "monitor_specs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False, index=True
-    )
-    canonical_id: Mapped[str | None] = mapped_column(
-        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), nullable=True, index=True
+    canonical_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("canonical_parts.canonical_id", ondelete="CASCADE"), unique=True, nullable=False, index=True
     )
 
     screen_size_inch: Mapped[float | None] = mapped_column(Numeric(4, 1))
@@ -183,3 +192,12 @@ class MonitorSpecs(Base):
     refresh_rate_hz: Mapped[int | None] = mapped_column(Integer)
     panel_type: Mapped[str | None] = mapped_column(String(20))
     response_time_ms: Mapped[float | None] = mapped_column(Numeric(3, 1))
+
+    brand: Mapped[str | None] = mapped_column(String(50), index=True)
+    model_number: Mapped[str | None] = mapped_column(String(100), index=True)
+    confidence: Mapped[str | None] = mapped_column(String(20))
+    notes: Mapped[str | None] = mapped_column(Text)
+    llm_model: Mapped[str | None] = mapped_column(String(100))
+    raw_response: Mapped[dict | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
+    error: Mapped[str | None] = mapped_column(Text)
