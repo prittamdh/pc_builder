@@ -38,6 +38,8 @@ data/exports/
 
 # Temporary HTML & Downloaded Assets
 *.html
+# ...but the app's own frontend markup is source, not a scraped artifact.
+!src/static/*.html
 *.download
 *_files/
 tests/html/**/*_files/
