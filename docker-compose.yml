@@ -6,7 +6,7 @@ services:
     container_name: pc_builder_postgres
     environment:
       - POSTGRES_USER=pc_builder
-      - POSTGRES_PASSWORD=pc_builder123
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=pc_builder
     ports:
       - "5432:5432"
@@ -18,6 +18,22 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pc_builder_pgadmin
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+
   airflow-standalone:
     image: apache/airflow:2.9.1-python3.11
     container_name: pc_builder_airflow
@@ -25,13 +41,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://pc_builder:pc_builder123@postgres:5432/pc_builder
-      - DATABASE_URL=postgresql+psycopg2://pc_builder:pc_builder123@postgres:5432/pc_builder
-      - AIRFLOW__CORE__FERNET_KEY=46BK85BWoEWYvGtxPDjsfs0apWiyB_1BjgYFuBoOdFc=
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://pc_builder:${POSTGRES_PASSWORD}@postgres:5432/pc_builder_airflow
+      - DATABASE_URL=postgresql+psycopg2://pc_builder:${POSTGRES_PASSWORD}@postgres:5432/pc_builder
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY}
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__WEBSERVER__SECRET_KEY=secret_key_pc_builder
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW_WEBSERVER_SECRET_KEY}
       - PYTHONPATH=/opt/airflow/src:/opt/airflow
     volumes:
       - ./dags:/opt/airflow/dags
@@ -46,3 +64,4 @@ services:
 
 volumes:
   postgres_data:
+  pgadmin_data:

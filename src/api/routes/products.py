@@ -19,6 +19,12 @@ def list_products(
     category: str | None = Query(None, description="Filter by raw category"),
     p_category: str | None = Query(None, description="Filter by standardized production category"),
     in_stock: bool | None = Query(None, description="Filter by in-stock status"),
+    include_legacy: bool = Query(
+        False,
+        description="Include off-policy legacy parts (pre-10th-gen Intel, pre-3000 Ryzen, "
+                    "retired sockets, pre-DDR4 memory). Hidden everywhere by default; pass "
+                    "true to browse them. Their price history is unaffected either way.",
+    ),
     min_price: Decimal | None = Query(None, description="Minimum current price"),
     max_price: Decimal | None = Query(None, description="Maximum current price"),
     page: int = Query(1, ge=1, description="Page number"),
@@ -40,6 +46,8 @@ def list_products(
         conditions.append(func.lower(Product.p_category) == p_category.lower())
     if in_stock is not None:
         conditions.append(Product.in_stock == in_stock)
+    if not include_legacy:
+        conditions.append(Product.is_legacy.is_(False))
     if min_price is not None:
         conditions.append(Product.current_price >= min_price)
     if max_price is not None:

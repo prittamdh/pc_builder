@@ -17,9 +17,12 @@ const state = {
         ram: null,
         storage: null,
         psu: null,
-        case: null
+        case: null,
+        cooler: null,
+        monitor: null
     },
-    activeSlotKey: null
+    activeSlotKey: null,
+    activeSlotName: null
 };
 
 // Initialize Application
@@ -27,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initCatalog();
     initBuilder();
-    initCanonical();
 });
 
 // Navigation Handler
@@ -47,8 +49,6 @@ function initNavigation() {
 
             if (targetTab === 'catalog' && state.products.length === 0) {
                 fetchProducts();
-            } else if (targetTab === 'canonical') {
-                fetchCanonicalProducts();
             }
         });
     });
@@ -130,7 +130,7 @@ function renderProducts(products) {
                     ${p.current_mrp ? `<span class="product-mrp">₹${Number(p.current_mrp).toLocaleString('en-IN')}</span>` : ''}
                 </div>
                 <div class="card-actions">
-                    <button class="btn-secondary" onclick="openCompareModal('${escapeHtml(p.name)}')">Compare</button>
+                    <button class="btn-secondary" onclick="openCompareModal('${escapeHtml(p.name)}', ${p.id})">Compare</button>
                     <button class="btn-secondary" onclick="openHistoryModal(${p.id})">History</button>
                 </div>
             </div>
@@ -147,7 +147,9 @@ function initBuilder() {
         { key: 'ram', name: 'Memory (RAM)' },
         { key: 'storage', name: 'Storage (SSD/HDD)' },
         { key: 'psu', name: 'Power Supply (PSU)' },
-        { key: 'case', name: 'Cabinet / Case' }
+        { key: 'case', name: 'Cabinet / Case' },
+        { key: 'cooler', name: 'CPU Cooler' },
+        { key: 'monitor', name: 'Monitor' }
     ];
 
     const container = document.getElementById('slots-container');
@@ -169,35 +171,85 @@ function initBuilder() {
     validateBuild();
 }
 
-function openSelectModal(slotKey, slotName) {
+async function openSelectModal(slotKey, slotName) {
     state.activeSlotKey = slotKey;
+    state.activeSlotName = slotName;
     const modal = document.getElementById('select-modal');
     const title = document.getElementById('select-modal-title');
-    const list = document.getElementById('select-modal-list');
 
     title.innerText = `Select ${slotName}`;
     modal.classList.add('active');
 
-    // Filter catalog matching slot category
-    const catMap = {
-        cpu: 'CPU',
-        gpu: 'GPU',
-        motherboard: 'MOTHERBOARD',
-        ram: 'RAM',
-        storage: 'SSD',
-        psu: 'PSU',
-        case: 'CABINET'
-    };
-    const targetCat = catMap[slotKey];
+    const searchBox = document.getElementById('select-modal-search');
+    if (searchBox) searchBox.value = '';
+    const compatToggle = document.getElementById('select-modal-compatible-only');
+    if (compatToggle) compatToggle.checked = true;
 
-    const matching = state.products.filter(p => !targetCat || (p.category || '').toUpperCase().includes(targetCat));
+    await loadSlotCandidates();
+}
 
-    if (matching.length === 0) {
-        list.innerHTML = '<div style="color: var(--text-secondary);">No matching components loaded. Search or select a category first.</div>';
+// Debounced so typing doesn't fire a request per keystroke.
+let slotSearchTimer = null;
+function onSlotSearchInput() {
+    clearTimeout(slotSearchTimer);
+    slotSearchTimer = setTimeout(loadSlotCandidates, 250);
+}
+
+async function loadSlotCandidates() {
+    const slotKey = state.activeSlotKey;
+    const slotName = state.activeSlotName || slotKey;
+    const list = document.getElementById('select-modal-list');
+    const countEl = document.getElementById('select-modal-count');
+    const q = (document.getElementById('select-modal-search')?.value || '').trim();
+    const compatibleOnly = document.getElementById('select-modal-compatible-only')?.checked !== false;
+
+    list.innerHTML = '<div style="color: var(--text-secondary);">Loading components...</div>';
+    if (countEl) countEl.innerText = '';
+
+    const selectedIds = Object.entries(state.builderSelections)
+        .filter(([k, v]) => v && k !== slotKey)
+        .map(([, v]) => v.id);
+
+    let data;
+    try {
+        const res = await fetch(`${API_BASE}/builder/candidates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                slot: slotKey,
+                selected_product_ids: selectedIds,
+                q: q || null,
+                compatible_only: compatibleOnly
+            })
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        data = await res.json();
+    } catch (err) {
+        list.innerHTML = `<div style="color: var(--danger);">Could not load ${escapeHtml(slotName)}: ${escapeHtml(err.message)}</div>`;
         return;
     }
 
-    list.innerHTML = matching.map(p => `
+    const items = data.items || [];
+    items.forEach(p => {
+        if (!state.products.some(existing => existing.id === p.id)) state.products.push(p);
+    });
+
+    if (countEl) {
+        const hidden = data.filtered_out || 0;
+        countEl.innerText = hidden > 0
+            ? `${items.length} shown · ${hidden} hidden as incompatible with your current build`
+            : `${items.length} shown`;
+    }
+
+    if (items.length === 0) {
+        list.innerHTML = `<div style="color: var(--text-secondary);">
+            No ${escapeHtml(slotName)} matches${q ? ` "${escapeHtml(q)}"` : ''}${compatibleOnly ? ' that fit your current build' : ''}.
+            ${compatibleOnly ? '<br>Untick "Compatible only" to see everything.' : ''}
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = items.map(p => `
         <div class="slot-card" style="margin-bottom: 0.75rem; cursor: pointer;" onclick="selectComponentForSlot('${slotKey}', ${p.id}, '${escapeHtml(p.name)}')">
             <div>
                 <div style="font-weight: 600;">${escapeHtml(p.name)}</div>
@@ -228,8 +280,13 @@ async function validateBuild() {
         const res = await fetch(`${API_BASE}/builder/validate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_ids: productIds })
+            body: JSON.stringify({ selected_product_ids: productIds })
         });
+        if (!res.ok) {
+            // A 422 here used to fall through silently and leave the sidebar stuck on
+            // "Incompatibilities Detected" for every build, including an empty one.
+            throw new Error(`validate failed: ${res.status} ${await res.text()}`);
+        }
         const summary = await res.json();
 
         // Render Summary Sidebar
@@ -259,7 +316,7 @@ async function validateBuild() {
 }
 
 // Compare Modal
-async function openCompareModal(productName) {
+async function openCompareModal(productName, productId) {
     const modal = document.getElementById('compare-modal');
     const content = document.getElementById('compare-modal-content');
     modal.classList.add('active');
@@ -267,14 +324,22 @@ async function openCompareModal(productName) {
     content.innerHTML = '<div>Loading price comparison across retailer stores...</div>';
 
     try {
-        const res = await fetch(`${API_BASE}/compare?q=${encodeURIComponent(productName)}`);
+        const url = `${API_BASE}/compare?q=${encodeURIComponent(productName)}`
+            + (productId ? `&product_id=${productId}` : '');
+        const res = await fetch(url);
         const data = await res.json();
 
         content.innerHTML = `
             <h2>${escapeHtml(data.query)}</h2>
-            <div style="margin: 1rem 0; display: flex; gap: 1rem;">
+            <div style="margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <div>Lowest: <strong style="color: var(--accent-cyan);">₹${Number(data.lowest_price || 0).toLocaleString('en-IN')}</strong></div>
                 <div>Highest: <strong>₹${Number(data.highest_price || 0).toLocaleString('en-IN')}</strong></div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">
+                    ${data.total_offers} offer${data.total_offers === 1 ? '' : 's'} ·
+                    ${data.matched_by === 'canonical_id'
+                        ? 'matched as the same product across stores'
+                        : 'matched by title text only'}
+                </div>
             </div>
             <table class="compare-table">
                 <thead>
@@ -352,126 +417,95 @@ function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Canonical Match (Test) GUI Logic
-let canonicalState = {
-    selectedCategory: '',
-    reviewOnly: false
-};
+// Saved builds -------------------------------------------------------------
+// A build previously lived only in this page's memory and was lost on refresh.
 
-function initCanonical() {
-    const chips = document.querySelectorAll('#canonical-category-chips .chip');
-    chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            chips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            canonicalState.selectedCategory = chip.dataset.canonicalCat || '';
-            fetchCanonicalProducts();
-        });
-    });
-
-    const reviewCheckbox = document.getElementById('canonical-review-only');
-    if (reviewCheckbox) {
-        reviewCheckbox.addEventListener('change', () => {
-            canonicalState.reviewOnly = reviewCheckbox.checked;
-            fetchCanonicalProducts();
-        });
+async function saveBuild() {
+    const btn = document.getElementById('save-build-btn');
+    const selections = {};
+    for (const [slot, product] of Object.entries(state.builderSelections)) {
+        if (product) selections[slot] = product.id;
     }
-
-    const runBtn = document.getElementById('run-canonical-btn');
-    if (runBtn) {
-        runBtn.addEventListener('click', runCanonicalPipeline);
-    }
-}
-
-async function runCanonicalPipeline() {
-    const grid = document.getElementById('canonical-grid');
-    const runBtn = document.getElementById('run-canonical-btn');
-    if (runBtn) runBtn.innerText = '⏳ Running...';
-    if (grid) grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Executing experimental matching pipeline across 10 stores...</div>';
-
-    try {
-        const res = await fetch(`${API_BASE}/canonical/run`, { method: 'POST' });
-        const data = await res.json();
-        if (runBtn) runBtn.innerText = '▶ Run Pipeline';
-        fetchCanonicalProducts();
-    } catch (err) {
-        if (runBtn) runBtn.innerText = '▶ Run Pipeline';
-        if (grid) grid.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 2rem;">Failed to execute pipeline: ${err.message}</div>`;
-    }
-}
-
-async function fetchCanonicalProducts() {
-    const grid = document.getElementById('canonical-grid');
-    if (!grid) return;
-
-    grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Loading canonical product groups...</div>';
-
-    let url = `${API_BASE}/canonical/products?limit=80`;
-    if (canonicalState.selectedCategory) url += `&category=${encodeURIComponent(canonicalState.selectedCategory)}`;
-    if (canonicalState.reviewOnly) url += `&needs_review=true`;
-
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        renderCanonicalProducts(data.items || []);
-    } catch (err) {
-        grid.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 2rem;">Failed to fetch canonical products: ${err.message}</div>`;
-    }
-}
-
-function renderCanonicalProducts(items) {
-    const grid = document.getElementById('canonical-grid');
-    if (!grid) return;
-
-    if (items.length === 0) {
-        grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">No canonical product groups match your filter. Click "▶ Run Pipeline" to generate groups.</div>';
+    if (Object.keys(selections).length === 0) {
+        alert('Add at least one component before saving.');
         return;
     }
 
-    grid.innerHTML = items.map(c => `
-        <div class="product-card" style="display: block; margin-bottom: 1rem; border-left: 4px solid ${c.needs_review ? 'var(--danger)' : 'var(--accent-cyan)'};">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
-                <div>
-                    <span class="product-badge" style="background: ${c.needs_review ? 'rgba(239, 68, 68, 0.2)' : 'rgba(6, 182, 212, 0.2)'}; color: ${c.needs_review ? '#f87171' : '#38bdf8'}; font-weight: 700;">
-                        ${c.needs_review ? '⚠ REVIEW QUEUE' : '✓ MATCHED GROUP (' + (c.listings ? c.listings.length : 0) + ' Stores)'}
-                    </span>
-                    <span class="product-badge" style="margin-left: 0.5rem;">${(c.category || '').toUpperCase()}</span>
-                    <h3 class="product-title" style="margin-top: 0.4rem; font-size: 1.1rem; color: #f8fafc;">${escapeHtml(c.name)}</h3>
-                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
-                        Key: <code style="background: #0f172a; padding: 0.2rem 0.5rem; border-radius: 4px; color: #a5f3fc;">${escapeHtml(c.canonical_key || 'None')}</code>
-                    </div>
-                </div>
-            </div>
+    const original = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
 
-            <div style="background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.85rem; color: #cbd5e1;">
-                <strong>Structured Attributes:</strong> ${escapeHtml(JSON.stringify(c.attributes))}
-            </div>
+    try {
+        const res = await fetch(`${API_BASE}/builder/builds`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                selections,
+                name: document.getElementById('build-name')?.value || null
+            })
+        });
+        if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+        const data = await res.json();
 
-            <div>
-                <strong style="font-size: 0.9rem; color: var(--text-primary);">Mapped Retailer Store Listings:</strong>
-                <table class="compare-table" style="margin-top: 0.5rem; font-size: 0.85rem;">
-                    <thead>
-                        <tr>
-                            <th>Store</th>
-                            <th>Listing Title</th>
-                            <th>Price</th>
-                            <th>Normalized Match Text</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${(c.listings || []).map(l => `
-                            <tr>
-                                <td style="font-weight: 600; color: #a5f3fc;">${escapeHtml(l.store_name)}</td>
-                                <td style="color: #f1f5f9;">${escapeHtml(l.raw_title)}</td>
-                                <td style="color: var(--accent-cyan); font-weight: 700;">₹${Number(l.price || 0).toLocaleString('en-IN')}</td>
-                                <td style="color: var(--text-secondary); font-size: 0.8rem;">${escapeHtml(l.normalized_title)}</td>
-                                <td><a href="${l.product_url}" target="_blank" class="btn-secondary" style="padding: 0.2rem 0.6rem; text-decoration: none; font-size: 0.8rem;">View</a></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `).join('');
+        const url = `${location.origin}/?build=${data.share_token}`;
+        document.getElementById('share-link').value = url;
+        document.getElementById('share-link-box').style.display = 'block';
+        btn.innerText = 'Saved ✓';
+        setTimeout(() => { btn.innerText = original; btn.disabled = false; }, 2000);
+    } catch (err) {
+        btn.innerText = 'Save failed';
+        console.error('Save build failed:', err);
+        setTimeout(() => { btn.innerText = original; btn.disabled = false; }, 2500);
+    }
 }
+
+async function loadSharedBuild(token) {
+    try {
+        const res = await fetch(`${API_BASE}/builder/builds/${encodeURIComponent(token)}`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+
+        for (const [slot, item] of Object.entries(data.items || {})) {
+            state.builderSelections[slot] = item;
+            const el = document.getElementById(`slot-name-${slot}`);
+            if (el) el.innerText = item.name;
+        }
+        if (data.name) {
+            const nameInput = document.getElementById('build-name');
+            if (nameInput) nameInput.value = data.name;
+        }
+
+        // Switch to the builder so the restored build is actually visible.
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            if (b.dataset.tab === 'builder') b.click();
+        });
+
+        await validateBuild();
+
+        // Stock and prices move between save and load, so say so rather than quietly
+        // showing a build that can't be bought as-is.
+        const notices = [];
+        if ((data.unavailable || []).length) {
+            notices.push(`${data.unavailable.length} component(s) no longer purchasable: ` +
+                data.unavailable.map(u => `${u.slot} (${u.reason})`).join(', '));
+        }
+        if (data.compatibility_changed_since_save) {
+            notices.push('Compatibility differs from when this build was saved.');
+        }
+        if (notices.length) {
+            const warn = document.getElementById('warnings-list');
+            if (warn) {
+                warn.innerHTML = notices.map(n =>
+                    `<div class="warning-item warning">${escapeHtml(n)}</div>`).join('') + warn.innerHTML;
+            }
+        }
+    } catch (err) {
+        console.error('Could not load shared build:', err);
+        alert('That shared build link could not be loaded.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const token = new URLSearchParams(location.search).get('build');
+    if (token) loadSharedBuild(token);
+});

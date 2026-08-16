@@ -32,15 +32,49 @@ class CompareResponse(BaseModel):
     highest_price: Decimal | None = None
     average_price: Decimal | None = None
     offers: list[StoreOffer]
+    matched_by: str = "name"
 
 
 @router.get("", response_model=CompareResponse)
 def compare_product(
     q: str = Query(..., description="Product query name to compare across stores"),
+    product_id: int | None = Query(
+        None,
+        description="Anchor the comparison to a specific listing. Its canonical_id is used "
+                    "to gather the same real-world product across every store.",
+    ),
     db: Session = Depends(get_db),
 ):
-    """Compare product pricing, availability, and offers across all 4 retailer stores."""
-    stmt = select(Product).where(Product.name.ilike(f"%{q}%"))
+    """Compare pricing and availability for one real-world product across all stores.
+
+    Prefers the canonical group over a name substring search. Retailers title the
+    same part very differently ("AMD Ryzen 7 7800X3D Processor with Radeon Graphics"
+    vs "Amd Ryzen 7 7800X3D Gaming Processor Oem..."), so matching on the name finds
+    only the listings that happen to share wording - for that CPU, 3 offers from one
+    store instead of the 12 across nine stores that are actually the same chip.
+    Falls back to the name search when no canonical id is available.
+    """
+    matched_by = "name"
+    canonical_id = None
+
+    if product_id is not None:
+        anchor = db.get(Product, product_id)
+        if anchor is not None and anchor.canonical_id:
+            canonical_id = anchor.canonical_id
+    if canonical_id is None:
+        # Resolve the query to a listing, then use that listing's canonical group.
+        anchor = db.scalars(
+            select(Product).where(Product.name.ilike(f"%{q}%")).limit(1)
+        ).first()
+        if anchor is not None and anchor.canonical_id:
+            canonical_id = anchor.canonical_id
+
+    if canonical_id:
+        stmt = select(Product).where(Product.canonical_id == canonical_id)
+        matched_by = "canonical_id"
+    else:
+        stmt = select(Product).where(Product.name.ilike(f"%{q}%"))
+
     products = list(db.scalars(stmt))
 
     if not products:
@@ -48,6 +82,7 @@ def compare_product(
             query=q,
             total_offers=0,
             offers=[],
+            matched_by=matched_by,
         )
 
     offers = []
@@ -75,6 +110,9 @@ def compare_product(
     highest = max(prices) if prices else None
     avg = sum(prices) / Decimal(len(prices)) if prices else None
 
+    # Cheapest first: the whole point of comparing is finding the best price.
+    offers.sort(key=lambda o: (not o.in_stock, o.price))
+
     return CompareResponse(
         query=q,
         total_offers=len(offers),
@@ -82,4 +120,5 @@ def compare_product(
         highest_price=highest,
         average_price=avg,
         offers=offers,
+        matched_by=matched_by,
     )

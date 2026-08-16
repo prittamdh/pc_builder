@@ -111,6 +111,26 @@ class Product(Base, TimestampMixin):
         index=True,
     )
 
+    # Traceability: whether this product has been through spec/title extraction.
+    # 'pending' (default, new/unprocessed) | 'extracted' | 'needs_review' (low confidence) | 'failed'
+    spec_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+        index=True,
+    )
+
+    # Off the supported-platform policy (see matching/legacy_policy.py): still
+    # price-tracked, but hidden from the PC Builder's component pickers.
+    is_legacy: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+        index=True,
+    )
+
     canonical_part = relationship(
         "CanonicalPart",
         back_populates="listings",

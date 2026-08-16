@@ -1,20 +1,28 @@
 """
 Canonical Part Model (Layer between raw scraped listings and spec extraction).
 """
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Any
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import relationship
+
+try:
+    from sqlalchemy.orm import Mapped, mapped_column
+except ImportError:
+    class Mapped:
+        def __class_getitem__(cls, item):
+            return Any
+    from sqlalchemy import Column as mapped_column
 
 from db.base import Base
-from db.models.mixins import TimestampMixin
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 
 if TYPE_CHECKING:
     from db.models.chipset_specs import ChipsetSpecs
     from db.models.product import Product
 
 
-class CanonicalPart(Base, TimestampMixin):
+class CanonicalPart(Base):
     """
     Canonical Part table holding deduplicated real-world products.
     """
@@ -32,6 +40,7 @@ class CanonicalPart(Base, TimestampMixin):
     )
     from_title: Mapped[dict] = mapped_column(JSONB, nullable=False, default=list)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="OK", index=True)
+    created_at: Mapped[Any] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     chipset_specs = relationship("ChipsetSpecs", back_populates="canonical_parts")
     listings = relationship("Product", back_populates="canonical_part")

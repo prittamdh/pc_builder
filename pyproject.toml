@@ -17,6 +17,8 @@ dependencies = [
     "psycopg[binary]>=3.2.0",
     "python-dotenv>=1.1.0",
     "tenacity>=9.1.0",
+    # Reads the 80 PLUS certification export in scripts/import_80plus_efficiency.py.
+    "openpyxl>=3.1.0",
 ]
 
 [tool.setuptools]

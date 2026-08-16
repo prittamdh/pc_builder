@@ -9,7 +9,7 @@ Canonical Key Rules Per Category:
 - Case: brand + model_number
 - Storage: brand + series + capacity + interface
 - RAM: brand + series + capacity + speed_mhz + cl_timing
-- Motherboard: brand + chipset + model_number
+- Motherboard: brand + board_designation + model_number
 - GPU: aib_brand + variant_model + chipset
 """
 import re
@@ -40,6 +40,13 @@ def normalize_category(category: str) -> str:
 def extract_brand(title: str) -> str:
     """Extracts known brand name from title."""
     title_lower = title.lower()
+    
+    # Explicit brand inference for CPUs
+    if "ryzen" in title_lower or "threadripper" in title_lower:
+        return "AMD"
+    if "intel" in title_lower or "core i" in title_lower or "xeon" in title_lower:
+        return "Intel"
+
     known_brands = [
         "ant esports", "cooler master", "western digital", "deepcool", "thermalright",
         "lii auto", "g.skill", "gskill", "kingston", "corsair", "crucial", "adata",
@@ -55,6 +62,132 @@ def extract_brand(title: str) -> str:
     return words[0].title() if words else "Unknown"
 
 
+# --- Motherboard board designation -------------------------------------------------
+# A board's *chipset* (B850) and its *board designation* (B850, B850I, B850M-P) are not
+# the same thing. Vendors encode the physical variant in the designation - a trailing
+# I (mini-ITX) or M (micro-ATX) on the chipset stem, and/or a short "-X" model suffix
+# (ASUS ROG Strix B860-A / -F / -G / -I). Those are physically different SKUs with
+# different DIMM counts and form factors.
+#
+# The LLM identity pass normalizes this away inconsistently - it returns "B850" for
+# both "MSI MPG B850 EDGE TI WIFI" (ATX, 4 DIMM) and "MSI MPG B850I Edge TI WiFi"
+# (ITX, 2 DIMM), which merged them into one canonical_id and gave the ITX board the
+# ATX board's specs. It also does the inverse, emitting "B650M" for some listings of a
+# board and "B650" for others, splitting one real model across two canonical_ids.
+#
+# So the designation is recovered deterministically from the listing title instead of
+# being trusted from the model: the variant letters are literal text in the title.
+_DESIGNATION_PATTERNS: dict[str, re.Pattern] = {}
+
+# Ordered longest-form-first: "M-ATX" and "Mini-ITX" both contain a bare "ATX"/"ITX"
+# substring, so the broad ATX pattern must be tried last.
+_FORM_FACTOR_PATTERNS = [
+    ("EATX", re.compile(r"\b(?:e\s*-?\s*atx|extended\s+atx)\b", re.I)),
+    ("MATX", re.compile(r"\b(?:m\s*-?\s*atx|micro\s*-?\s*atx|matx|uatx)\b", re.I)),
+    ("ITX", re.compile(r"\b(?:mini\s*-?\s*itx|m\s*-?\s*itx|itx)\b", re.I)),
+    ("ATX", re.compile(r"\b(?:full\s*-?\s*atx|atx)\b", re.I)),
+]
+
+# Deterministic order used to break majority-vote ties, most common variant first.
+FORM_FACTOR_RANK = ["ATX", "MATX", "ITX", "EATX"]
+
+
+def resolve_board_designation(chipset: str | None, title: str) -> str:
+    """
+    Recovers the board designation (chipset stem plus its variant letter) for a
+    motherboard listing by locating it in the listing's own title.
+
+    Only ever adds detail, never removes it: the title match has to be more specific
+    than what the model returned to win. The model sometimes puts a variant marker in
+    the chipset field that is not written that way in the title (it returns "B860A" for
+    "ASUS ROG Strix B860-A"), and that distinction is worth keeping.
+
+    Deliberately does NOT absorb "-X" model suffixes. Retailers write the same board as
+    both "Gigabyte B550M K" and "Gigabyte B550M-K", so treating the suffix as part of
+    the designation would split one model in two - it belongs in model_number, where
+    the extraction already puts it.
+
+        resolve_board_designation("B850", "MSI MPG B850I Edge TI WiFi Motherboard")
+        -> "B850I"
+        resolve_board_designation("B650", "ASUS TUF Gaming B650M Plus Wifi")
+        -> "B650M"
+    """
+    if not chipset:
+        return ""
+    cs = chipset.strip().upper()
+    stem_match = re.match(r"^([A-Z]+\d+)", cs)
+    if not stem_match:
+        return cs
+    stem = stem_match.group(1)
+
+    pattern = _DESIGNATION_PATTERNS.get(stem)
+    if pattern is None:
+        pattern = _DESIGNATION_PATTERNS[stem] = re.compile(rf"\b{stem}([EIM])?\b", re.I)
+
+    # Titles often name the bare chipset alongside the real designation ("Asrock B760M
+    # Steel Legend WiFi Intel B760 Micro ATX"), so the most specific match in the title
+    # wins - and then only if it beats the chipset the model already gave us.
+    best = cs
+    for m in pattern.finditer(title or ""):
+        token = m.group(0).upper()
+        if len(token) > len(best):
+            best = token
+    return best
+
+
+def form_factor_from_designation(designation: str | None) -> str | None:
+    """
+    Derives form factor from the variant letter in a board designation, which is the
+    most reliable signal available: an "M" or "I" directly after the chipset stem is
+    vendor-assigned and unambiguous. A trailing "E" on the stem means a chipset tier
+    (X670E, X870E), not a form factor, so it is deliberately ignored here.
+    """
+    if not designation:
+        return None
+    m = re.match(r"^[A-Z]+\d+([EIM])?(?:-([A-Z]{1,2}))?$", designation.strip().upper())
+    if not m:
+        return None
+    stem_suffix, dash_suffix = m.group(1), m.group(2)
+    if stem_suffix == "M":
+        return "MATX"
+    if stem_suffix == "I":
+        return "ITX"
+    # ASUS puts the ITX marker in the model suffix instead ("ROG Strix B860-I").
+    if dash_suffix == "I":
+        return "ITX"
+    return None
+
+
+def form_factor_from_title(title: str) -> str | None:
+    """Reads a form factor out of a listing title, only when it is stated literally."""
+    for label, pattern in _FORM_FACTOR_PATTERNS:
+        if pattern.search(title or ""):
+            return label
+    return None
+
+
+def resolve_motherboard_form_factor(designation: str | None, title: str) -> str | None:
+    """
+    Per-listing form factor from evidence only, strongest first: the vendor's variant
+    letter, then form factor stated literally in the title. Returns None rather than
+    guessing - retailer titles are frequently wrong ("MSI PRO B850M-P AM5 ATX
+    Motherboard" is a micro-ATX board) and the model's own inference is noisier still,
+    so an unsupported value is worse than no value.
+    """
+    return form_factor_from_designation(designation) or form_factor_from_title(title)
+
+
+def build_motherboard_key_dict(brand: str | None, chipset: str | None,
+                               model_number: str | None, title: str) -> dict:
+    """Canonical key fields for a motherboard listing: brand + board designation + model."""
+    return {
+        "category": "motherboard",
+        "brand": brand or "Unknown",
+        "chipset": resolve_board_designation(chipset, title),
+        "model_number": model_number or "",
+    }
+
+
 def build_canonical_key(title: str, category: str, specs: dict | None = None) -> dict:
     """
     Builds the category-specific canonical key dictionary from normalized title and optional specs.
@@ -62,6 +195,14 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
     """
     cat = normalize_category(category)
     t_lower = title.lower()
+    
+    # Normalize spaces/hyphens, filler words, generation prefixes, and word order for CPU model numbers
+    t_clean = re.sub(r"core\s+(\d{1,2}(st|nd|rd|th))\s+gen\s+(i[3579])", r"core \3", t_lower)
+    t_clean = re.sub(r"core\s+ultra\s+([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{3}[a-z]*)", r"core ultra \1 \3", t_clean)
+    t_clean = re.sub(r"core\s+i\s*([3579])\s*[\-_\s]+\s*(processor\s+)?(\d{4,5}[a-z]*)", r"core i\1-\3", t_clean)
+    t_clean = re.sub(r"ryzen\s*(\d)\s*[\-_\s]+\s*(processor\s+)?(\d{4}[a-z0-9]*)", r"ryzen \1 \3", t_clean)
+    t_clean = re.sub(r"(\d{4}[a-z0-9]*)\s*ryzen\s*(\d)", r"ryzen \2 \1", t_clean)
+
     brand = extract_brand(title)
     specs = specs or {}
 
@@ -69,9 +210,29 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
 
     if cat == "cpu":
         # CPU: brand + model_number
-        # Example: AMD Ryzen 7 7800X3D -> brand: AMD, model_number: ryzen 7 7800x3d
-        match = re.search(r"(ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-?\d{4,5}[a-z]*|\b\d{4,5}[a-z]{1,2}\b)", t_lower)
-        model_num = match.group(0) if match else t_lower
+        # Handles Intel Core i, Intel Core Ultra, AMD Ryzen, Threadripper, Athlon, Pentium
+        match = re.search(r"(core\s+ultra\s+[3579]\s+\d{3}[a-z]*|ryzen\s+threadripper\s+(pro\s+)?\d{4}[a-z]*|ryzen\s+[3579]\s+\d{4}[a-z0-9]*|core\s+i[3579]-\d{4,5}[a-z]*|athlon\s+3000g|pentium\s+[a-z0-9]+)", t_clean)
+        if match:
+            model_num = match.group(0)
+        else:
+            # Fallback for bare numbers like "12400F" or "13600K"
+            bare_match = re.search(r"\b(1\d{4}|[3579]\d{3})[a-z]{0,2}\b", t_clean)
+            if bare_match:
+                num = bare_match.group(0)
+                # Map bare model number to full prefix based on generation/digits e.g. 12400f -> core i5-12400f
+                if num.startswith("12400") or num.startswith("13400") or num.startswith("14400") or num.startswith("12600") or num.startswith("13600") or num.startswith("14600") or num.startswith("10400") or num.startswith("11400"):
+                    model_num = f"core i5-{num}"
+                elif num.startswith("12700") or num.startswith("13700") or num.startswith("14700") or num.startswith("10700") or num.startswith("11700"):
+                    model_num = f"core i7-{num}"
+                elif num.startswith("12900") or num.startswith("13900") or num.startswith("14900") or num.startswith("10900") or num.startswith("11900"):
+                    model_num = f"core i9-{num}"
+                elif num.startswith("12100") or num.startswith("13100") or num.startswith("14100") or num.startswith("10100"):
+                    model_num = f"core i3-{num}"
+                else:
+                    model_num = num
+            else:
+                model_num = t_clean
+
         key_dict["model_number"] = model_num.strip()
 
     elif cat == "psu":
@@ -138,9 +299,13 @@ def build_canonical_key(title: str, category: str, specs: dict | None = None) ->
         key_dict["cl_timing"] = cl_timing
 
     elif cat == "motherboard":
-        # Motherboard: brand + chipset + model_number
-        chipset_match = re.search(r"(b650m?|b760m?|z790m?|x670e?|b550m?|a620m?)", t_lower)
-        chipset = chipset_match.group(0).upper() if chipset_match else "Unknown"
+        # Motherboard: brand + board designation + model_number
+        chipset_match = re.search(r"([abhqxz]\d{3}[eim]?)", t_lower)
+        # Keep the variant letter / "-X" model suffix: B650 and B650M are different SKUs.
+        chipset = (
+            resolve_board_designation(chipset_match.group(0), title)
+            if chipset_match else "Unknown"
+        )
 
         model_match = re.search(r"(tuf\s*gaming|rog\s*strix|prime|aorus|tomahawk|mortar|pro\s*rs|steel\s*legend)", t_lower)
         model_num = model_match.group(0) if model_match else title
@@ -184,3 +349,27 @@ def make_canonical_key_string(category: str, key_dict: dict) -> str:
                 parts.append(val)
                 seen_vals.add(val)
     return ":".join(parts)
+
+
+def disambiguate_failed_key(key_dict: dict, product_id: int) -> dict:
+    """
+    Guards against false merging: when LLM extraction fails for a listing, every
+    identity field in key_dict tends to come back empty/"Unknown" at once, so
+    make_canonical_key_string() would produce the SAME string (e.g. "gpu:unknown")
+    for every failed listing regardless of what the real product is - silently
+    merging genuinely different products into one fake canonical group.
+
+    If key_dict has no real distinguishing value (brand is "Unknown"/empty and every
+    other field is empty), salt it with the product's own id so each unresolved
+    listing gets its own canonical_id instead of colliding with unrelated ones.
+    """
+    # Treat "Unknown" as equivalent to empty regardless of which field it's in
+    # (categories vary: CPU/monitor/etc use "brand", GPU uses "aib_brand").
+    has_signal = any(
+        v for k, v in key_dict.items()
+        if k != "category" and v and str(v).strip().lower() != "unknown"
+    )
+    if not has_signal:
+        key_dict = dict(key_dict)
+        key_dict["_unresolved_id"] = str(product_id)
+    return key_dict

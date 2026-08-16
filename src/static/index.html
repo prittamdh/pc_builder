@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder 2 - Hardware Price Comparison & Assembly Engine</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo">
+            <span>⚡</span> PC Builder 2
+        </div>
+        <ul class="nav-links">
+            <li><button class="nav-btn active" data-tab="catalog">Catalog & Search</button></li>
+            <li><button class="nav-btn" data-tab="builder">PC Builder</button></li>
+            <li><button class="nav-btn" data-tab="stores">Stores</button></li>
+        </ul>
+    </header>
+
+    <!-- Main Application Container -->
+    <main>
+
+        <!-- Tab 1: Catalog Search -->
+        <section id="catalog-tab" class="tab-content active">
+            <div class="hero">
+                <h1>Find & Compare PC Components</h1>
+                <p>Track live hardware pricing across 10 Indian retailers, including MDComputers, PCStudio, Vedant Computers, PrimeABGB, EliteHubs, and Computech.</p>
+            </div>
+
+            <div class="search-container">
+                <div class="search-input-group">
+                    <input type="text" id="search-input" placeholder="Search processors, graphics cards, motherboards, RAM...">
+                    <button class="btn-primary" id="search-btn">Search</button>
+                </div>
+                <div class="category-chips">
+                    <button class="chip active" data-category="">All Categories</button>
+                    <button class="chip" data-category="CPU">CPUs</button>
+                    <button class="chip" data-category="GPU">GPUs</button>
+                    <button class="chip" data-category="Motherboard">Motherboards</button>
+                    <button class="chip" data-category="RAM">RAM</button>
+                    <button class="chip" data-category="Storage">Storage</button>
+                    <button class="chip" data-category="Power Supply">Power Supplies</button>
+                    <button class="chip" data-category="CPU Cooler">CPU Coolers</button>
+                    <button class="chip" data-category="Cabinet">Cabinets</button>
+                    <button class="chip" data-category="Monitor">Monitors</button>
+                </div>
+            </div>
+
+            <div class="products-grid" id="products-grid">
+                <!-- Dynamically populated product cards -->
+            </div>
+        </section>
+
+        <!-- Tab 2: PC Builder -->
+        <section id="builder-tab" class="tab-content">
+            <div class="hero">
+                <h1>Interactive PC Builder</h1>
+                <p>Assemble your dream rig with live hardware compatibility checking and multi-store price optimization.</p>
+            </div>
+
+            <div class="builder-layout">
+                <div class="slots-container" id="slots-container">
+                    <!-- Component slots rendered here -->
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-title">Build Summary</div>
+                    <div id="compatibility-status" class="compatibility-status ok">
+                        ✓ Compatibility Checked
+                    </div>
+                    
+                    <div class="warning-list" id="warnings-list"></div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary);">
+                        <span>Est. System Draw:</span>
+                        <strong id="total-wattage" style="color: var(--text-primary);">0 W</strong>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Total Lowest Build Cost:</span>
+                        <div class="total-cost" id="total-cost">₹0</div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); margin-top: 1rem; padding-top: 1rem;">
+                        <input type="text" id="build-name" placeholder="Name this build (optional)"
+                               style="width: 100%; padding: 0.5rem 0.75rem; margin-bottom: 0.6rem; border-radius: 8px;
+                                      border: 1px solid rgba(148,163,184,0.3); background: rgba(15,23,42,0.6);
+                                      color: #f1f5f9; font-size: 0.85rem;">
+                        <button class="btn-primary" id="save-build-btn" onclick="saveBuild()"
+                                style="width: 100%; padding: 0.6rem;">Save &amp; Get Share Link</button>
+                        <div id="share-link-box" style="display: none; margin-top: 0.75rem;">
+                            <input type="text" id="share-link" readonly onclick="this.select()"
+                                   style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px;
+                                          border: 1px solid var(--accent-cyan); background: rgba(15,23,42,0.8);
+                                          color: var(--accent-cyan); font-size: 0.78rem;">
+                            <div style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.4rem;">
+                                Re-priced from live store data each time it's opened.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Tab 3: Stores -->
+        <section id="stores-tab" class="tab-content">
+            <div class="hero">
+                <h1>Integrated Retailer Stores</h1>
+                <p>Dynamically scraping live price updates across top Indian computer retailers.</p>
+            </div>
+
+            <div class="products-grid">
+                <div class="product-card">
+                    <h3 class="product-title">MDComputers</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: mdcomputers.in</p>
+                    <span class="product-badge">Active</span>
+                </div>
+                <div class="product-card">
+                    <h3 class="product-title">PCStudio</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: pcstudio.in</p>
+                    <span class="product-badge">Active</span>
+                </div>
+                <div class="product-card">
+                    <h3 class="product-title">Vedant Computers</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: vedantcomputers.com</p>
+                    <span class="product-badge">Active</span>
+                </div>
+                <div class="product-card">
+                    <h3 class="product-title">PrimeABGB</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: primeabgb.com</p>
+                    <span class="product-badge">Active</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-backdrop" id="select-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="select-modal-title">Select Component</h3>
+                <button class="modal-close" onclick="closeModal('select-modal')">&times;</button>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                <input type="text" id="select-modal-search" placeholder="Search within this category..."
+                       oninput="onSlotSearchInput()"
+                       style="flex: 1; min-width: 220px; padding: 0.55rem 0.9rem; border-radius: 8px;
+                              border: 1px solid rgba(148,163,184,0.3); background: rgba(15,23,42,0.6);
+                              color: #f1f5f9; font-size: 0.9rem;">
+                <label style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);
+                              font-size: 0.85rem; cursor: pointer; white-space: nowrap;">
+                    <input type="checkbox" id="select-modal-compatible-only" checked onchange="loadSlotCandidates()">
+                    Compatible only
+                </label>
+            </div>
+            <div id="select-modal-count" style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.6rem;"></div>
+            <div id="select-modal-list"></div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="compare-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Multi-Store Price Comparison</h3>
+                <button class="modal-close" onclick="closeModal('compare-modal')">&times;</button>
+            </div>
+            <div id="compare-modal-content"></div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="history-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Price History Snapshots</h3>
+                <button class="modal-close" onclick="closeModal('history-modal')">&times;</button>
+            </div>
+            <div id="history-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
+    <script src="/static/app.js?v=7"></script>
+</body>
+</html>
