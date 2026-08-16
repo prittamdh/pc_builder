@@ -114,6 +114,15 @@ CPU_BRAND_INDICATORS = (
 )
 
 
+# Audio gear that some stores file under Power Supply, presumably because it plugs in.
+# A Sennheiser soundbar reached the PSU spec pipeline and had an efficiency rating
+# scraped onto it before this guard existed.
+AUDIO_INDICATORS = (
+    "soundbar", "speaker", "headphone", "headset", "earbud", "earphone",
+    "microphone", "subwoofer",
+)
+
+
 # Thermal interface material sold alongside coolers. It ships under the cooler
 # category at several stores, but it is a consumable, not a mountable cooler - and a
 # builder offering "Noctua NT-H2 AM5 Edition" as a CPU cooler is plainly wrong.
@@ -133,6 +142,11 @@ def _title_indicates_discrete_gpu(title: str | None) -> bool:
 def _title_indicates_thermal_material(title: str | None) -> bool:
     t = f" {(title or '').lower()} "
     return any(marker in t for marker in THERMAL_MATERIAL_INDICATORS)
+
+
+def _title_indicates_audio(title: str | None) -> bool:
+    t = f" {(title or '').lower()} "
+    return any(marker in t for marker in AUDIO_INDICATORS)
 
 
 class CategoryClassifier:
@@ -163,6 +177,10 @@ class CategoryClassifier:
         # Thermal paste and pads ship under the cooler category but are consumables,
         # not coolers, and must never be offered to fill a build's cooler slot.
         if p_cat == "CPU Cooler" and _title_indicates_thermal_material(title):
+            return "Accessories"
+
+        # Audio devices are not power supplies, whatever the store filed them under.
+        if p_cat == "Power Supply" and _title_indicates_audio(title):
             return "Accessories"
 
         return p_cat

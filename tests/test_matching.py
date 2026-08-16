@@ -97,3 +97,18 @@ class TestThermalMaterialNotACooler:
         from matching.category_classifier import CategoryClassifier as C
         assert C.get_p_category("CPU Cooler", "Deepcool AK620 Dual Tower CPU Air Cooler") == "CPU Cooler"
         assert C.get_p_category("CPU Cooler", "ZEBRONICS AIO240TW 240mm AIO Liquid Cooler") == "CPU Cooler"
+
+
+class TestAudioNotAPowerSupply:
+    """Audio gear filed under Power Supply reached the PSU spec pipeline and had an
+    efficiency rating scraped onto it from a cross-sell block."""
+
+    def test_audio_is_accessory(self):
+        from matching.category_classifier import CategoryClassifier as C
+        assert C.get_p_category("Power Supply", "Sennheiser AMBEO Soundbar Plus") == "Accessories"
+        assert C.get_p_category("Power Supply", "Marshall Emberton II Wireless Bluetooth Portable Speaker") == "Accessories"
+
+    def test_real_psus_unaffected(self):
+        from matching.category_classifier import CategoryClassifier as C
+        assert C.get_p_category("Power Supply", "Corsair RM850x 850W 80+ Gold Fully Modular") == "Power Supply"
+        assert C.get_p_category("Power Supply", "ANT ESPORTS VS550L 550 Watt SMPS") == "Power Supply"
