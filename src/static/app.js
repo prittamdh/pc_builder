@@ -166,7 +166,7 @@ function initBuilder() {
     validateBuild();
 }
 
-function openSelectModal(slotKey, slotName) {
+async function openSelectModal(slotKey, slotName) {
     state.activeSlotKey = slotKey;
     const modal = document.getElementById('select-modal');
     const title = document.getElementById('select-modal-title');
@@ -175,22 +175,40 @@ function openSelectModal(slotKey, slotName) {
     title.innerText = `Select ${slotName}`;
     modal.classList.add('active');
 
-    // Filter catalog matching slot category
+    // Slot -> normalized p_category. Previously this filtered whatever the Catalog
+    // tab happened to have loaded, matching on the RAW store category, so opening
+    // the builder and clicking Select almost always showed an empty list (the
+    // catalog's first page is rarely the slot you want). Fetch per slot instead.
     const catMap = {
         cpu: 'CPU',
         gpu: 'GPU',
-        motherboard: 'MOTHERBOARD',
+        motherboard: 'Motherboard',
         ram: 'RAM',
-        storage: 'SSD',
-        psu: 'PSU',
-        case: 'CABINET'
+        storage: 'Storage',
+        psu: 'Power Supply',
+        case: 'Cabinet'
     };
     const targetCat = catMap[slotKey];
 
-    const matching = state.products.filter(p => !targetCat || (p.category || '').toUpperCase().includes(targetCat));
+    list.innerHTML = '<div style="color: var(--text-secondary);">Loading components...</div>';
+
+    let matching = [];
+    try {
+        const res = await fetch(`${API_BASE}/products?p_category=${encodeURIComponent(targetCat)}&in_stock=true&size=100`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        matching = data.items || [];
+        // Keep them available to selectComponentForSlot(), which looks up by id.
+        matching.forEach(p => {
+            if (!state.products.some(existing => existing.id === p.id)) state.products.push(p);
+        });
+    } catch (err) {
+        list.innerHTML = `<div style="color: var(--danger);">Could not load ${slotName}: ${err.message}</div>`;
+        return;
+    }
 
     if (matching.length === 0) {
-        list.innerHTML = '<div style="color: var(--text-secondary);">No matching components loaded. Search or select a category first.</div>';
+        list.innerHTML = `<div style="color: var(--text-secondary);">No in-stock ${slotName} found.</div>`;
         return;
     }
 
