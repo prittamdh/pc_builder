@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, Query
+import secrets
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
 from db.models.product import Product
+from db.models.saved_build import SavedBuild
 from domain.builder import BuildSelection, BuildSummary, ComponentSlot
 from services.builder_service import BuilderService
 from services.compatibility_engine import CompatibilityEngine
@@ -30,6 +33,13 @@ class CandidateRequest(BaseModel):
     selected_product_ids: list[int] = []
     q: str | None = None
     compatible_only: bool = True
+
+
+class SaveBuildRequest(BaseModel):
+    # slot key -> product id, e.g. {"cpu": 4089, "motherboard": 4867}
+    selections: dict[str, int]
+    name: str | None = None
+    notes: str | None = None
 
 
 @router.get("/slots", response_model=list[ComponentSlot])
@@ -98,4 +108,104 @@ def list_slot_candidates(
         ],
         "total": len(kept),
         "filtered_out": total_before - len(candidates),
+    }
+
+
+@router.post("/builds")
+def save_build(req: SaveBuildRequest, db: Session = Depends(get_db)):
+    """Persist an assembled build and return a share token.
+
+    Stores product ids rather than prices: the ten stores reprice constantly and the
+    whole point of the tool is the current best price, so a saved build is re-costed
+    whenever it's opened.
+    """
+    selections = {slot: pid for slot, pid in (req.selections or {}).items() if pid}
+    if not selections:
+        raise HTTPException(status_code=400, detail="Cannot save an empty build.")
+
+    unknown_slots = set(selections) - set(SLOT_CATEGORY)
+    if unknown_slots:
+        raise HTTPException(status_code=400, detail=f"Unknown slots: {sorted(unknown_slots)}")
+
+    product_ids = list(selections.values())
+    found = {p.id for p in db.scalars(select(Product).where(Product.id.in_(product_ids)))}
+    missing = set(product_ids) - found
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Unknown product ids: {sorted(missing)}")
+
+    summary = BuilderService(db).validate_and_calculate_build(product_ids)
+
+    # token_urlsafe(16) is ~22 chars of URL-safe randomness - unguessable, so a shared
+    # link can't be walked to reach anyone else's build the way a sequential id could.
+    build = SavedBuild(
+        share_token=secrets.token_urlsafe(16),
+        name=(req.name or "").strip()[:120] or None,
+        selections=selections,
+        was_compatible=summary.compatible,
+        notes=(req.notes or "").strip()[:2000] or None,
+    )
+    db.add(build)
+    db.commit()
+    db.refresh(build)
+
+    return {
+        "share_token": build.share_token,
+        "name": build.name,
+        "compatible": summary.compatible,
+        "total_min_cost": str(summary.total_min_cost),
+        "created_at": build.created_at.isoformat() if build.created_at else None,
+    }
+
+
+@router.get("/builds/{share_token}")
+def load_build(share_token: str, db: Session = Depends(get_db)):
+    """Re-hydrate a saved build, re-validated and re-costed against current data.
+
+    Components can go out of stock or be repriced between save and load, so the stored
+    verdict is never trusted - it's recomputed and any drift is reported explicitly.
+    """
+    build = db.scalar(select(SavedBuild).where(SavedBuild.share_token == share_token))
+    if build is None:
+        raise HTTPException(status_code=404, detail="Saved build not found.")
+
+    selections = build.selections or {}
+    products = {p.id: p for p in db.scalars(select(Product).where(Product.id.in_(list(selections.values()))))}
+
+    items = {}
+    unavailable = []
+    for slot, pid in selections.items():
+        p = products.get(pid)
+        if p is None:
+            unavailable.append({"slot": slot, "product_id": pid, "reason": "no longer in catalog"})
+            continue
+        if not p.in_stock:
+            unavailable.append({"slot": slot, "product_id": pid, "name": p.name, "reason": "out of stock"})
+        items[slot] = {
+            "id": p.id,
+            "name": p.name,
+            "current_price": float(p.current_price) if p.current_price is not None else None,
+            "in_stock": bool(p.in_stock),
+        }
+
+    summary = BuilderService(db).validate_and_calculate_build([p.id for p in products.values()])
+
+    return {
+        "share_token": build.share_token,
+        "name": build.name,
+        "notes": build.notes,
+        "created_at": build.created_at.isoformat() if build.created_at else None,
+        "items": items,
+        "unavailable": unavailable,
+        "compatible": summary.compatible,
+        "warnings": [w.model_dump() if hasattr(w, "model_dump") else w for w in summary.warnings],
+        "estimated_wattage": summary.estimated_wattage,
+        "total_min_cost": str(summary.total_min_cost),
+        "store_breakdown": [
+            s.model_dump() if hasattr(s, "model_dump") else s for s in summary.store_breakdown
+        ],
+        # Surfaced so the UI can say the verdict changed rather than silently showing
+        # a different answer than the one the build was saved with.
+        "compatibility_changed_since_save": (
+            build.was_compatible is not None and build.was_compatible != summary.compatible
+        ),
     }

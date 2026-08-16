@@ -24,6 +24,7 @@ from .mixins import TimestampMixin
 from .price_history import PriceHistory
 from .product import Product
 from .product_target import ProductTarget
+from .saved_build import SavedBuild
 from .scrape_target import ScrapeTarget
 from .store import Store
 

@@ -186,6 +186,19 @@ A survey of storage/PSU/cabinet/cooler found three problems, none about age:
   so `interface = "NVMe"` is honest while still being external — so titles are matched
   too. Verified no internal drive was caught.
 
+### Saved & shareable builds (2026-08-16)
+An assembled build lived only in page memory and was lost on refresh, so there was no
+way to keep one or send it to anyone. `saved_builds` stores the slot->product mapping
+under an unguessable share token (`secrets.token_urlsafe`, so a link can't be walked to
+reach someone else's build the way a sequential id could).
+
+Selections are stored as **product ids, not a price snapshot**: the ten stores reprice
+constantly and the point of the tool is the current best price, so a saved build is
+re-validated and re-costed on every load. Stock and compatibility can drift between save
+and load, so the stored verdict is never trusted - the response reports components that
+went out of stock and flags when the compatibility verdict differs from save time, rather
+than quietly showing a different answer.
+
 ### Wired into the live scraping DAG (2026-08-16)
 Extraction was previously run only via manual one-off script invocations. `dags/scheduled_scraper_dag.py` now has a second task, `extract_canonical_identities`, chained after `process_due_targets`, which calls each category's already-incremental extractor (`reprocess_all=False` default → only products missing `canonical_id`) with a small per-category limit (15) every 15-minute cycle — comfortably under Mistral's free-tier 50 RPM. New products scraped by the DAG now get canonical identity extraction automatically; no more manual script runs needed for steady-state operation. Verified by nulling a real product's `canonical_id` and confirming `airflow tasks test` re-extracted it correctly inside the actual container (not just a clean import).
 
@@ -245,4 +258,7 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 7. **`CategoryClassifier.get_p_category()` title fallback** — currently a dead parameter; unrecognized raw categories silently dump into "Accessories" regardless of title content. Worth fixing once more scrape-source categories are seen in practice.
 8. **Wire the new Stage-2 spec extractors into the DAG** — `extract_canonical_identities` currently runs only the Stage-1 identity extractors. The 7 new `*_specs` scripts (plus the two zero-API `populate_*_from_extractions.py` scripts) should run after it so newly-scraped models get physical specs automatically. `scripts/classify_legacy_products.py` and `scripts/fix_catalog_data_quality.py` are both idempotent and belong in the same task, otherwise newly-scraped legacy or external parts reappear in the builder.
 9. **Frontend surfaces still untested** — Compare, History and the Stores tab were exercised and work, but nothing has been checked on a narrow viewport, and there are no automated frontend tests at all. Every frontend bug found on 2026-08-16 was silent (a swallowed 422, an empty list, a `zip()` truncation), so the absence of errors in the console is not evidence the UI is behaving.
-10. **PSU efficiency gap** — 78 PSUs have no `efficiency_rating` because their titles don't state one and Cybenetics doesn't cover the budget Indian brands. Not wrong, just missing; a second certification source would close it.
+10. **PSU efficiency gap (source assessment done 2026-08-16)** — 77 PSUs still lack an `efficiency_rating`. Investigated where the rest could come from:
+    - **CLEAResult/80 PLUS official database** is the authoritative source (~11,000 certified units vs Cybenetics' 1,152) and its page has an "Export Data" (xlsx) button. The export is a browser-initiated download the sandbox blocks, and the obvious Drupal view-export URLs return 500/404, so pulling it in bulk needs either a manual download or paginating a JS-rendered table. This is the highest-value remaining lead.
+    - **Manufacturer product pages** cover what neither certification body lists. Confirmed the gap is real rather than absent certification: the Ant Esports VS550L is 80 Plus Bronze certified, but the retailer titles omit it and Cybenetics doesn't test the budget Indian brands. Seeded from the vendor page.
+    - Remaining gap skews to Ant Esports (18) and unresolved-brand entries (20).

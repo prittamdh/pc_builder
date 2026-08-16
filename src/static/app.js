@@ -416,3 +416,96 @@ function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// Saved builds -------------------------------------------------------------
+// A build previously lived only in this page's memory and was lost on refresh.
+
+async function saveBuild() {
+    const btn = document.getElementById('save-build-btn');
+    const selections = {};
+    for (const [slot, product] of Object.entries(state.builderSelections)) {
+        if (product) selections[slot] = product.id;
+    }
+    if (Object.keys(selections).length === 0) {
+        alert('Add at least one component before saving.');
+        return;
+    }
+
+    const original = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
+
+    try {
+        const res = await fetch(`${API_BASE}/builder/builds`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                selections,
+                name: document.getElementById('build-name')?.value || null
+            })
+        });
+        if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+        const data = await res.json();
+
+        const url = `${location.origin}/?build=${data.share_token}`;
+        document.getElementById('share-link').value = url;
+        document.getElementById('share-link-box').style.display = 'block';
+        btn.innerText = 'Saved ✓';
+        setTimeout(() => { btn.innerText = original; btn.disabled = false; }, 2000);
+    } catch (err) {
+        btn.innerText = 'Save failed';
+        console.error('Save build failed:', err);
+        setTimeout(() => { btn.innerText = original; btn.disabled = false; }, 2500);
+    }
+}
+
+async function loadSharedBuild(token) {
+    try {
+        const res = await fetch(`${API_BASE}/builder/builds/${encodeURIComponent(token)}`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+
+        for (const [slot, item] of Object.entries(data.items || {})) {
+            state.builderSelections[slot] = item;
+            const el = document.getElementById(`slot-name-${slot}`);
+            if (el) el.innerText = item.name;
+        }
+        if (data.name) {
+            const nameInput = document.getElementById('build-name');
+            if (nameInput) nameInput.value = data.name;
+        }
+
+        // Switch to the builder so the restored build is actually visible.
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            if (b.dataset.tab === 'builder') b.click();
+        });
+
+        await validateBuild();
+
+        // Stock and prices move between save and load, so say so rather than quietly
+        // showing a build that can't be bought as-is.
+        const notices = [];
+        if ((data.unavailable || []).length) {
+            notices.push(`${data.unavailable.length} component(s) no longer purchasable: ` +
+                data.unavailable.map(u => `${u.slot} (${u.reason})`).join(', '));
+        }
+        if (data.compatibility_changed_since_save) {
+            notices.push('Compatibility differs from when this build was saved.');
+        }
+        if (notices.length) {
+            const warn = document.getElementById('warnings-list');
+            if (warn) {
+                warn.innerHTML = notices.map(n =>
+                    `<div class="warning-item warning">${escapeHtml(n)}</div>`).join('') + warn.innerHTML;
+            }
+        }
+    } catch (err) {
+        console.error('Could not load shared build:', err);
+        alert('That shared build link could not be loaded.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const token = new URLSearchParams(location.search).get('build');
+    if (token) loadSharedBuild(token);
+});

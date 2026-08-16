@@ -83,6 +83,24 @@
                         <span style="color: var(--text-secondary); font-size: 0.9rem;">Total Lowest Build Cost:</span>
                         <div class="total-cost" id="total-cost">₹0</div>
                     </div>
+
+                    <div style="border-top: 1px solid var(--border-color); margin-top: 1rem; padding-top: 1rem;">
+                        <input type="text" id="build-name" placeholder="Name this build (optional)"
+                               style="width: 100%; padding: 0.5rem 0.75rem; margin-bottom: 0.6rem; border-radius: 8px;
+                                      border: 1px solid rgba(148,163,184,0.3); background: rgba(15,23,42,0.6);
+                                      color: #f1f5f9; font-size: 0.85rem;">
+                        <button class="btn-primary" id="save-build-btn" onclick="saveBuild()"
+                                style="width: 100%; padding: 0.6rem;">Save &amp; Get Share Link</button>
+                        <div id="share-link-box" style="display: none; margin-top: 0.75rem;">
+                            <input type="text" id="share-link" readonly onclick="this.select()"
+                                   style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px;
+                                          border: 1px solid var(--accent-cyan); background: rgba(15,23,42,0.8);
+                                          color: var(--accent-cyan); font-size: 0.78rem;">
+                            <div style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.4rem;">
+                                Re-priced from live store data each time it's opened.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -166,6 +184,6 @@
     </div>
 
     <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
-    <script src="/static/app.js?v=6"></script>
+    <script src="/static/app.js?v=7"></script>
 </body>
 </html>

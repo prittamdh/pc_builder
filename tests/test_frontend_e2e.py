@@ -189,3 +189,50 @@ class TestCatalogPolicy:
             return (await r.json()).total;
         }""")
         assert total == 0
+
+
+class TestSavedBuilds:
+    """A build used to live only in page memory and vanished on refresh."""
+
+    def test_save_then_open_share_link_restores_the_build(self, page, base_url):
+        _open_builder(page)
+        token = page.evaluate("""async () => {
+            const get = async id => (await fetch(`/api/v1/products/${id}`)).json();
+            for (const [slot, id] of Object.entries({cpu:4089, motherboard:4867})) {
+                const p = await get(id);
+                state.builderSelections[slot] = p;
+                document.getElementById(`slot-name-${slot}`).innerText = p.name;
+            }
+            const r = await fetch('/api/v1/builder/builds', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({selections:{cpu:4089, motherboard:4867}, name:'e2e rig'})
+            });
+            return (await r.json()).share_token;
+        }""")
+        assert token
+
+        page.goto(f"{base_url}/?build={token}", wait_until="networkidle")
+        page.wait_for_function(
+            "document.getElementById('slot-name-cpu')"
+            "&& !/No component/.test(document.getElementById('slot-name-cpu').innerText)",
+            timeout=15000,
+        )
+        assert "7800X3D" in page.locator("#slot-name-cpu").inner_text()
+        assert "B850" in page.locator("#slot-name-motherboard").inner_text()
+        assert page.locator("#build-name").input_value() == "e2e rig"
+
+    def test_empty_build_cannot_be_saved(self, page):
+        status = page.evaluate("""async () => {
+            const r = await fetch('/api/v1/builder/builds', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({selections:{}})
+            });
+            return r.status;
+        }""")
+        assert status == 400
+
+    def test_unknown_share_token_is_404(self, page):
+        status = page.evaluate(
+            "fetch('/api/v1/builder/builds/definitely-not-a-token').then(r => r.status)"
+        )
+        assert status == 404
