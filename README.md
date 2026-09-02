@@ -2,6 +2,14 @@
 
 A production-grade, multi-store PC component price aggregator, real-time spec normalizer, and PC assembly compatibility optimization engine built for Indian PC hardware retailers.
 
+> **Start here: [docs/DATAFLOW.md](docs/DATAFLOW.md)** — step-by-step data flow from
+> retailer page to UI, what every table holds, and the invariants the pipeline relies
+> on. Read it before writing a query or changing the scraper.
+>
+> Other docs: [PROGRESS.md](PROGRESS.md) (running log of work and bugs found),
+> [PROJECT_MAP.md](PROJECT_MAP.md) (file-by-file map),
+> [docs/competitive_research.md](docs/competitive_research.md) (market and product notes).
+
 ---
 
 ## 🌟 Key Features

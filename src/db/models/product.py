@@ -78,6 +78,14 @@ class Product(Base, TimestampMixin):
         index=True,
     )
 
+    # Sale condition: NULL for an ordinary sealed listing, otherwise "open_box",
+    # "repacked" or "refurbished". Opened stock is systematically cheaper, so without
+    # this it beats sealed units in every price comparison and cheapest-first sort.
+    condition: Mapped[str | None] = mapped_column(
+        String(32),
+        index=True,
+    )
+
     description: Mapped[str | None] = mapped_column(
         Text,
     )

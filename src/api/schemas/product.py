@@ -15,6 +15,8 @@ class ProductOut(BaseModel):
     brand: str | None = None
     category: str | None = None
     p_category: str | None = None
+    # None for ordinary sealed stock; "open_box" / "repacked" / "refurbished" otherwise.
+    condition: str | None = None
     description: str | None = None
     specifications: dict | None = None
     currency: str

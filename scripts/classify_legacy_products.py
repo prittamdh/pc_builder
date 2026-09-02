@@ -84,7 +84,19 @@ def classify(dry_run: bool = False) -> None:
                 legacy = p.id in unbranded_psu_products
                 bucket = "PSU (no brand)"
             elif p.p_category == "CPU":
+                # The canonical pass covers everything identity extraction could name.
+                # When it failed there is no series to test, so fall back to the
+                # product's own title - that is how a 7th-gen Core i5 with
+                # canonical_id 'cpu:unknown' stayed visible and led the cheapest-first
+                # CPU listing. is_cpu_legacy only reads the title when the series is
+                # blank, and reads it per brand.
                 legacy = p.canonical_id in legacy_cpu_ids
+                if not legacy:
+                    key_fields = cpu_keys.get(p.canonical_id) or {}
+                    if not (key_fields.get("series") or "").strip():
+                        legacy = is_cpu_legacy(
+                            None, None, cpu_socket.get(p.canonical_id), p.name
+                        )
                 bucket = "CPU"
             elif p.p_category == "Motherboard":
                 legacy = p.id in legacy_mobo_products

@@ -18,7 +18,9 @@ class SearchService:
             return
 
         from matching.category_classifier import CategoryClassifier
+        from matching.condition_policy import detect_condition
         p_category = CategoryClassifier.get_p_category(hard_category, result.name)
+        condition = detect_condition(result.name)
 
         product, created = self.product_repository.get_or_create(
             sid=result.sid,
@@ -28,6 +30,7 @@ class SearchService:
             image_url=str(result.image) if result.image else None,
             category=hard_category,
             p_category=p_category,
+            condition=condition,
             currency=result.currency,
             current_price=float(result.price),
             current_mrp=float(result.mrp) if result.mrp is not None else None,
@@ -40,6 +43,7 @@ class SearchService:
                 "product_url": str(result.url),
                 "image_url": str(result.image) if result.image else None,
                 "p_category": p_category,
+                "condition": condition,
                 "currency": result.currency,
                 "current_price": float(result.price),
                 "current_mrp": float(result.mrp) if result.mrp is not None else None,

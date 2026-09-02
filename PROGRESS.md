@@ -186,6 +186,454 @@ A survey of storage/PSU/cabinet/cooler found three problems, none about age:
   so `interface = "NVMe"` is honest while still being external — so titles are matched
   too. Verified no internal drive was caught.
 
+### Catalog sorting, and the price bug it exposed (2026-08-17)
+
+Adding sort to the catalog was meant to be a small UI job. It surfaced two data
+defects instead, both of which had been invisible precisely because nothing had ever
+ordered the catalog by price.
+
+**Computech Store (sid 8) was pricing products from their own titles.**
+`_parse_computech_html` ran `₹?\s*(\d{1,3}(?:,\d{3})+|\d{4,6})` over the whole card
+text and took the first match above 500. A card's text begins with the product title,
+the rupee sign was **optional**, and hardware titles are full of 4-6 digit numbers
+that are not prices. So the parser sold model numbers, memory speeds, sockets and
+wattages as prices. Measured live against computechstore.in on 2026-08-17:
+
+| Title | Parsed as | Actually |
+|---|---|---|
+| Colorful iGame GeForce RTX 5080 | ₹5,080 | ₹1,54,499 |
+| Colorful iGame RTX 5070 Ti | ₹5,070 | ₹1,24,499 |
+| NEXTRON RX 7600 XT | ₹7,600 | ₹34,999 |
+| ASRock RX 9050 Challenger | ₹9,050 | ₹30,999 |
+
+An unbiased 500-product sample across the store found **57% carried a price identical
+to a number in their own name**. This is the same failure as the PSU-efficiency
+carousel bug: an unanchored regex over too much text returning a confident wrong
+answer. The fix is to require the rupee sign; on the live page that picks the correct
+price in every case checked, and a card with no marked amount is now skipped rather
+than assigned an invented one. `tests/test_price_extraction.py` covers it offline.
+
+Severity is worth stating plainly: Computech is the largest store in the catalog, and
+systematically understated prices mean it would have won almost every price
+comparison the tool made.
+
+**Repaired the same day, in two passes.** A category re-scrape
+(`re_scrape_all_stores.py`, now takes an optional store argument) walked the store's
+12 targets in 84s and fixed the bulk: RTX 5080 ₹5,080 → ₹1,54,499, RX 7600 XT ₹7,600
+→ ₹34,999. That took the store-wide rate from 57% to 5%.
+
+The remaining 5% were rows the listing pages no longer carry — out of stock on the
+site, or past a target's `max_pages` — so a category scrape can never reach them, and
+they kept their pre-fix prices. `scripts/repair_unseen_products.py` fetches those
+products' own pages instead. It identifies them from **price_history, not
+`products.updated_at`**: `save()` writes a history row on every scrape even when the
+product row is unchanged, so "no history row since the run began" is the only precise
+test for "never seen" — `updated_at` cannot separate *not seen* from *seen and
+identical*. That distinction mattered: `updated_at` suggested 1,152 stale rows, while
+the real figure was 123.
+
+It corrected 89 of those 123, with no failures: PNY RTX 5000 Ada ₹5,000 → ₹4,59,999,
+PNY RTX PRO 4000 Blackwell ₹4,000 → ₹2,14,999, ASUS ROG MAXIMUS Z890 HERO ₹1,851 →
+₹58,999. Not all corrections were upward — Coconut clip fans went ₹1,200 → ₹239,
+since the title number had been overstating them.
+
+**Verified: 0 of all 2,042 Computech products now carry a price matching a number in
+their own title, down from 57%.**
+
+**TLG Gaming (sid 11) has no usable prices at all.** All 163 of its products are
+priced 0.00 while flagged in stock. A zero is not a cheap price, it is a failed
+scrape, and it led every price-ascending sort while silently subtracting a whole
+component from any build total that included one — a ₹0 part was reachable from the
+builder's candidate list. `api/filters.has_usable_price()` now excludes unpriced
+listings from both the catalog (overridable with `include_unpriced=true`) and the
+builder (not overridable — an unpriced part cannot belong in a costed build). That is
+a guard, not a fix; TLG's parser is still wrong.
+
+**What shipped alongside**
+- `sort=price_asc|price_desc|name_asc|recent` on `/products`, with `NULLS LAST` so
+  unpriced rows never lead, and `id` appended as a tiebreaker — offset pagination over
+  a non-unique key was unstable, since a whole scrape batch shares one `updated_at`.
+- **No `discount` sort, deliberately.** Indian retailers inflate MRP to manufacture a
+  headline discount, so ordering by `mrp - price` would rank the least honest listings
+  first.
+- Search now matches per token against both the title as written and the title with
+  punctuation stripped, so "rtx4070", "rtx 4070" and "4070 gigabyte" all find the same
+  card. Previously only the exact spelling the shopper typed would match.
+- The Stores tab and the catalog's retailer count now come from `/api/v1/stores`. Both
+  were hand-written, so the page claimed 10 retailers while listing 4.
+
+### TLG Gaming had no prices at all (2026-08-17)
+
+All 163 of TLG Gaming's (sid 11) products were priced 0.00 while flagged in stock, so
+the whole store contributed nothing and `has_usable_price()` was hiding it entirely.
+Two causes, both in the price path:
+
+- The store writes `Rs.31,999.00`, not `₹31,999`. `_clean_price` only stripped `₹` and
+  commas, then handed the rest to `Decimal()`, which raised — and the fallback answered
+  `0`. It now takes the **first** money-looking amount out of the string regardless of
+  currency prefix, so `Rs.`, `INR` and bare digits all parse.
+- The configured `price` selector was `.price-new, .price`, but `.price` is a
+  *container* holding both the selling price and the tax line, giving
+  `"Rs.31,999.00Ex Tax:Rs.27,117.80"`. Narrowed to `.price-new, .price-normal`, which
+  hold the selling price alone (Journal 3 uses `-new` only when discounted).
+
+Re-scraped in 4.2s, then `repair_unseen_products.py` fixed the 10 the listing pages
+don't carry. **Catalog-wide unpriced products: 0 of 11,822.**
+
+### Category leaks and the dead title fallback (2026-08-17)
+
+`get_p_category()` returned `"Accessories"` immediately whenever the store supplied no
+category, ignoring the `title` argument entirely — the long-standing open item. That
+buried real parts: an AMD Radeon Pro W7700, a Sapphire RX 9070 XT, a Gigabyte Z890
+board, 4 DDR5 kits and 10 internal surveillance drives were all sitting in Accessories,
+invisible to both the catalog and the builder. `_classify_from_title()` now runs
+whenever the raw category is missing or unmapped, using high-confidence markers only
+and still falling back to Accessories when nothing is certain. 17 products recovered.
+
+Also added a removable-media guard: a SanDisk 128GB memory card was filed by the store
+under "Graphics Card" and was the cheapest GPU in the catalog.
+
+A first attempt reclassified in bulk and moved a genuine W7700 *into* Accessories
+before being caught — worth noting that a blanket re-run of the classifier is not safe
+on rows whose `p_category` was corrected by hand earlier.
+
+### Spec filters (2026-08-17)
+
+The nine `*_specs` tables held 6,951 extracted model rows that nothing ever exposed, so
+the catalog could be searched by title and nothing else. `api/spec_filters.py` maps each
+category to its spec table and the fields worth narrowing by; `/products` accepts
+`spec_<field>=`, `spec_<field>_min=` and `spec_<field>_max=`, joining on `canonical_id`.
+
+`/products/facets?p_category=…` drives the UI from the catalog itself — enum options
+carry counts, range fields carry observed bounds — so a filter can never offer a value
+that returns nothing, and newly extracted specs appear without a code change. Unknown
+`spec_*` names are ignored rather than rejected, so a stale bookmark degrades to a
+broader search instead of a 422.
+
+Building the facets surfaced three data defects that had no visible symptom before:
+- **`psu_specs.wattage` was 100% NULL** (446/446), so the most useful PSU filter simply
+  didn't appear. `psu_title_extractions.wattage` had held it all along (980 of 1,016
+  rows); `populate_psu_wattage_from_extractions.py` backfilled 411 at zero API cost.
+- A GPU claiming **12,000 GB of VRAM** (MB read as GB), another at 128, and 4 at zero.
+- A RAM kit at **32 MHz** — a model-number digit read as the speed.
+
+  All nulled rather than guessed, consistent with how the PSU efficiency gaps were left.
+
+### Stage-1 data never reached the spec tables (2026-08-17)
+
+Auditing every `*_specs` column for NULL density found key fields at **0%**:
+`motherboard_specs.socket` (0 of 1,213), `cabinet_specs.form_factor`,
+`cooler_specs.cooler_type`, and PSU wattage. The values had been extracted all along -
+`motherboard_title_extractions.socket` was populated - but nothing ever copied stage 1
+into stage 2. It stayed invisible because `CompatibilityEngine` reads the extraction
+tables directly, so the builder worked correctly while the catalog offered **no
+motherboard filters at all**.
+
+`scripts/populate_specs_from_extractions.py` backfills all nine categories at zero API
+cost: socket 917, memory_type 913, motherboard form_factor 857, cabinet form_factor
+1,296, cooler_type 585, fan_size 377.
+
+It validates before writing. A first run would have re-introduced a "32 MHz" RAM kit
+that had just been cleared, because the bad value originates in the extraction table -
+so `BOUNDS` rejects physically impossible readings and leaves the column NULL instead.
+That also caught 11 bad fan sizes.
+
+A sweep of every numeric spec column against physical bounds found only 7 outliers in
+the whole catalog, and two of the three classes were **not** defects: an ASUS SP6
+server board really does have 12 DIMM slots, and the "610 Hz" monitor is real - the
+title reads "Asus XG248QSG ACE 24.1 Inch 610Hz". Worth recording that the bounds were
+wrong, not the data.
+
+### PCStudio was storing truncated product names (2026-08-17)
+
+The remaining outlier class did turn out to be real, and it was the largest data defect
+found so far. Five RAM kits carried `latency_cl = 3`; the source titles read
+`"Kingston Fury Beast RGB 16GB 6000MHz CL3..."`. The name itself was cut off.
+
+**1,793 products - 15% of the catalog, all PCStudio - had truncated names.** The theme
+clamps long titles, so the visible text ends in an ellipsis while the complete name
+sits in a nested `<span title="...">`. The parser read the visible text. This corrupted
+far more than display: search couldn't match past the cut, canonical keys are built
+from the name, and spec extraction was reading incomplete text - "CL3" is where the
+title stopped, not what the kit is.
+
+`_full_title()` now prefers a `title`/`aria-label`/`alt` attribute, but **only** when
+the visible text is actually elided and the attribute agrees with the visible prefix,
+so a theme using `title` for a tooltip cannot overwrite a good name. Re-scraped
+PCStudio, then repaired the stragglers from their product pages: **1,793 → 59, and 0 of
+those are in stock.** 1,730 products were correctly re-queued for extraction, since
+their names changed and their old specs came from the truncated text.
+
+Fixed a second bug found while repairing: `parse_product` unwrapped a JSON-LD `image`
+list but not an `ImageObject` dict, so `urljoin` raised `TypeError` on every PCStudio
+product page.
+
+**A mistake worth recording:** `repair_unseen_products.py` treated *any* exception as
+"the listing is gone" and marked 61 in-stock products unavailable when that TypeError
+fired. Marking a product unavailable is a claim about the store's inventory, so it must
+come from the store - it now only acts on a 404/410 and reports anything else as a
+failure, leaving the row untouched. Re-checked all 61 against the store afterwards:
+they were genuinely out of stock, so the data was accidentally right and the reasoning
+was wrong.
+
+### Price history charts (2026-08-17)
+
+`price_history` had been accumulating since 2026-07-27 — 322,484 rows, 10,359 products
+with five or more snapshots — and the UI showed it as a raw table of every 15-minute
+scrape, which is thousands of rows describing a line that mostly doesn't move.
+
+`GET /products/{id}/price-series?days=` aggregates per day, carrying each day's low and
+high so real intra-day movement still shows. Stats report what the listing has actually
+sold for: `lowest`, `highest`, `at_lowest`, `pct_above_lowest`.
+
+**The comparison is deliberately against the observed floor, never MRP.** Inflated MRP
+is precisely the trick this is meant to see through, so "3.8% above its 90-day low of
+₹22,399" is a claim we can stand behind, while "40% off MRP" would not be.
+
+Chart is hand-built SVG (a line for the daily low, a shaded band for the day's range) —
+the page has no build step, and one `<path>` is less code than adding a dependency.
+Edge cases verified in the browser: a flat price would divide by zero and emit `NaN`
+into the path, so `min == max` is widened; a single day shows stats without a chart;
+a listing with no history says so.
+
+### Data flow documentation (2026-08-17)
+
+`docs/DATAFLOW.md` — the pipeline end to end (config → scrape → persist → classify →
+identity extraction → specs → read paths → DAG), what every table holds and how it is
+keyed, and the invariants the pipeline depends on. Written because the two-identity
+model (`(sid, pid)` per listing vs `canonical_id` per model) is the thing that has to
+be understood before any query here makes sense, and it wasn't written down anywhere.
+Linked from `README.md` and `PROJECT_MAP.md`, and it lists the backup/experiment tables
+that should be ignored.
+
+### Frontend review round (2026-08-17)
+
+Six issues reported after testing; findings below, several of which were not what they
+first looked like.
+
+**1. Product grid collapsed to one card per row.** Mine, from the filter sidebar. The
+sidebar and grid share one CSS grid, and a hidden panel is `display:none` - so it
+leaves the grid entirely and the product grid becomes the *first* item, landing in the
+230px sidebar column. Fixed with a `no-filters` class that collapses the layout to one
+column, applied on first paint as well as on category change (`loadFacets()` wasn't
+called at init, so the first render was always wrong). Also cache-busted `style.css`,
+which had no version parameter while `app.js` did - CSS changes were not reaching
+browsers at all.
+
+**2. A 7th-gen Core i5 led the CPU list.** Identity extraction had failed completely
+(`series=''`, `canonical_id='cpu:unknown'`), and `is_cpu_legacy` only ever reads
+extraction fields, so no rule fired. It now falls back to the title when the series is
+blank - **per brand**, which is the important part: vendors write "3rd Gen"/"5th Gen"
+in AMD titles too, so running the Intel parser over "AMD Ryzen 5 5600X 5th Gen" returns
+5 and would have hidden a current Ryzen 5000 part. Four of the five apparent hits were
+false positives of exactly that kind; only the Intel one was real.
+
+**3. Missing images: an entire store.** Computech had no image for 2,041 of 2,042
+products - the thumbnail sits one level above the element the parser treats as the
+card, so `card.find("img")` found nothing. `_image_near()` now searches outward from
+the product link and **stops as soon as an ancestor holds a second product link**,
+because past that point the nearest image belongs to a neighbouring product. The bound
+is the point of the method: an unbounded search is what once read an 80+ Gold rating
+off an adjacent listing's carousel. Catalog-wide missing images: 124 of 11,822.
+
+**4. "RePacked" (TPS Tech) and "Open Box" (Computech, EliteHubs, PrimeABGB).** TPS
+Tech's pages don't define the term; the listings carry original brand warranty and a
+7-day return window, which places it with open-box rather than used goods. These are
+systematically cheaper, so with no way to tell them apart they win price comparisons
+against sealed stock - an "AMD Ryzen 3 4100 Open Box OEM" was the cheapest CPU in the
+catalog. Added `products.condition` (migration `c4a1f7e2d910`, NULL = sealed) with
+`matching/condition_policy.py`, wired into the save path, backfilled 24 listings, shown
+as a badge, and ranked below sealed stock in the builder. Flagged, not hidden - an
+open-box Threadripper at a real discount is a legitimate buy.
+
+**5. Storage interface filter offered 13 options for 7 real things** - "SATA" and
+"SATA III", "NVMe Gen4"/"NVMe Gen 4.0"/"NVMe PCIe 4.0", plus "SSD" and "Unknown", which
+aren't interfaces. `VALUE_ALIASES` and `NON_VALUES` in the backfill script normalize on
+write and re-tidy existing rows on every run. Now 7 options; "Unknown" is gone from
+every category's filters.
+
+**6. The two cooler URLs — two separate problems, one of which is not ours.**
+- Computech genuinely publishes **₹99,999** for that cooler; the live page says so. Our
+  scrape is accurate and the price is the retailer's placeholder. 18 listings sit at
+  exactly 99,999 and 4 at 999,999. Left as-is: it is what the shop says. (₹9,999 is a
+  normal price and was correctly left alone.)
+- The real bug is a **canonical split**: PCStudio's listing keys as
+  `cooler:cooler_master:masterliquid_core_lcd` while the other three key as
+  `..._lcd_360`, so Compare cannot group them. 62 such prefix pairs exist catalog-wide.
+  **Not merged**, because the short key is genuinely ambiguous: `adata:levante_ii` has
+  both `_240` and `_360` candidates, and `kingston:nv3` vs `nv3_2230` are different form
+  factors. This needs re-extraction, not a mechanical merge - recorded as open work.
+
+A cross-store outlier check (listing ≥4× the median of its own model, 3+ listings)
+returned only 4 hits, and two of those - two independent stores agreeing on ~₹35,700
+for a "Dawg Y 990" against a ₹5,674 median - indicate the *median* is wrong, i.e. more
+canonical merging of different products. Useful signal, same root cause as above.
+
+### UI credibility pass (2026-08-17)
+
+The brief was that it shouldn't look fake. The substantive problem was not styling: a
+product card never said **which retailer the price came from**, which on a price
+comparison site is both the missing trust signal and unusable information - you cannot
+buy from "somewhere". Cards now carry the retailer, stock state, a saving badge, and a
+proper "No image" placeholder rather than a broken-image glyph.
+
+Added `/products/stats` and a stat bar (components tracked, retailers, price snapshots,
+last updated). Every figure is fetched; the bar hides itself if the call fails rather
+than showing placeholder dashes. Hardcoded numbers are the fastest way to look
+fabricated and go stale the moment a retailer is added.
+
+Toned down the template tells: gradient-text wordmark, 2.75rem hero, neon-cyan prices,
+and cards that lift-and-glow on hover. Density raised instead (232px columns, 140px
+images, tighter cards) - a catalog should read like something you scan, not a landing
+page.
+
+### Picker reworked: model first, then store (2026-08-17)
+
+The builder's picker listed every *listing*, so "Asus Dual RX 9060 XT 16GB" appeared
+four times at ₹53,990 / ₹54,662 / ₹56,000 / ₹69,999 — the same card at four shops
+presented as four unrelated choices. Searching "9060 XT 16GB" returned 15 rows for 7
+cards; the category as a whole holds 51 listings across 25 models.
+
+That asks for two decisions at once — *which card* and *where to buy* — out of one
+undifferentiated list, and whichever row gets clicked sets the retailer as a side
+effect. `/builder/candidates` now returns one entry per `canonical_id` with its store
+offers nested: models ordered by best price, offers within a model by price, the
+cheapest tagged. `group_by_model: false` keeps the flat shape.
+
+Listings with no `canonical_id` become their own group keyed by product id. Guessing
+that two unidentified parts are the same model would merge genuinely different
+products, which is a mistake this codebase has already paid for twice.
+
+**Two assumptions corrected while doing this:**
+- The builder was **not** auto-selecting the cheapest store. `_rank_candidates` sorted
+  by condition then PSU tier and nothing else, so the leading row was effectively
+  database order — arbitrary, not cheapest. Whatever the user clicked was always the
+  exact listing used.
+- The sidebar said **"Total Lowest Build Cost"** while `validate_and_calculate_build`
+  simply sums the chosen listings. Nothing searched for a cheaper store, so the label
+  was a claim the code never made good on. Now "Total for selected offers".
+
+Grouping supersedes the old flat sealed-above-opened rule: models are ordered by price,
+so a cheaper repacked model can lead and the badge says so. The guarantee that still
+holds is *within* a model — at equal price, sealed stock is offered first.
+
+### Stores tab demoted to a footer (2026-08-17)
+
+A static list of ten shop names with no interaction and no reason to return to it does
+not earn a nav slot. The information is worth keeping — it answers "who do you cover?",
+which is a trust question — so it moved to a site footer alongside a note that prices
+are scraped and we are not affiliated with any retailer. Coverage is also in the stat
+bar, and every product card now names its retailer.
+
+It earns a tab back when it carries something worth visiting for: per-store reliability
+(whose "in stock" actually holds), which is already on the roadmap.
+
+### Catalog: models not listings, and it can be paged (2026-08-17)
+
+Two gaps, both structural:
+
+**No pagination existed at all.** `app.js` fetched a hardcoded `size=40` with no `page`
+parameter, so 11,449 products were browsable forty at a time and everything past that
+was unreachable unless you happened to guess a narrowing search term.
+
+**The catalog listed every listing.** Searching "9060 XT 16GB" returned 56 near-identical
+cards for ~25 actual cards, the same product repeated once per shop — precisely the
+duplication a comparison site exists to collapse.
+
+`GET /products/models` aggregates by `canonical_id` **in SQL**, so paging is over models
+rather than listings: 11,449 listings → 6,148 models, 257 pages of 24. Grouping a page of
+listings in Python instead would have produced pages of wildly differing size and missed
+cheaper offers sitting past the page boundary. Each card reads "from ₹X · N stores ·
+cheapest <shop>", with the spread shown when offers differ.
+
+Also added: budget min/max and a retailer dropdown (the API had accepted both all along),
+and **URL state** — `?q=…&category=…&spec_socket=AM5&page=2` — so a result set can be
+shared, bookmarked and reached with the back button. Every filter change resets to page 1;
+staying on page 7 of a shorter result set renders an empty grid and looks broken.
+
+### Filters are now hierarchical (2026-08-17)
+
+Filters were computed independently of each other, so Motherboard offered all 72 chipsets
+regardless of socket and most of them returned nothing once a socket was chosen.
+
+`SPEC_FILTERS` field order is now the *display* order, deliberately arranged so each
+category leads with the decision that constrains the rest — socket before form factor
+before chipset; wattage before efficiency; brand always last, since it narrows least and
+is what shoppers are most flexible about. `/products/facets` accepts the current selection
+and computes every facet against it:
+
+| Selection | chipsets | memory_type | brands | models |
+|---|---|---|---|---|
+| none | 72 | 2 | 11 | 905 |
+| socket=AM5 | 22 | **1** (DDR5 — correct for AM5) | 10 | 374 |
+| + form_factor=ITX | 5 | 1 | 4 | 16 |
+
+Each facet is computed with every other filter applied but **not its own**. That is what
+lets someone switch AM5 → LGA1700 directly; a self-constraining facet would collapse to
+the single value already chosen and force a clear first. Skipping a filter leaves
+everything below it wide, so a shopper with no socket preference can go straight to form
+factor — verified: ITX alone gives 31 models, ITX on AM5 gives 16.
+
+Supporting UI: active selections render as individually removable chips (with chained
+filters, the panel alone doesn't convey how narrow a search has become once a lower
+filter has collapsed to one option), and any list over 8 options is capped with a "Show
+all N" toggle — a 72-entry dropdown is a wall regardless of how well it is ordered.
+
+**Accessories** added as a category chip: 53 models. It has no spec table, so the facet
+endpoint returns nothing, the panel hides, and the grid takes the full width — which the
+`no-filters` layout fix from earlier already handled correctly.
+
+### Spec value normalization (2026-08-17)
+
+Values reach the filters from free-text retailer titles via an LLM, so the same fact
+arrived spelled many ways. `src/matching/spec_value_normalizer.py` now owns the canonical
+forms, replacing alias tables that had been accreting inside the backfill script.
+
+| Filter | Before | After | What was wrong |
+|---|---|---|---|
+| Monitor resolution | 42 | 18 | Four naming systems at once — labels, pixel pairs, marketing names, and one mojibake entry where the separator had been corrupted upstream |
+| Motherboard chipset | 72 | 45 | Form factor baked into the chipset name: `B850`/`B850M`/`B850I` were three options for one chipset |
+| GPU chipset | 53 | 45 | `RX 9060 XT` vs `RX 9060XT` split one card's offers in two; `GTX 710` was never a product |
+| Cabinet brand | 48 | 36 | Case variants, plus `Thermaltek` — a genuine typo, not a manufacturer |
+| Storage brand | 39 | 33 | `WD` vs `Western Digital`, `Patriot` vs `Patriot Memory` |
+| RAM brand | 36 | 23 | `TeamGroup` four ways, `G.Skill` four ways |
+| PSU brand | 36 | 24 | `ProLab Design` four ways |
+| Storage interface | 13 | 7 | `SATA`/`SATA III`, three spellings of NVMe Gen4 |
+| PSU modularity | 5 | 3 | `Modular`/`Fully Modular`/`Full` |
+
+Two rules throughout, and they are the whole design:
+
+- **Only collapse what is genuinely the same.** `B650E` survives because it is a
+  different chipset from `B650`, while a trailing `M`/`I` is stripped because those are
+  form factors and `form_factor` is already its own filter. Sub-brands stay separate:
+  XPG is ADATA's memory line, but people search "XPG", so folding it in would lose a
+  search term without shortening any filter meaningfully.
+- **A value that says nothing becomes NULL.** Applied to every column rather than per
+  field, which is how "Unknown" stayed out of all nine categories instead of being
+  handled eight times and forgotten in the ninth.
+
+Values removed for being in the wrong filter entirely: `SP5`/`SP6` (sockets, sitting in
+chipset), `DDR6`/`DDR7`/`SDR` (no GPU ships these), `Curved`/`Ultrawide Curved`/`LED`
+(shape and backlight, not panel technology), `SSD` (says what a drive is, not how it
+connects), and `Cybenetics Bronze`/bare `80+` (a different certification scheme, and a
+tier claim that names no tier).
+
+**Monitor was missing from `MAPPINGS` entirely** — the root cause of it being the one
+category still offering "Unknown" brands and 42 resolutions. Nothing had ever normalized
+it. 100 tests in `tests/test_spec_value_normalizer.py`, every case a real catalog value.
+
+Also fixed: `repair_unseen_products.py` never wrote `image_url`, so anything repaired via
+its product page kept no picture — which is why Computech still had imageless cards after
+a full re-scrape. The 8 in-stock cases are filled; missing images across the catalog are
+now 116 of 11,824, all out of stock.
+
+### Mobile filter drawer (2026-08-17)
+
+Below 860px the sidebar had been stacking above the grid, pushing every result below the
+fold. It is now a drawer — the pattern faceted-search guidance recommends for narrow
+screens — with the page behind it locked from scrolling. Verified at 375px: results stay
+visible, all six motherboard filters reachable, body unlocks on close.
+
 ### Saved & shareable builds (2026-08-16)
 An assembled build lived only in page memory and was lost on refresh, so there was no
 way to keep one or send it to anyone. `saved_builds` stores the slot->product mapping

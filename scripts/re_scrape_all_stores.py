@@ -2,7 +2,14 @@
 Master Re-Scraping Script across all 10 Retailer Stores.
 Re-scrapes all catalog endpoints and updates products.category with the exact raw category
 assigned to each catalog target, without string pattern normalization.
+
+Pass a store name or id to re-scrape just one, which is what you want after fixing a
+single store's parser rather than re-pulling all ten:
+
+    python scripts/re_scrape_all_stores.py computechstore
+    python scripts/re_scrape_all_stores.py 8
 """
+import sys
 import time
 from db.session import SessionLocal
 from db.models.store import Store
@@ -13,14 +20,25 @@ from scrapers.generic_scraper import GenericScraper
 from services.search_service import SearchService
 
 
-def run_master_rescrape():
+def run_master_rescrape(only_store: str | None = None):
+    scope = f"STORE '{only_store}'" if only_store else "ALL 10 STORES"
     print("=" * 80)
-    print("STARTING MASTER RE-SCRAPING PIPELINE ACROSS ALL 10 STORES")
+    print(f"STARTING RE-SCRAPING PIPELINE ACROSS {scope}")
     print("=" * 80)
     start_time = time.time()
 
     with SessionLocal() as session:
-        stores = list(session.scalars(select(Store).where(Store.active == True)).all())
+        stmt = select(Store).where(Store.active == True)
+        if only_store:
+            stmt = (
+                stmt.where(Store.id == int(only_store))
+                if only_store.isdigit()
+                else stmt.where(Store.name == only_store)
+            )
+        stores = list(session.scalars(stmt).all())
+        if not stores:
+            print(f"No active store matched '{only_store}'.")
+            return
         search_service = SearchService(session)
 
         with HttpClient() as client:
@@ -58,4 +76,4 @@ def run_master_rescrape():
 
 
 if __name__ == "__main__":
-    run_master_rescrape()
+    run_master_rescrape(sys.argv[1] if len(sys.argv) > 1 else None)

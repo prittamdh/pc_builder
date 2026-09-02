@@ -1,5 +1,8 @@
 # PROJECT_MAP.md
 
+> This file lists *where code lives*. For *how data moves* between those files and
+> what each database table holds, see **[docs/DATAFLOW.md](docs/DATAFLOW.md)**.
+
 ## Application Entry & Infrastructure
 - **src/main.py**: Application entry point.
 - **docker-compose.yml**: Docker Compose configuration running Airflow webserver/scheduler & PostgreSQL.

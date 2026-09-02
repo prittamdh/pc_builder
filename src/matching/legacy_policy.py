@@ -99,12 +99,42 @@ def amd_ryzen_generation(model_number: str | None) -> int | None:
     return int(match.group(1)) if match else None
 
 
-def is_cpu_legacy(series: str | None, model_number: str | None, socket: str | None) -> bool:
+def is_cpu_legacy(
+    series: str | None,
+    model_number: str | None,
+    socket: str | None,
+    title: str | None = None,
+) -> bool:
     norm_socket = _normalize_socket(socket)
     if norm_socket in LEGACY_SOCKETS:
         return True
 
     series_text = (series or "").strip().lower()
+
+    # Identity extraction sometimes fails outright, leaving every field blank - an
+    # "Intel Core i5 7th Gen Desktop Processor" came through with series='' and
+    # canonical_id='cpu:unknown', so no rule fired and a 7th-gen part led the
+    # cheapest-first CPU listing. The generation is stated in the title; fall back to
+    # it, but only when extraction gave us nothing.
+    #
+    # The brand check is essential, not cosmetic. Vendors write "3rd Gen"/"5th Gen" in
+    # AMD titles too, so running the Intel generation parser over "AMD Ryzen 5 5600X
+    # 5th Gen" yields 5 and would hide a perfectly current Ryzen 5000 part. Hiding a
+    # valid product is the worse error, so each brand is only ever read by its own
+    # parser.
+    if not series_text and title:
+        title_text = title.strip().lower()
+        if "ryzen" in title_text or "threadripper" in title_text:
+            gen = amd_ryzen_generation(model_number or title)
+            return gen is not None and gen < MIN_AMD_RYZEN_GEN
+        if "core ultra" in title_text:
+            return False
+        if "core i" in title_text or "intel core" in title_text:
+            gen = intel_core_generation(model_number or title)
+            return gen is not None and gen < MIN_INTEL_CORE_GEN
+        if any(word in title_text for word in ("pentium", "celeron", "athlon")):
+            return True
+        return False
 
     # Core Ultra (Arrow Lake and later) has no generation digit in the old sense.
     if "core ultra" in series_text:
