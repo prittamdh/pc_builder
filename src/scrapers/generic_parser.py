@@ -16,17 +16,95 @@ class GenericParser:
         self.selectors = store.search_config.get("selectors", {}) if isinstance(store.search_config, dict) else {}
         self.attributes = store.search_config.get("attributes", {}) if isinstance(store.search_config, dict) else {}
 
+    # First money-looking amount in a string: optional thousands separators, optional
+    # decimals. Anchored on a digit so any currency prefix is skipped.
+    _AMOUNT_RE = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+    @staticmethod
+    def _full_title(element) -> str:
+        """The complete product name, preferring an attribute over elided text.
+
+        Themes that clamp long names render the visible text cut short - PCStudio ships
+        "TEAMGROUP T-FORCE DELTA RGB DDR5 6,000 M..." in the markup while carrying the
+        whole name in a nested `<span title="...">`. Taking the visible text stored a
+        truncated name for 1,793 products (15% of the catalog), which broke search,
+        fed incomplete text to spec extraction - a DDR5-6000 CL30 kit came back as
+        "CL3" because that is where the title stopped - and corrupted canonical keys
+        built from the name.
+
+        The attribute is only trusted when the visible text is actually elided and the
+        attribute agrees with what is visible, so a theme using `title` for something
+        unrelated (a tooltip, a category) can't overwrite a good name.
+        """
+        text = element.get_text(strip=True)
+        if not text.rstrip().endswith(("...", "…")):
+            return text
+
+        stem = text.rstrip().rstrip(".…").strip()
+        if not stem:
+            return text
+
+        candidates = []
+        for node in [element, *element.find_all(True)]:
+            for attribute in ("title", "aria-label", "alt"):
+                value = (node.get(attribute) or "").strip()
+                if len(value) > len(text) and value.startswith(stem[: min(len(stem), 20)]):
+                    candidates.append(value)
+
+        return max(candidates, key=len) if candidates else text
+
+    def _image_near(self, link, card):
+        """Image belonging to `link`'s product, searched outward from the link.
+
+        Computech puts the thumbnail one level above the element this parser treats as
+        the card, so `card.find("img")` returned nothing and 2,041 of that store's
+        2,042 products were stored with no image at all.
+
+        The walk stops as soon as an ancestor contains a second product link, because
+        past that point the nearest image belongs to a *neighbouring* product. That is
+        the same failure that once read an 80+ Gold rating off an adjacent listing's
+        carousel, so the bound is the important part of this method, not the search.
+        """
+        node = card
+        for _ in range(4):
+            if node is None:
+                break
+            links = [
+                other for other in node.find_all("a", href=True)
+                if "/product/" in other["href"]
+                and other.get_text(strip=True)
+                and other.get_text(strip=True) != "View Product"
+            ]
+            if len(links) > 1 and links != [link]:
+                break
+
+            img = node.find("img")
+            if img is not None:
+                src = img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+                if src and not src.startswith("data:"):
+                    return urljoin(self.store.base_url, src)
+            node = node.parent
+        return None
+
     @staticmethod
     def _clean_price(text: str) -> Decimal:
-        cleaned = (
-            str(text)
-            .replace("₹", "")
-            .replace(",", "")
-            .strip()
-        )
+        """First amount in `text`, or 0 if there isn't one.
+
+        Stores write prices as "₹31,999", "Rs.31,999.00", "INR 31999" and often put
+        more than one number in the element - TLG Gaming's `.price` container reads
+        "Rs.31,999.00Ex Tax:Rs.27,117.80". Decimal() on any of those raises, and the
+        previous version answered 0 for all of them, which is why all 163 of that
+        store's products were priced zero.
+
+        Taking the FIRST amount is deliberate: the displayed selling price leads, with
+        tax-exclusive or struck-through figures following it.
+        """
+        match = GenericParser._AMOUNT_RE.search(str(text))
+        if not match:
+            return Decimal("0")
 
         try:
-            return Decimal(cleaned)
+            return Decimal(match.group(0).replace(",", ""))
         except (InvalidOperation, ValueError):
             return Decimal("0")
 
@@ -153,13 +231,25 @@ class GenericParser:
             if not in_stock:
                 continue
 
-            numbers = re.findall(r"₹?\s*(\d{1,3}(?:,\d{3})+|\d{4,6})", card_text)
+            # The rupee sign is REQUIRED, not optional. card_text starts with the
+            # product title, and titles are full of 4-6 digit numbers that are not
+            # prices - memory speeds (6000MHz), model numbers (RX 7600, RTX 5080),
+            # sockets (LGA1851), wattages (1000W). With the sign optional this took
+            # the first such number and sold an RTX 5080 for its model number:
+            # measured live on 2026-08-17, "RTX 5080" parsed as Rs 5,080 against a
+            # real price of Rs 1,54,499, and 57% of this store's catalog carried a
+            # price identical to a number in its own title.
+            # Same failure as the PSU-efficiency carousel bug: an unanchored regex
+            # over too much text returns a confident wrong answer.
+            numbers = re.findall(r"₹\s*(\d{1,3}(?:,\d{3})+|\d{4,6})", card_text)
             clean_nums = []
             for n in numbers:
                 val = self._clean_price(n)
                 if val > 500:
                     clean_nums.append(val)
 
+            # No rupee-marked amount means the price wasn't found. Skipping keeps the
+            # listing out rather than inventing a number for it.
             if not clean_nums:
                 continue
 
@@ -167,8 +257,7 @@ class GenericParser:
             mrp = clean_nums[1] if len(clean_nums) > 1 and clean_nums[1] >= price else price
 
             prod_url = urljoin(self.store.base_url, href)
-            img_elem = card.find("img")
-            image_url = img_elem.get("src") if img_elem else None
+            image_url = self._image_near(a, card)
 
             sr = SearchResult(
                 store=self.store.name,
@@ -330,7 +419,7 @@ class GenericParser:
                     store=self.store.name,
                     sid=self.store.id,
                     pid=pid,
-                    name=title.get_text(strip=True),
+                    name=self._full_title(title),
                     url=product_url,
                     price=self._clean_price(price.get_text()),
                     mrp=(
@@ -457,13 +546,19 @@ class GenericParser:
             brand = brand.get("name")
 
         # ---------- Image ----------
+        # schema.org allows a bare URL, a list, or an ImageObject - and a list *of*
+        # ImageObjects. Unwrapping only the list left a dict here, and urljoin raised
+        # TypeError on it, which failed the whole product parse for every PCStudio
+        # page. Anything that isn't a usable string is dropped rather than guessed.
         image = data.get("image")
 
         if isinstance(image, list):
             image = image[0] if image else None
 
-        if image:
-            image = urljoin(self.store.base_url, image)
+        if isinstance(image, dict):
+            image = image.get("url") or image.get("contentUrl")
+
+        image = urljoin(self.store.base_url, image) if isinstance(image, str) and image else None
 
         # ---------- Stock ----------
         availability = (

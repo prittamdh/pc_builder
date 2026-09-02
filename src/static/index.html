@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PC Builder 2 - Hardware Price Comparison & Assembly Engine</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
 
@@ -16,8 +16,7 @@
         <ul class="nav-links">
             <li><button class="nav-btn active" data-tab="catalog">Catalog & Search</button></li>
             <li><button class="nav-btn" data-tab="builder">PC Builder</button></li>
-            <li><button class="nav-btn" data-tab="stores">Stores</button></li>
-        </ul>
+            </ul>
     </header>
 
     <!-- Main Application Container -->
@@ -26,8 +25,19 @@
         <!-- Tab 1: Catalog Search -->
         <section id="catalog-tab" class="tab-content active">
             <div class="hero">
-                <h1>Find & Compare PC Components</h1>
-                <p>Track live hardware pricing across 10 Indian retailers, including MDComputers, PCStudio, Vedant Computers, PrimeABGB, EliteHubs, and Computech.</p>
+                <h1>Compare PC component prices across India</h1>
+                <!-- Counts come from the API for the same reason the Stores tab does.
+                     Every number here is measured, not written - a stat bar with
+                     invented figures is exactly what makes a site read as fake. -->
+                <p>Live pricing from <span id="store-count">…</span> Indian retailers, with
+                   compatibility checking and price history on every part.</p>
+            </div>
+
+            <div class="stat-bar" id="stat-bar">
+                <div><strong id="stat-products">—</strong><span>components tracked</span></div>
+                <div><strong id="stat-stores">—</strong><span>retailers</span></div>
+                <div><strong id="stat-snapshots">—</strong><span>price snapshots</span></div>
+                <div><strong id="stat-updated">—</strong><span>last updated</span></div>
             </div>
 
             <div class="search-container">
@@ -35,6 +45,27 @@
                     <input type="text" id="search-input" placeholder="Search processors, graphics cards, motherboards, RAM...">
                     <button class="btn-primary" id="search-btn">Search</button>
                 </div>
+                <div class="catalog-controls">
+                    <label for="sort-select">Sort</label>
+                    <select id="sort-select">
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="name_asc">Name (A-Z)</option>
+                        <option value="recent">Recently Updated</option>
+                    </select>
+                    <label for="store-filter">Retailer</label>
+                    <select id="store-filter"><option value="">All retailers</option></select>
+
+                    <label for="budget-min">Budget</label>
+                    <span class="budget-range">
+                        <input type="number" id="budget-min" placeholder="min" min="0" inputmode="numeric">
+                        <span>&ndash;</span>
+                        <input type="number" id="budget-max" placeholder="max" min="0" inputmode="numeric">
+                    </span>
+
+                    <span id="result-count"></span>
+                </div>
+
                 <div class="category-chips">
                     <button class="chip active" data-category="">All Categories</button>
                     <button class="chip" data-category="CPU">CPUs</button>
@@ -46,11 +77,39 @@
                     <button class="chip" data-category="CPU Cooler">CPU Coolers</button>
                     <button class="chip" data-category="Cabinet">Cabinets</button>
                     <button class="chip" data-category="Monitor">Monitors</button>
+                    <button class="chip" data-category="Accessories">Accessories</button>
                 </div>
             </div>
 
-            <div class="products-grid" id="products-grid">
-                <!-- Dynamically populated product cards -->
+            <div class="catalog-layout">
+                <!-- Filters come from /products/facets, so options are whatever the
+                     catalog actually holds and never lead to an empty result. -->
+                <aside class="filter-panel" id="filter-panel" hidden>
+                    <div class="filter-panel-head">
+                        <strong>Filters</strong>
+                        <button class="filter-clear" id="filter-clear">Clear all</button>
+                        <button class="drawer-close" onclick="toggleFilterDrawer()"
+                                aria-label="Close filters">&times;</button>
+                    </div>
+                    <!-- Filters are chained: each one's options come from what the
+                         ones above it left available. -->
+                    <div id="filter-list"></div>
+                </aside>
+
+                <div>
+                    <!-- Narrow screens have no room for a persistent sidebar, and a
+                         panel stacked above the grid pushes the results off-screen.
+                         This button opens the panel as a drawer instead. -->
+                    <button class="filter-toggle" id="filter-toggle" hidden
+                            onclick="toggleFilterDrawer()" aria-expanded="false">
+                        Filters
+                    </button>
+                    <div class="active-filters" id="active-filters" hidden></div>
+                    <div class="products-grid" id="products-grid">
+                        <!-- Dynamically populated model cards -->
+                    </div>
+                    <nav class="pager" id="pager" aria-label="Catalog pages"></nav>
+                </div>
             </div>
         </section>
 
@@ -80,7 +139,7 @@
                     </div>
 
                     <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Total Lowest Build Cost:</span>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Total for selected offers:</span>
                         <div class="total-cost" id="total-cost">₹0</div>
                     </div>
 
@@ -106,38 +165,23 @@
         </section>
 
 
-        <!-- Tab 3: Stores -->
-        <section id="stores-tab" class="tab-content">
-            <div class="hero">
-                <h1>Integrated Retailer Stores</h1>
-                <p>Dynamically scraping live price updates across top Indian computer retailers.</p>
-            </div>
-
-            <div class="products-grid">
-                <div class="product-card">
-                    <h3 class="product-title">MDComputers</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: mdcomputers.in</p>
-                    <span class="product-badge">Active</span>
-                </div>
-                <div class="product-card">
-                    <h3 class="product-title">PCStudio</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: pcstudio.in</p>
-                    <span class="product-badge">Active</span>
-                </div>
-                <div class="product-card">
-                    <h3 class="product-title">Vedant Computers</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: vedantcomputers.com</p>
-                    <span class="product-badge">Active</span>
-                </div>
-                <div class="product-card">
-                    <h3 class="product-title">PrimeABGB</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Domain: primeabgb.com</p>
-                    <span class="product-badge">Active</span>
-                </div>
-            </div>
-        </section>
 
     </main>
+
+    <!-- Who we cover. Was a nav tab, but a static list nobody returns to doesn't earn
+         one; as a footer it answers the trust question on every page instead. It
+         earns a tab back when it carries per-store reliability data. -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <h2>Retailers tracked</h2>
+            <div class="store-list" id="stores-grid"></div>
+            <p class="footer-note">
+                Prices are scraped directly from each retailer and re-checked continuously.
+                We are not affiliated with any of them, and always link to the shop's own page.
+            </p>
+        </div>
+    </footer>
+
 
     <!-- Modals -->
     <div class="modal-backdrop" id="select-modal">
@@ -184,6 +228,6 @@
     </div>
 
     <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
-    <script src="/static/app.js?v=7"></script>
+    <script src="/static/app.js?v=18"></script>
 </body>
 </html>

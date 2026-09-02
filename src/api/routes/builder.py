@@ -6,9 +6,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
+from api.filters import has_usable_price
 from db.models.product import Product
 from db.models.category_specs import PSUSpecs
 from db.models.saved_build import SavedBuild
+from db.models.store import Store
 from domain.builder import BuildSelection, BuildSummary, ComponentSlot
 from services.builder_service import BuilderService
 from services.compatibility_engine import CompatibilityEngine
@@ -34,6 +36,9 @@ class CandidateRequest(BaseModel):
     selected_product_ids: list[int] = []
     q: str | None = None
     compatible_only: bool = True
+    # One entry per model with its store offers nested, rather than one row per
+    # listing. Pass false for the old flat shape.
+    group_by_model: bool = True
 
 
 class SaveBuildRequest(BaseModel):
@@ -76,6 +81,11 @@ def _rank_candidates(db: Session, slot: str, candidates: list[Product]) -> list[
     blocklist keeps the judgement about the product, not the manufacturer, and any unit
     that later gains a verified rating rises automatically.
     """
+    # Opened stock undercuts sealed stock on price, so left alone it leads every slot.
+    # Ranked below sealed rather than hidden: an open-box Threadripper at a real
+    # discount is a legitimate choice, the buyer just has to see what it is.
+    candidates = sorted(candidates, key=lambda p: p.condition is not None)
+
     if slot != "psu" or not candidates:
         return candidates
 
@@ -94,6 +104,61 @@ def _rank_candidates(db: Session, slot: str, candidates: list[Product]) -> list[
         return (_PSU_TIER_ORDER.get(tier, 99), product.name or "")
 
     return sorted(candidates, key=sort_key)
+
+
+def _group_by_model(db: Session, candidates: list[Product]) -> list[dict]:
+    """Collapse listings into one entry per model, each carrying its store offers.
+
+    The picker previously listed every listing separately, so an "Asus Dual RX 9060 XT
+    16GB" appeared four times at four prices - 51 rows for what are really 25 cards.
+    That asks the shopper to make two decisions at once (which card, and where to buy
+    it) out of one undifferentiated list, and the row they happen to click decides the
+    retailer as a side effect.
+
+    Grouping splits it into the two decisions people actually make in order: pick the
+    card, then pick the shop. Models are ordered by their best price, and offers within
+    a model by price, so the cheapest way to buy each card leads.
+
+    Listings with no canonical_id are their own group, keyed by product id - guessing
+    that two unidentified parts are the same model would merge genuinely different
+    products, which is the error this system has been bitten by before.
+    """
+    store_names = {
+        s.id: (s.display_name or s.name)
+        for s in db.scalars(select(Store))
+    }
+
+    grouped: dict[str, list[Product]] = {}
+    for product in candidates:
+        key = product.canonical_id or f"product:{product.id}"
+        grouped.setdefault(key, []).append(product)
+
+    models = []
+    for key, listings in grouped.items():
+        listings.sort(key=lambda p: (float(p.current_price), p.condition is not None))
+        best = listings[0]
+        models.append({
+            "canonical_id": key,
+            # The shortest title is the least padded with store-specific boilerplate.
+            "name": min((p.name for p in listings), key=len),
+            "best_price": float(best.current_price),
+            "offer_count": len(listings),
+            "condition": best.condition,
+            "offers": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "store": store_names.get(p.sid, "Retailer"),
+                    "price": float(p.current_price),
+                    "condition": p.condition,
+                    "url": p.product_url,
+                }
+                for p in listings
+            ],
+        })
+
+    models.sort(key=lambda m: m["best_price"])
+    return models
 
 
 @router.post("/candidates")
@@ -119,6 +184,9 @@ def list_slot_candidates(
             Product.p_category == category,
             Product.in_stock.is_(True),
             Product.is_legacy.is_(False),
+            # An unpriced listing would be added to a build at zero cost, quietly
+            # understating the total by a whole component.
+            has_usable_price(),
         )
     )
     if req.q:
@@ -134,18 +202,29 @@ def list_slot_candidates(
         candidates = engine.filter_candidates(req.slot, others, candidates)
 
     candidates = _rank_candidates(db, req.slot, candidates)
-    kept = candidates[:limit]
+
+    if not req.group_by_model:
+        kept = candidates[:limit]
+        return {
+            "items": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "current_price": float(p.current_price) if p.current_price is not None else None,
+                    "p_category": p.p_category,
+                    "condition": p.condition,
+                }
+                for p in kept
+            ],
+            "total": len(kept),
+            "filtered_out": total_before - len(candidates),
+        }
+
+    models = _group_by_model(db, candidates)[:limit]
     return {
-        "items": [
-            {
-                "id": p.id,
-                "name": p.name,
-                "current_price": float(p.current_price) if p.current_price is not None else None,
-                "p_category": p.p_category,
-            }
-            for p in kept
-        ],
-        "total": len(kept),
+        "items": models,
+        "total": len(models),
+        "offer_count": sum(m["offer_count"] for m in models),
         "filtered_out": total_before - len(candidates),
     }
 

@@ -149,11 +149,70 @@ def _title_indicates_audio(title: str | None) -> bool:
     return any(marker in t for marker in AUDIO_INDICATORS)
 
 
+# Removable flash media that stores sometimes file under Graphics Card. A SanDisk
+# 128GB memory card was the cheapest "GPU" in the catalog and would have led a
+# price-ascending browse of graphics cards.
+REMOVABLE_MEDIA_INDICATORS = (
+    " memory card ", " sd card ", " microsd ", " micro sd ", " sdhc ", " sdxc ",
+    " pen drive ", " pendrive ", " flash drive ", " compactflash ",
+)
+
+
+def _title_indicates_removable_media(title: str | None) -> bool:
+    t = f" {(title or '').lower()} "
+    return any(marker in t for marker in REMOVABLE_MEDIA_INDICATORS)
+
+
+# High-confidence title markers, used only when the store gave us no usable category.
+# Order matters: the first match wins, so the more specific phrases come first.
+# Everything here has to be unambiguous on its own, because there is no raw category
+# to cross-check against - anything doubtful is better left as Accessories.
+TITLE_ONLY_CATEGORY_MARKERS = (
+    ("Power Supply", ("power supply", "smps", "psu ", " psu")),
+    ("CPU Cooler", ("cpu cooler", "air cooler", "liquid cooler", "aio cooler",
+                    "cpu air cooler", "cpu liquid cooler")),
+    ("Motherboard", ("motherboard", "mainboard")),
+    ("Cabinet", ("cabinet", "pc case", "computer case", "mid tower", "full tower")),
+    ("Monitor", ("monitor", "gaming monitor")),
+    ("Storage", ("ssd", "nvme", "hard disk", "hard drive", " hdd")),
+    ("RAM", ("ram ", " ram", "dimm", "memory module")),
+)
+
+
+def _classify_from_title(title: str | None) -> str | None:
+    """Best-effort category from the title alone, or None if nothing is certain.
+
+    Only consulted when the store supplied no category or one we don't recognise.
+    Previously those products were filed as Accessories regardless of what they were,
+    which hid real parts from the builder - an AMD Radeon Pro W7700 sat in Accessories
+    because its listing carried no category at all.
+    """
+    if not title:
+        return None
+
+    # A discrete card is checked first: its detector already rules out CPUs
+    # advertising integrated graphics, which the coarse markers below would not.
+    if _title_indicates_discrete_gpu(title):
+        return "GPU"
+    if _title_indicates_removable_media(title) or _title_indicates_audio(title):
+        return "Accessories"
+    if _title_indicates_thermal_material(title):
+        return "Accessories"
+
+    t = f" {title.lower()} "
+    if any(marker in t for marker in CPU_BRAND_INDICATORS):
+        return "CPU"
+    for category, markers in TITLE_ONLY_CATEGORY_MARKERS:
+        if any(marker in t for marker in markers):
+            return category
+    return None
+
+
 class CategoryClassifier:
     @staticmethod
     def get_p_category(raw_category: str | None = None, title: str | None = None) -> str:
         if not raw_category:
-            return "Accessories"
+            return _classify_from_title(title) or "Accessories"
 
         cleaned_cat = raw_category.strip()
 
@@ -166,7 +225,7 @@ class CategoryClassifier:
             p_cat = next((v for k, v in CATEGORY_MAPPING.items() if k.lower() == c_low), None)
 
         if p_cat is None:
-            return "Accessories"
+            return _classify_from_title(title) or "Accessories"
 
         # Store-side raw categories are sometimes wrong (e.g. a discrete GPU listed
         # under "Processor"). If the raw category maps to CPU but the title clearly
@@ -181,6 +240,11 @@ class CategoryClassifier:
 
         # Audio devices are not power supplies, whatever the store filed them under.
         if p_cat == "Power Supply" and _title_indicates_audio(title):
+            return "Accessories"
+
+        # A memory card is not a graphics card. Removable media has no build slot, so
+        # it belongs in Accessories rather than Storage, which feeds the drive slot.
+        if p_cat == "GPU" and _title_indicates_removable_media(title):
             return "Accessories"
 
         return p_cat

@@ -51,11 +51,10 @@ header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
 }
 
 .nav-links {
@@ -112,18 +111,19 @@ main {
 /* Hero Section */
 .hero {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .hero h1 {
-    font-size: 2.75rem;
+    font-size: 1.85rem;
     font-weight: 700;
-    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
 }
 
 .hero p {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 /* Search Bar & Filters */
@@ -159,19 +159,130 @@ main {
 }
 
 .btn-primary {
-    background: var(--accent-gradient);
+    background: var(--accent-cyan);
     border: none;
-    color: #0b0f19;
+    color: #06202b;
     font-weight: 600;
     padding: 0.85rem 1.75rem;
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: filter 0.15s ease;
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--accent-glow);
+    filter: brightness(1.08);
+}
+
+.catalog-layout {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* A hidden panel is display:none, so it leaves the grid entirely and the product grid
+   becomes the FIRST item - landing in the 230px sidebar column and collapsing to one
+   card per row. Whenever there is no sidebar there is exactly one column. */
+.catalog-layout.no-filters {
+    grid-template-columns: 1fr;
+}
+
+/* Filters stack above the grid once there isn't room for a sidebar. */
+@media (max-width: 860px) {
+    .catalog-layout { grid-template-columns: 1fr; }
+}
+
+.filter-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    position: sticky;
+    top: 1rem;
+}
+
+.filter-panel[hidden] { display: none; }
+
+.filter-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.9rem;
+}
+
+.filter-clear {
+    background: none;
+    border: none;
+    color: var(--accent-cyan);
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.filter-group { margin-bottom: 0.9rem; }
+
+.filter-group label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.filter-group select,
+.filter-group input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.35rem 0.5rem;
+    border-radius: 7px;
+    font-size: 0.8rem;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+}
+
+.filter-range {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.filter-range span {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+}
+
+.catalog-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.catalog-controls select {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.catalog-controls select:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+}
+
+#result-count {
+    margin-left: auto;
 }
 
 .category-chips {
@@ -201,15 +312,15 @@ main {
 /* Product Cards Grid */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+    gap: 1rem;
 }
 
 .product-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 1.25rem;
+    border-radius: 12px;
+    padding: 0.9rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -219,14 +330,12 @@ main {
 
 .product-card:hover {
     background: var(--bg-card-hover);
-    border-color: var(--accent-cyan);
-    transform: translateY(-4px);
-    box-shadow: var(--accent-glow);
+    border-color: rgba(255, 255, 255, 0.22);
 }
 
 .product-img {
     width: 100%;
-    height: 180px;
+    height: 140px;
     object-fit: contain;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 12px;
@@ -246,10 +355,11 @@ main {
 }
 
 .product-title {
-    font-size: 1rem;
+    font-size: 0.88rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem;
     line-height: 1.4;
+    min-height: 2.4em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -264,9 +374,10 @@ main {
 }
 
 .product-price {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     font-weight: 700;
-    color: var(--accent-cyan);
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
 }
 
 .product-mrp {
@@ -488,4 +599,517 @@ main {
 .compare-table th {
     color: var(--text-secondary);
     font-weight: 500;
+}
+
+/* Price history ---------------------------------------------------------- */
+
+.price-chart {
+    width: 100%;
+    height: auto;
+    margin: 0.9rem 0 0.4rem;
+    display: block;
+}
+
+.price-stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin: 0.7rem 0;
+}
+
+.price-stats div {
+    display: flex;
+    flex-direction: column;
+}
+
+.price-stats span {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.price-stats strong {
+    color: var(--text-primary);
+    font-size: 1.05rem;
+}
+
+.verdict {
+    display: inline-block;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    border-left: 3px solid var(--border-color);
+    padding-left: 0.6rem;
+}
+
+.verdict.good {
+    color: var(--accent-cyan);
+    border-left-color: var(--accent-cyan);
+    font-weight: 600;
+}
+
+.chart-note {
+    color: var(--text-secondary);
+    font-size: 0.73rem;
+    line-height: 1.5;
+}
+
+/* Non-sealed stock. Deliberately warning-coloured rather than decorative: these
+   listings undercut sealed ones on price, so the label is the whole point. */
+.condition-badge {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.12rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--warning);
+    border: 1px solid var(--warning);
+    background: rgba(245, 158, 11, 0.12);
+    vertical-align: middle;
+}
+
+/* Stat bar --------------------------------------------------------------- */
+/* Trust signals. Every figure is fetched from /products/stats, never written into
+   the markup - hardcoded numbers are what make a tracker look fabricated, and they
+   go stale the moment a retailer is added. */
+
+.stat-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.25rem;
+    justify-content: center;
+    padding: 0.9rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.stat-bar[hidden] { display: none; }
+
+.stat-bar div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.stat-bar strong {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-bar span {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Card detail ------------------------------------------------------------ */
+
+.card-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+/* Which shop the price is from. A price with no retailer attached is the single
+   biggest reason a comparison site reads as fake. */
+.card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    margin-bottom: 0.7rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.store-name {
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stock-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+}
+
+.stock-dot::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.stock-dot.in { color: var(--success); }
+.stock-dot.out { color: var(--text-secondary); }
+
+.product-save {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--success);
+    margin-left: auto;
+}
+
+/* A broken image should read as "no photo", not as a snapped-image glyph, which is
+   the most obviously unfinished thing a catalog can show. */
+.img-missing {
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--border-color);
+}
+
+.img-missing::after {
+    content: 'No image';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.card-actions .btn-secondary {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.3rem;
+}
+
+/* Component picker: model first, then store ------------------------------ */
+
+.model-row {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.model-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.87rem;
+}
+
+.model-head:hover { background: rgba(255, 255, 255, 0.04); }
+
+.model-name { flex: 1; font-weight: 600; }
+
+.model-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.model-price strong { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+
+.model-price em {
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.model-caret { color: var(--text-secondary); font-size: 0.7rem; }
+
+.model-head[aria-expanded="true"] .model-caret { transform: rotate(180deg); }
+
+.model-offers {
+    border-top: 1px solid var(--border-color);
+    padding: 0.35rem 0.85rem 0.6rem;
+}
+
+.model-offers[hidden] { display: none; }
+
+.offer-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    font-size: 0.82rem;
+}
+
+.offer-row + .offer-row { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+.offer-store { flex: 1; color: var(--text-secondary); }
+
+.offer-price {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.offer-best {
+    font-style: normal;
+    font-size: 0.66rem;
+    color: var(--success);
+    margin-left: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.offer-pick {
+    padding: 0.3rem 0.85rem;
+    font-size: 0.78rem;
+    border-radius: 7px;
+}
+
+/* Footer ------------------------------------------------------------------ */
+
+.site-footer {
+    border-top: 1px solid var(--border-color);
+    margin-top: 3rem;
+    padding: 1.75rem 1.5rem 2.5rem;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.footer-inner {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.site-footer h2 {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.store-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 0.9rem;
+}
+
+.store-chip {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.store-chip:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.footer-note {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 62ch;
+}
+
+/* Pagination ------------------------------------------------------------- */
+
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.pager:empty { display: none; }
+
+.page-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.83rem;
+    cursor: pointer;
+}
+
+.page-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.28); }
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Budget range in the control row */
+.budget-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.budget-range input {
+    width: 82px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+}
+
+.budget-range input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+}
+
+/* "from ₹X" — the price is the cheapest of several offers, and saying so is the
+   difference between an honest figure and one that looks like the only price. */
+.price-from {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 0.3rem;
+}
+
+.price-spread {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: center;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state strong { font-size: 1rem; }
+
+.empty-state span {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Chained filters -------------------------------------------------------- */
+
+.facet-more {
+    background: none;
+    border: none;
+    color: var(--accent-cyan);
+    font-size: 0.72rem;
+    cursor: pointer;
+    padding: 0.25rem 0 0;
+}
+
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+}
+
+.active-filters[hidden] { display: none; }
+
+/* With filters chained, the panel alone doesn't show how narrow a search has become -
+   a lower filter may already have collapsed to one option. */
+.active-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--accent-cyan);
+    background: rgba(0, 242, 254, 0.1);
+    color: var(--accent-cyan);
+    border-radius: 20px;
+    font-size: 0.74rem;
+    cursor: pointer;
+    text-transform: capitalize;
+}
+
+.active-chip span { font-size: 0.9rem; line-height: 1; }
+
+.active-chip:hover { background: rgba(0, 242, 254, 0.2); }
+
+/* Mobile filter drawer ---------------------------------------------------- */
+/* Below 860px there is no room for a persistent sidebar, and a panel stacked above
+   the grid pushes every result below the fold. The panel becomes a drawer instead -
+   the pattern faceted-search guidance recommends for narrow screens. */
+
+.filter-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.55rem 1.1rem;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 0.9rem;
+}
+
+.drawer-close {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+@media (max-width: 860px) {
+    .filter-toggle:not([hidden]) { display: inline-block; }
+
+    /* Hidden until opened, rather than stacked above the results. */
+    .filter-panel:not([hidden]) { display: none; }
+
+    .filter-panel.drawer-open {
+        display: block;
+        position: fixed;
+        inset: 0 0 0 auto;
+        width: min(320px, 88vw);
+        z-index: 200;
+        border-radius: 0;
+        overflow-y: auto;
+        padding: 1.25rem;
+        background: var(--bg-dark);
+        border-left: 1px solid var(--border-color);
+        box-shadow: -12px 0 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .filter-panel.drawer-open .drawer-close { display: block; }
+
+    /* Stop the page behind the drawer from scrolling with it. */
+    body.drawer-locked { overflow: hidden; }
 }
