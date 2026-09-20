@@ -20,13 +20,13 @@ from db.session import SessionLocal
 from db.models.product import Product
 from db.models.ram_title_extraction import RAMTitleExtraction
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, identity_prompt,
-    MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
+    GroqExtractionError, identity_prompt,
+    default_service,
 )
 
 
 def extract_ram_titles(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 8, sleep_s: float = 0.0):
-    with SessionLocal() as session, GroqExtractionService(api_key=MISTRAL_API_KEY, model=MISTRAL_MODEL, api_url=MISTRAL_API_URL) as groq:
+    with SessionLocal() as session, default_service() as groq:
         print("=" * 80)
         print("GROQ LLM RAM TITLE EXTRACTION (batched)")
         print("=" * 80)

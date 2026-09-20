@@ -22,13 +22,13 @@ from matching.canonical_key_builder import (
 )
 from matching.motherboard_identity import reconcile_group_form_factors
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, identity_prompt,
-    MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
+    GroqExtractionError, identity_prompt,
+    default_service,
 )
 
 
 def extract_motherboard_identity(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 6, sleep_s: float = 0.0):
-    with SessionLocal() as session, GroqExtractionService(api_key=MISTRAL_API_KEY, model=MISTRAL_MODEL, api_url=MISTRAL_API_URL) as groq:
+    with SessionLocal() as session, default_service() as groq:
         print("=" * 80)
         print("GROQ LLM MOTHERBOARD IDENTITY EXTRACTION (per listing, batched)")
         print("=" * 80)

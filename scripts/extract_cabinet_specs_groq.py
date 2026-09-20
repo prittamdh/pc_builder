@@ -24,8 +24,8 @@ from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.category_specs import CabinetSpecs
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, CABINET_SPEC_BATCH_PROMPT,
-    MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
+    GroqExtractionError, CABINET_SPEC_BATCH_PROMPT,
+    default_service,
     as_int, as_str,
 )
 
@@ -45,7 +45,7 @@ def grounded_input(session: Session, cp: CanonicalPart, sample_count: int = 2) -
 
 
 def extract_cabinet_specs(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 6, sleep_s: float = 0.0):
-    with SessionLocal() as session, GroqExtractionService(api_key=MISTRAL_API_KEY, model=MISTRAL_MODEL, api_url=MISTRAL_API_URL) as groq:
+    with SessionLocal() as session, default_service() as groq:
         print("=" * 80)
         print("GROQ LLM CABINET SPEC EXTRACTION - Stage 2 (per unique model, batched)")
         print("=" * 80)

@@ -695,6 +695,56 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 
 ---
 
+## LLM provider strategy (settled 2026-09-20)
+
+**All extraction is AI-based; no regex hit-and-trial.** Keys were probed rather than assumed, and
+two of the five had never been tried:
+
+| Provider | State | Notes |
+| :--- | :--- | :--- |
+| **groq** | ✅ primary | `openai/gpt-oss-120b`. Note `llama-3.1-8b-instant` (the old `GROQ_MODEL`) was **retired upstream and 404s** — that is what pushed this project onto Mistral originally. Throttles at ~15s between calls on free tier but honours `retry-after`. |
+| **google** | ✅ fallback | `gemini-3.1-flash-lite` via Google's **OpenAI-compatible** endpoint (`/v1beta/openai/chat/completions`), so it is a drop-in — no adapter, no second code path. `gemini-2.5-flash` is retired for new users. |
+| **mistral** | ⚠ quota exhausted | A one-token probe 429s. Kept in the chain because quotas reset. |
+| **cerebras** | ❌ | Authenticates, then 402 payment required. |
+| **nvidia** | ❌ | Key valid, 82 models listed, but chat completions 500/410. |
+
+**Benchmark, not vibes.** A fixed 8-case PSU set built from titles whose answer is independently
+known (including the Cybenetics trap and the MSI "GL" inference): `groq/gpt-oss-120b` **8/8**,
+`groq/gpt-oss-20b` **8/8**, `gemini-3.1-flash-lite` **8/8**. Chain order follows that.
+
+**The prompt mattered more than the model.** Every model failed the Super Flower case until the
+prompt named the certification scheme — see below. Reach for a better prompt before a bigger model.
+
+**`default_service()` is how scripts get a client.** Fifteen scripts each hardcoded Mistral, which
+is how the whole pipeline stayed pinned to one exhausted quota and only reached the fallback chain
+after every batch had burned its full retry budget. All fifteen now call the factory.
+
+**Local inference — deferred, not rejected.** Prittam has a second desktop (RX 9060 XT, 16GB VRAM,
+Windows, Ollama installed). 16GB comfortably runs `gpt-oss-20b`, which already scored 8/8, so
+quality is there and the win is re-extracting all ~11,800 listings with no quota ceiling. Unverified
+before committing to it: the RX 9060 XT is RDNA4 and Ollama's Windows AMD path is ROCm-based.
+
+## PSU efficiency — Cybenetics vs 80 PLUS (2026-09-20)
+
+Titles routinely carry **two certification schemes at once**, and they disagree:
+
+> Super Flower LEADEX III GOLD UP ATX 3.1 750W **Cybenetics Platinum** Certified **Gold** SMPS
+
+That unit is **80 PLUS Gold** and **Cybenetics Platinum**. Every model read "Platinum" off it,
+which is not a hallucination — it is reading a real token the prompt never disambiguated. Both PSU
+prompts now state: report the 80 PLUS tier only, ignore Cybenetics entirely, and treat a tier word
+inside the **model name** as the manufacturer's own marker (Super Flower "Leadex III Gold", Cooler
+Master "MWE Gold", MSI `GL` = Gold / `BN` = Bronze).
+
+**Effect, measured by `audit_psu_trim_conflicts.py`: 18 conflicts → 2.** All 452 `psu_specs` rows
+are now grounded-LLM extracted (previously 16 carried no `llm_model` at all, predating grounded
+extraction), all `status='ok'`, 390 carrying a rating.
+
+The last 2 are MSI MAG A750GL/A850GL, and they are a **Stage 1 key** fault, not a spec fault: a
+stray listing keyed a Bronze group that should not exist. Re-tested against the updated identity
+prompt, **all 18 MSI GL listings now return Gold**, so a Stage 1 re-extraction plus a re-key clears
+them. That run is long because of Groq throttling.
+
 ## What's Next
 
 1. ~~Reconcile legacy regex `*_specs` data with LLM extraction~~ — **Resolved 2026-08-16.** `motherboard_specs`/`ram_specs`/`gpu_specs`/`psu_specs`/`cabinet_specs`/`cooler_specs`/`ssd_specs` turned out to be populated by the old regex `NormalizationService` (not empty as previously documented), and `CompatibilityEngine._merge()` was preferring those regex values over the verified LLM extraction whenever both existed. Investigated properly before fixing: an initial raw `IS DISTINCT FROM` count of 341 "disagreeing" motherboards was mostly noise (regex simply had `NULL`, not a real disagreement) — only **6 products** had both sources populated with conflicting sockets, and in all 6 the *regex* value was actually correct (MSI Z890 boards; LLM said LGA1700 instead of LGA1851). Broadening the check to every chipset→socket pairing surfaced 22 total LLM inference errors worth fixing directly: the whole H810 chipset family (14 rows, Intel's 800-series companion chipset, real systematic gap), AMD's 2025 B840 refresh chipset getting confused with Intel's similarly-numbered B860 (3 rows), three isolated Intel 400/500-series-vs-LGA1700 mixups, and one WRX80→sTR5 mixup (should always be sWRX8). Corrected those 22 rows directly in `motherboard_title_extractions`, then flipped `CompatibilityEngine._merge()`'s priority so `*_title_extractions` (LLM, now more reliable) wins over `*_specs` (uncontrolled regex leftovers) — the right general default until `*_specs` is repopulated from a real external dataset, at which point that priority should flip back (noted in the code). Re-verified the RAM DDR4/DDR5 mismatch tests still pass and confirmed the fixed Z890 board now resolves to `LGA1851` end-to-end through the engine.

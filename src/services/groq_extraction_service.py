@@ -10,7 +10,9 @@ import time
 import httpx
 
 from common.logger import get_logger
-from configs.settings import CEREBRAS_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY
+from configs.settings import (
+    CEREBRAS_API_KEY, GOOGLE_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY,
+)
 
 logger = get_logger(__name__)
 
@@ -95,6 +97,12 @@ CEREBRAS_MODEL = "gpt-oss-120b"
 # Mistral in the first place.
 GROQ_OSS_MODEL = "openai/gpt-oss-120b"
 
+# Google exposes an OpenAI-compatible endpoint, so Gemini is a drop-in on the same
+# request/response shape as every other provider here - no adapter, no second code path.
+# Note the plain generativelanguage .../models/{m}:generateContent route is NOT this one.
+GOOGLE_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+GOOGLE_MODEL = "gemini-3.1-flash-lite"
+
 
 def provider_chain() -> list[tuple[str, str, str, str]]:
     """
@@ -107,10 +115,16 @@ def provider_chain() -> list[tuple[str, str, str, str]]:
     treated those rows as done - so 15 PSU models were permanently stuck until both the
     query and the provider were fixed. Rolling to the next provider keeps an exhausted
     quota from being recorded as a fact about the data.
+
+    Order is by measured accuracy then headroom, not by habit. On a fixed 8-case PSU set
+    built from titles whose answer is independently known, groq/gpt-oss-120b,
+    groq/gpt-oss-20b and gemini-3.1-flash-lite each scored 8/8; mistral-small is out of
+    quota and cerebras returns 402. Mistral stays in the chain because quotas reset.
     """
     candidates = [
-        ("mistral", MISTRAL_API_URL, MISTRAL_MODEL, MISTRAL_API_KEY),
         ("groq", GROQ_API_URL, GROQ_OSS_MODEL, GROQ_API_KEY),
+        ("google", GOOGLE_API_URL, GOOGLE_MODEL, GOOGLE_API_KEY),
+        ("mistral", MISTRAL_API_URL, MISTRAL_MODEL, MISTRAL_API_KEY),
         ("cerebras", CEREBRAS_API_URL, CEREBRAS_MODEL, CEREBRAS_API_KEY),
     ]
     return [c for c in candidates if c[3]]
@@ -240,7 +254,7 @@ CRITICAL: "index" MUST equal the input title's number (1-based). Titles are ofte
 brand: manufacturer (Corsair, Cooler Master, Thermaltake, GIGABYTE, MSI, Seasonic, Antec, Ant Esports, Deepcool, etc), title-cased.
 model_number: the series/model name, e.g. "Toughpower GF A3", "V SFX", "P650SS", "Smart BM3". Null if truly generic.
 wattage: number only, e.g. "1050 Watt" -> 1050, "650W" -> 650.
-efficiency_rating: normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium" if stated, else null.
+efficiency_rating: report the 80 PLUS tier ONLY. Many titles also carry a CYBENETICS rating - a different certification body on its own scale, which frequently disagrees ("LEADEX III GOLD UP ... Cybenetics Platinum Certified Gold" is 80 PLUS **Gold**). Ignore Cybenetics entirely; never let it set the tier. A tier word inside the MODEL NAME is the manufacturer's own marker and is valid evidence (Super Flower "Leadex III Gold", Cooler Master "MWE Gold", MSI's "GL" suffix = Gold, "BN" = Bronze). Normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium" if determinable, else null.
 confidence: high=clear series+wattage, medium=some inferred, low=guessing or non-PSU title. notes: short reason if not high, else null. Never refuse; always give best guess.
 
 Titles (2 total, respond with exactly 2 results, each carrying its own index):
@@ -320,7 +334,7 @@ PSU_SPEC_BATCH_PROMPT = """For each PSU model, you get its clean identity (brand
 Return STRICT JSON only: {"results": [{"index": number, "efficiency_rating": string|null, "modularity": string|null, "confidence": "high"|"medium"|"low", "notes": string|null}, ...]}
 CRITICAL: "index" MUST equal the input model's number (1-based). One result per input model, exact count, any order (index is authoritative, not array position).
 These specs are almost always stated directly in PSU retail titles - if not present in the title, mark low confidence rather than guessing from trained knowledge (efficiency tier and modularity are marketing-critical, retailers virtually never omit them, so their absence usually means the LISTING is ambiguous, not that you should recall it).
-efficiency_rating: normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium", null if not stated. modularity: "Full"|"Semi"|"Non", null if not stated.
+efficiency_rating: report the 80 PLUS tier ONLY. Many titles also carry a CYBENETICS rating - a different certification body on its own scale, which frequently disagrees ("LEADEX III GOLD UP ... Cybenetics Platinum Certified Gold" is 80 PLUS **Gold**). Ignore Cybenetics entirely; never let it set the tier. A tier word inside the MODEL NAME is the manufacturer's own marker and is valid evidence (Super Flower "Leadex III Gold", Cooler Master "MWE Gold", MSI's "GL" suffix = Gold, "BN" = Bronze). Normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium", null if not determinable. modularity: "Full"|"Semi"|"Non", null if not stated.
 notes: short reason if not high confidence, else null.
 
 Models (2 total, respond with exactly 2 results, each carrying its own index):
@@ -580,3 +594,19 @@ def identity_prompt(category: str) -> str:
     except Exception:  # noqa: BLE001 - hints are an optimisation, never a hard dependency
         logger.warning("Brand hints unavailable; using the bare %s prompt.", name)
         return base
+
+
+def default_service(timeout: float = 30.0) -> "GroqExtractionService":
+    """
+    A service pointed at the first provider in the chain, with the rest as fallbacks.
+
+    Extraction scripts should use this rather than naming a provider. Fifteen scripts
+    each hardcoding Mistral is how the pipeline became pinned to one exhausted quota:
+    the fallback chain was only reached after every batch had burned its full retry
+    budget against a provider already known to be out.
+    """
+    chain = provider_chain()
+    if not chain:
+        raise GroqExtractionError("No provider API keys are configured.")
+    _name, api_url, model, api_key = chain[0]
+    return GroqExtractionService(api_key=api_key, model=model, api_url=api_url, timeout=timeout)

@@ -395,3 +395,68 @@ class TestQualifierFieldsDoNotIdentify:
         assert "_unresolved_id" in disambiguate_failed_key(
             {"category": "gpu", "aib_brand": "Unknown", "chipset": "", "variant_model": ""}, 7
         )
+
+
+class TestProviderChain:
+    """
+    One provider is a single point of failure, and it fails quietly: an exhausted quota
+    429s through every retry, each model is written status "failed", and Stage 2 then
+    treats those rows as done. Fifteen PSU models were stuck that way.
+    """
+
+    def test_chain_is_ordered_by_measured_accuracy(self):
+        """Groq leads: it and gemini-flash-lite both scored 8/8 where mistral is out of quota."""
+        from services.groq_extraction_service import provider_chain
+        names = [c[0] for c in provider_chain()]
+        assert names[0] == "groq"
+        assert names.index("google") < names.index("mistral")
+
+    def test_chain_skips_providers_without_keys(self):
+        from services.groq_extraction_service import provider_chain
+        assert all(c[3] for c in provider_chain())
+
+    def test_default_service_uses_chain_head(self):
+        """
+        Scripts must not name a provider. Fifteen of them hardcoding Mistral is how the
+        pipeline stayed pinned to one exhausted quota.
+        """
+        from services.groq_extraction_service import default_service, provider_chain
+        head = provider_chain()[0]
+        with default_service() as svc:
+            assert (svc.api_url, svc.model) == (head[1], head[2])
+
+    def test_service_carries_the_rest_as_fallbacks(self):
+        from services.groq_extraction_service import default_service, provider_chain
+        with default_service() as svc:
+            assert len(svc._fallbacks) == len(provider_chain()) - 1
+            assert all(f[1] != svc.api_url for f in svc._fallbacks)
+
+    def test_provider_exhausted_is_distinct_from_extraction_failure(self):
+        """
+        The distinction is what stops a provider outage being recorded as a fact about
+        the data - callers roll to the next provider instead of writing status "failed".
+        """
+        from services.groq_extraction_service import GroqExtractionError, ProviderExhausted
+        assert issubclass(ProviderExhausted, GroqExtractionError)
+
+
+class TestPSUPromptsRejectCybenetics:
+    """
+    PSU titles routinely carry two certification schemes at once - "LEADEX III GOLD UP
+    ... Cybenetics Platinum Certified Gold" is 80 PLUS Gold but Cybenetics Platinum.
+    Without the distinction every model read Platinum off that title. Naming the scheme
+    took a fixed 8-case benchmark from mixed to 8/8 on three separate models, and cut
+    real trim conflicts from 18 to 2 - the prompt mattered more than the model did.
+    """
+
+    def test_both_psu_prompts_name_the_scheme(self):
+        import services.groq_extraction_service as svc
+        for prompt in (svc.PSU_IDENTITY_BATCH_PROMPT, svc.PSU_SPEC_BATCH_PROMPT):
+            assert "CYBENETICS" in prompt
+            assert "80 PLUS" in prompt
+
+    def test_model_name_markers_are_documented(self):
+        """A tier word in the model name is the manufacturer's own marker, not noise."""
+        import services.groq_extraction_service as svc
+        for prompt in (svc.PSU_IDENTITY_BATCH_PROMPT, svc.PSU_SPEC_BATCH_PROMPT):
+            assert '"GL"' in prompt and "Leadex III Gold" in prompt
