@@ -460,3 +460,15 @@ class TestPSUPromptsRejectCybenetics:
         import services.groq_extraction_service as svc
         for prompt in (svc.PSU_IDENTITY_BATCH_PROMPT, svc.PSU_SPEC_BATCH_PROMPT):
             assert '"GL"' in prompt and "Leadex III Gold" in prompt
+
+    def test_conflict_audit_ignores_retired_groups(self):
+        """
+        A re-key retires a group by leaving it unreferenced, not by deleting it, and its
+        stale spec row stays behind. An unfiltered audit reports those corpses as live
+        conflicts - 4 of 6 reported conflicts had zero listings, including an MSI pair a
+        re-key had already dissolved. find_trim_conflicts must join through products.
+        """
+        import inspect
+        from matching import psu_identity
+        src = inspect.getsource(psu_identity.find_trim_conflicts)
+        assert "Product.canonical_id" in src, "audit must restrict to groups with listings"

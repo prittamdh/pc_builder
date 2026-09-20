@@ -117,16 +117,36 @@ def find_trim_conflicts(session) -> list[dict]:
     stray listing keyed a Bronze group. Stage 2 then reported Gold for both halves, so
     the split is visible without knowing anything about MSI's naming.
 
+    Only groups that still have listings are reported - see the query comment.
+
     Read-only; returns rows for a human to judge rather than merging anything. A
     conflict is evidence of a bad group, not proof of which side is right.
     """
+    from sqlalchemy import func
+
     from db.models.canonical_part import CanonicalPart
     from db.models.category_specs import PSUSpecs
+    from db.models.product import Product
 
+    # Only groups that still have listings. A re-key retires groups by leaving them
+    # unreferenced rather than deleting them, and their stale spec rows stay behind - so
+    # an unfiltered join reports long-dead groups as live conflicts. That is how the two
+    # MSI MAG A*GL groups kept appearing after a re-key had already dissolved them:
+    # 4 of 6 reported conflicts turned out to have zero listings.
+    live = (
+        select(Product.canonical_id)
+        .where(Product.canonical_id.is_not(None))
+        .group_by(Product.canonical_id)
+        .having(func.count() > 0)
+    )
     rows = session.execute(
         select(CanonicalPart.canonical_id, CanonicalPart.key_fields, PSUSpecs.efficiency_rating)
         .join(PSUSpecs, PSUSpecs.canonical_id == CanonicalPart.canonical_id)
-        .where(CanonicalPart.category == "psu", PSUSpecs.status == "ok")
+        .where(
+            CanonicalPart.category == "psu",
+            PSUSpecs.status == "ok",
+            CanonicalPart.canonical_id.in_(live),
+        )
     ).all()
 
     conflicts = []

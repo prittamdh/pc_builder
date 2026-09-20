@@ -740,10 +740,25 @@ Master "MWE Gold", MSI `GL` = Gold / `BN` = Bronze).
 are now grounded-LLM extracted (previously 16 carried no `llm_model` at all, predating grounded
 extraction), all `status='ok'`, 390 carrying a rating.
 
-The last 2 are MSI MAG A750GL/A850GL, and they are a **Stage 1 key** fault, not a spec fault: a
-stray listing keyed a Bronze group that should not exist. Re-tested against the updated identity
-prompt, **all 18 MSI GL listings now return Gold**, so a Stage 1 re-extraction plus a re-key clears
-them. That run is long because of Groq throttling.
+The last 2 were MSI MAG A750GL/A850GL - a **Stage 1 key** fault rather than a spec fault: a stray
+listing keyed a Bronze group that should not exist.
+
+**Closed 2026-09-21.** Full Stage 1 re-extraction of all 1,013 PSU listings on `ministral-14b-latest`
+(**1013/1013, 0 failures**; an earlier pass on the old chain had 77 batch failures where every
+provider was exhausted). The re-key that followed produced **0 splits and merged 19 groups** - the
+spurious Bronze groups collapsing back - taking canonical ids 432 → 413. Stage 2 then filled the 61
+models that needed it, 61/61.
+
+**Audit defect found and fixed in the same pass.** `find_trim_conflicts` joined `canonical_parts` to
+`psu_specs` without checking whether a group still had listings. A re-key retires a group by leaving
+it *unreferenced* rather than deleting it, and its stale spec row stays behind - so the audit was
+reporting corpses. Of 6 reported conflicts, **4 had zero listings**, including the MSI pair a re-key
+had already dissolved. The query now joins through `products`.
+
+**True state: 2 live conflicts across 413 groups (0.5%).** Both are single-listing Stage 1 mis-reads
+where the model name settles it: `cooler_master:gold:v_platinum_v2:1600w` (model name says Platinum,
+key says gold) and `corsair:platinum:rm750e:750w` (RM750e is 80+ Gold, key says platinum). Left for
+judgement, as the audit is designed to do.
 
 ## What's Next
 
