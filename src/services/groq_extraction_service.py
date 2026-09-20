@@ -87,7 +87,12 @@ def as_bool(value) -> bool | None:
 # llama-3.1-8b-instant tier turned out to be in practice - same OpenAI-compatible
 # chat completions shape, so it's a drop-in swap via GroqExtractionService(api_url=...).
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_MODEL = "mistral-small-latest"
+# NOT mistral-small-latest: Mistral's Free plan stopped serving the mistral-small and
+# magistral-small families, which 429 on a single one-token call even with the whole
+# $10 monthly allowance unspent and 1 req/sec respected. The ministral-* family is still
+# served on Free. ministral-3b was measured too and is NOT a substitute - it missed both
+# Bronze cases on the 8-case set.
+MISTRAL_MODEL = "ministral-14b-latest"
 
 CEREBRAS_API_URL = "https://api.cerebras.ai/v1/chat/completions"
 CEREBRAS_MODEL = "gpt-oss-120b"
@@ -116,15 +121,28 @@ def provider_chain() -> list[tuple[str, str, str, str]]:
     query and the provider were fixed. Rolling to the next provider keeps an exhausted
     quota from being recorded as a fact about the data.
 
-    Order is by measured accuracy then headroom, not by habit. On a fixed 8-case PSU set
-    built from titles whose answer is independently known, groq/gpt-oss-120b,
-    groq/gpt-oss-20b and gemini-3.1-flash-lite each scored 8/8; mistral-small is out of
-    quota and cerebras returns 402. Mistral stays in the chain because quotas reset.
+    Order is by measured accuracy first, then measured throughput - not by habit.
+
+    Accuracy, on a fixed 8-case PSU set built from titles whose answer is independently
+    known (it includes the Cybenetics trap and the MSI "GL" inference):
+    ministral-14b-latest 8/8, gemini-3.1-flash-lite 8/8, gemini-3.6-flash 8/8,
+    groq/gpt-oss-120b 8/8, groq/gpt-oss-20b 8/8, nvidia/mistral-nemotron 7/8,
+    ministral-3b-latest 6/8 (misses both Bronze cases - not a substitute for 14b).
+
+    Throughput breaks the tie, and it is not close. Back-to-back batches of 8 titles:
+    ministral-14b ~210 titles/min (3/3 calls), gemini-3.1-flash-lite ~108 (6/6),
+    groq/gpt-oss-120b 1/6 calls accepted - its free limiter rejects most requests, so a
+    re-extraction of 1,016 PSU listings managed 14 calls in 40 minutes there versus ~10
+    minutes on gemini. groq stays in the chain because a single call is fast when it is
+    allowed through; it is simply unusable for bulk.
+
+    cerebras authenticates then returns 402, and gemini-3.6-flash is frequently 503, so
+    neither leads. nvidia's key is valid but its endpoint is intermittent.
     """
     candidates = [
-        ("groq", GROQ_API_URL, GROQ_OSS_MODEL, GROQ_API_KEY),
-        ("google", GOOGLE_API_URL, GOOGLE_MODEL, GOOGLE_API_KEY),
         ("mistral", MISTRAL_API_URL, MISTRAL_MODEL, MISTRAL_API_KEY),
+        ("google", GOOGLE_API_URL, GOOGLE_MODEL, GOOGLE_API_KEY),
+        ("groq", GROQ_API_URL, GROQ_OSS_MODEL, GROQ_API_KEY),
         ("cerebras", CEREBRAS_API_URL, CEREBRAS_MODEL, CEREBRAS_API_KEY),
     ]
     return [c for c in candidates if c[3]]

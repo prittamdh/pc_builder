@@ -405,11 +405,11 @@ class TestProviderChain:
     """
 
     def test_chain_is_ordered_by_measured_accuracy(self):
-        """Groq leads: it and gemini-flash-lite both scored 8/8 where mistral is out of quota."""
+        """Accuracy ties at 8/8, so throughput decides: ministral-14b ~210/min, gemini ~108/min, groq rejects 5 of 6 calls."""
         from services.groq_extraction_service import provider_chain
         names = [c[0] for c in provider_chain()]
-        assert names[0] == "groq"
-        assert names.index("google") < names.index("mistral")
+        assert names[0] == "mistral"
+        assert names.index("google") < names.index("groq")
 
     def test_chain_skips_providers_without_keys(self):
         from services.groq_extraction_service import provider_chain
