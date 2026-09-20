@@ -49,7 +49,11 @@ def extract_psu_specs(reprocess_all: bool = False, limit: int | None = None, bat
 
         stmt = select(CanonicalPart).where(CanonicalPart.category == "psu")
         if not reprocess_all:
-            already_done = select(PSUSpecs.canonical_id)
+            # A row whose extraction failed is not done. Matching on existence alone
+            # made a failure permanent: the placeholder row blocked the model from ever
+            # being retried, so a transient API error looked identical to a model with
+            # no specs available. Only a successful row counts as done.
+            already_done = select(PSUSpecs.canonical_id).where(PSUSpecs.status == "ok")
             stmt = stmt.where(CanonicalPart.canonical_id.notin_(already_done))
         if limit:
             stmt = stmt.limit(limit)

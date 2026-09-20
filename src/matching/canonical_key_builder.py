@@ -401,6 +401,11 @@ def make_canonical_key_string(category: str, key_dict: dict) -> str:
     return ":".join(parts)
 
 
+# Key fields that qualify an already-identified product rather than identify one, so
+# their presence must not persuade disambiguate_failed_key that a key has real content.
+_NON_IDENTIFYING_FIELDS = frozenset({"category", "efficiency"})
+
+
 def disambiguate_failed_key(key_dict: dict, product_id: int) -> dict:
     """
     Guards against false merging: when LLM extraction fails for a listing, every
@@ -415,9 +420,16 @@ def disambiguate_failed_key(key_dict: dict, product_id: int) -> dict:
     """
     # Treat "Unknown" as equivalent to empty regardless of which field it's in
     # (categories vary: CPU/monitor/etc use "brand", GPU uses "aib_brand").
+    #
+    # Qualifier fields are excluded from the test. A PSU efficiency trim subdivides a
+    # model that is already identified; it names no product by itself. Counting it as
+    # signal means a listing with no brand, no model and no wattage but a readable
+    # "80+ Bronze" keys as "psu:unknown:bronze" - and every unresolved Bronze listing in
+    # the catalogue then merges into that one fake group, which is precisely the false
+    # merge this guard exists to prevent.
     has_signal = any(
         v for k, v in key_dict.items()
-        if k != "category" and v and str(v).strip().lower() != "unknown"
+        if k not in _NON_IDENTIFYING_FIELDS and v and str(v).strip().lower() != "unknown"
     )
     if not has_signal:
         key_dict = dict(key_dict)

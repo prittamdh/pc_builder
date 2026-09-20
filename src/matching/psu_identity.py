@@ -102,3 +102,43 @@ def reconcile_group_trims(session: Session, product_ids: list[int] | None = None
         "ambiguous_groups": ambiguous_groups,
         "ambiguous_listings": ambiguous_listings,
     }
+
+
+def find_trim_conflicts(session) -> list[dict]:
+    """
+    Canonical PSU groups whose key trim contradicts the trim Stage 2 extracted.
+
+    The two come from different evidence: the key trim is read off listing titles in
+    Stage 1, while psu_specs.efficiency_rating is extracted in Stage 2 from the model
+    name grounded in real listing text. When they disagree, Stage 1 almost certainly
+    mis-read a title and manufactured a group that should not exist.
+
+    MSI's MAG A750GL is the worked example - "GL" is MSI's own marker for Gold, yet a
+    stray listing keyed a Bronze group. Stage 2 then reported Gold for both halves, so
+    the split is visible without knowing anything about MSI's naming.
+
+    Read-only; returns rows for a human to judge rather than merging anything. A
+    conflict is evidence of a bad group, not proof of which side is right.
+    """
+    from db.models.canonical_part import CanonicalPart
+    from db.models.category_specs import PSUSpecs
+
+    rows = session.execute(
+        select(CanonicalPart.canonical_id, CanonicalPart.key_fields, PSUSpecs.efficiency_rating)
+        .join(PSUSpecs, PSUSpecs.canonical_id == CanonicalPart.canonical_id)
+        .where(CanonicalPart.category == "psu", PSUSpecs.status == "ok")
+    ).all()
+
+    conflicts = []
+    for canonical_id, key_fields, spec_rating in rows:
+        key_trim = normalize_efficiency_trim((key_fields or {}).get("efficiency"))
+        spec_trim = normalize_efficiency_trim(spec_rating)
+        # Only a genuine disagreement counts. A group with no trim in its key is the
+        # untiered case, which is expected and already handled by reconciliation.
+        if key_trim and spec_trim and key_trim != spec_trim:
+            conflicts.append({
+                "canonical_id": canonical_id,
+                "key_trim": key_trim,
+                "spec_trim": spec_trim,
+            })
+    return conflicts

@@ -10,7 +10,7 @@ import time
 import httpx
 
 from common.logger import get_logger
-from configs.settings import GROQ_API_KEY, MISTRAL_API_KEY
+from configs.settings import CEREBRAS_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY
 
 logger = get_logger(__name__)
 
@@ -86,6 +86,34 @@ def as_bool(value) -> bool | None:
 # chat completions shape, so it's a drop-in swap via GroqExtractionService(api_url=...).
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
 MISTRAL_MODEL = "mistral-small-latest"
+
+CEREBRAS_API_URL = "https://api.cerebras.ai/v1/chat/completions"
+CEREBRAS_MODEL = "gpt-oss-120b"
+
+# Current Groq catalogue. The long-standing GROQ_MODEL above ("llama-3.1-8b-instant")
+# has since been retired by Groq and now 404s, which is what pushed this project onto
+# Mistral in the first place.
+GROQ_OSS_MODEL = "openai/gpt-oss-120b"
+
+
+def provider_chain() -> list[tuple[str, str, str, str]]:
+    """
+    Providers to try in order, as (name, api_url, model, api_key), skipping any whose
+    key is unset.
+
+    A chain exists because a single provider's quota is a single point of failure, and
+    the failure is quiet: when Mistral's free tier was exhausted, every batch 429'd
+    through its retries, each model was written with status "failed", and Stage 2 then
+    treated those rows as done - so 15 PSU models were permanently stuck until both the
+    query and the provider were fixed. Rolling to the next provider keeps an exhausted
+    quota from being recorded as a fact about the data.
+    """
+    candidates = [
+        ("mistral", MISTRAL_API_URL, MISTRAL_MODEL, MISTRAL_API_KEY),
+        ("groq", GROQ_API_URL, GROQ_OSS_MODEL, GROQ_API_KEY),
+        ("cerebras", CEREBRAS_API_URL, CEREBRAS_MODEL, CEREBRAS_API_KEY),
+    ]
+    return [c for c in candidates if c[3]]
 
 # Kept compact deliberately: this system prompt is resent on every call and free-tier
 # Groq plans are TPM-bound (llama-3.1-8b-instant: 6000 TPM), so trimming tokens here
@@ -353,6 +381,16 @@ class GroqExtractionError(Exception):
     pass
 
 
+class ProviderExhausted(GroqExtractionError):
+    """
+    This provider is unavailable (rate limit, quota, retired model) - the data is fine.
+
+    Distinguished from GroqExtractionError so callers can roll to the next provider
+    instead of recording a provider outage as a failed extraction, which is what made
+    15 PSU models permanently unextractable when Mistral's free tier ran out.
+    """
+
+
 class GroqExtractionService:
     def __init__(
         self,
@@ -367,6 +405,11 @@ class GroqExtractionService:
         self.model = model
         self.api_url = api_url
         self.client = httpx.Client(timeout=timeout)
+        # Providers to fall back to, in order, skipping the one already in use.
+        self._fallbacks = [
+            p for p in provider_chain()
+            if p[1] != self.api_url and p[3] != self.api_key
+        ]
 
     def close(self):
         self.client.close()
@@ -432,7 +475,14 @@ class GroqExtractionService:
                 "model": self.model,
             }
 
-        raise GroqExtractionError(f"Groq API failed after {max_retries} attempts: {last_error}")
+        raise ProviderExhausted(
+            f"{self.model} failed after {max_retries} attempts: {last_error}"
+        )
+
+    def _switch_to(self, name: str, api_url: str, model: str, api_key: str) -> None:
+        logger.warning("Provider %s exhausted; falling back to %s (%s).",
+                       self.model, name, model)
+        self.api_url, self.model, self.api_key = api_url, model, api_key
 
     def extract_batch(self, system_prompt: str, titles: list[str], max_retries: int = 4) -> list[dict]:
         """
@@ -473,6 +523,15 @@ class GroqExtractionService:
                 {"parsed": by_index[i], "raw_response": result["raw_response"], "model": result["model"]}
                 for i in range(1, len(titles) + 1)
             ]
+        except ProviderExhausted as e:
+            # The provider is down or out of quota - the titles are fine, so bisecting
+            # would just burn the same wall against smaller batches. Move to the next
+            # provider and retry this batch whole.
+            if not self._fallbacks:
+                raise
+            self._switch_to(*self._fallbacks.pop(0))
+            logger.warning("Retrying batch of %d on the next provider (%s).", len(titles), e)
+            return self.extract_batch(system_prompt, titles, max_retries=max_retries)
         except GroqExtractionError as e:
             if len(titles) == 1:
                 raise

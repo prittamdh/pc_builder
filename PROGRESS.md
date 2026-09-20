@@ -774,5 +774,40 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
     a derived one nothing seeded, so cabinet prompts carried 9 hints instead of 38. Both the build and
     the lookup now run category strings through `normalize_category()`.
 
-    11 tests across `TestPSUEfficiencyTrimInKey` and `TestPSUTrimReconciliation`. Now that the re-key
-    has been applied, the gap-fill-only constraint on both efficiency importers can be revisited.
+    **Second pass, same day — three more faults the applied data exposed:**
+
+    - **The trim defeated `disambiguate_failed_key()`.** That guard salts a key with the product id
+      when extraction produced nothing identifying, so unresolved listings never collide into one fake
+      group. The trim counted as "real content", so a listing with no brand, no model and no wattage
+      but a readable "80+ Bronze" keyed as `psu:unknown:bronze` — and every unresolved Bronze listing
+      in the catalogue merged into it. Efficiency is a *qualifier*: it subdivides an already-identified
+      model and names no product alone. `_NON_IDENTIFYING_FIELDS` now excludes it from the signal test,
+      and a second re-key split those fake groups back apart.
+    - **Stage 2 treated a failed row as done.** `already_done` matched on the existence of a `psu_specs`
+      row, not its status, so a transient API error was permanent: the placeholder blocked the model
+      from ever being retried and looked identical to a model with no specs available. 15 PSU models
+      were stuck this way. Now only `status='ok'` counts as done.
+    - **A single provider is a single point of failure, and it fails quietly.** Mistral's free tier was
+      exhausted (a one-token probe 429s), so every batch burned its retries and wrote `status='failed'`
+      — recording a *provider outage* as a fact about the data. `provider_chain()` + `ProviderExhausted`
+      now roll to the next provider instead of bisecting into the same wall. Note `GROQ_MODEL`
+      (`llama-3.1-8b-instant`) has been retired by Groq and 404s; the working model is
+      `openai/gpt-oss-120b`. Cerebras authenticates but returns 402. With the chain in place the 15
+      stuck models extracted **15/15** on the Groq fallback.
+
+    Verified end to end: ASUS TUF Gaming 750W now resolves Bronze→`80+ Bronze`, Gold→`80+ Gold`. All
+    452 `psu_specs` rows are `status='ok'`, no orphans.
+
+    **`audit_psu_trim_conflicts.py` (new, read-only)** cross-checks the key trim against the Stage 2
+    spec trim — independent evidence, so a disagreement means one side mis-read. It found **18**, and
+    the attribution matters: **16 carry no `llm_model`**, i.e. pre-LLM rows that predate grounded
+    extraction, mostly `gold -> platinum` on models whose own names say Gold (Super Flower "Leadex III
+    Gold", Cooler Master "MWE Gold 750 V3", Thermaltake Toughpower GF A3). Those are pre-existing bad
+    data this audit surfaced for the first time, **not** a regression from the provider swap — the only
+    two conflicts from `openai/gpt-oss-120b` are MSI MAG A750GL/A850GL, where Stage 2 is *correct*
+    ("GL" is MSI's own Gold marker) and Stage 1 mis-read a title. Left for judgement rather than
+    auto-merged: a conflict proves a group is wrong, not which side is right.
+
+    18 tests across `TestPSUEfficiencyTrimInKey`, `TestPSUTrimReconciliation` and
+    `TestQualifierFieldsDoNotIdentify`. 231 pass. Now that the re-key has been applied, the
+    gap-fill-only constraint on both efficiency importers can be revisited.

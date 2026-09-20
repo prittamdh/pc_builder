@@ -354,3 +354,44 @@ class TestPSUTrimReconciliation:
             for r in rows
         }
         assert keys == {"psu:ant_esports:gold:fg650_v2:650w"}
+
+
+class TestQualifierFieldsDoNotIdentify:
+    """
+    disambiguate_failed_key salts a key with the product id when extraction produced
+    nothing identifying, so unresolved listings never collide into one fake group.
+    Adding the PSU efficiency trim to the key broke that test: a listing with no brand,
+    no model and no wattage but a readable "80+ Bronze" looked like it had real content
+    and keyed as psu:unknown:bronze - merging every unresolved Bronze listing into one.
+    """
+
+    def test_trim_alone_does_not_count_as_identity(self):
+        from matching.canonical_key_builder import (
+            build_psu_key_dict, disambiguate_failed_key, make_canonical_key_string,
+        )
+        a = disambiguate_failed_key(build_psu_key_dict(None, None, None, "80+ Bronze"), 101)
+        b = disambiguate_failed_key(build_psu_key_dict(None, None, None, "80+ Bronze"), 202)
+        assert make_canonical_key_string("psu", a) != make_canonical_key_string("psu", b)
+
+    def test_real_identity_is_not_salted(self):
+        """A key naming an actual product must stay stable across listings."""
+        from matching.canonical_key_builder import (
+            build_psu_key_dict, disambiguate_failed_key, make_canonical_key_string,
+        )
+        a = disambiguate_failed_key(build_psu_key_dict("Corsair", "RM850x", 850, "Gold"), 101)
+        b = disambiguate_failed_key(build_psu_key_dict("Corsair", "RM850x", 850, "Gold"), 202)
+        assert make_canonical_key_string("psu", a) == make_canonical_key_string("psu", b)
+        assert "_unresolved_id" not in a
+
+    def test_wattage_alone_still_identifies(self):
+        """Only the trim was reclassified - other fields keep their existing behaviour."""
+        from matching.canonical_key_builder import build_psu_key_dict, disambiguate_failed_key
+        assert "_unresolved_id" not in disambiguate_failed_key(
+            build_psu_key_dict(None, None, 850, None), 101
+        )
+
+    def test_other_categories_unaffected(self):
+        from matching.canonical_key_builder import disambiguate_failed_key
+        assert "_unresolved_id" in disambiguate_failed_key(
+            {"category": "gpu", "aib_brand": "Unknown", "chipset": "", "variant_model": ""}, 7
+        )
