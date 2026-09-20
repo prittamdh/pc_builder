@@ -22,7 +22,7 @@ from matching.canonical_key_builder import (
 )
 from matching.motherboard_identity import reconcile_group_form_factors
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, MOTHERBOARD_IDENTITY_BATCH_PROMPT,
+    GroqExtractionService, GroqExtractionError, identity_prompt,
     MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
 )
 
@@ -54,7 +54,7 @@ def extract_motherboard_identity(reprocess_all: bool = False, limit: int | None 
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(MOTHERBOARD_IDENTITY_BATCH_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('motherboard'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:

@@ -480,3 +480,44 @@ class GroqExtractionService:
             mid = len(titles) // 2
             return self.extract_batch(system_prompt, titles[:mid], max_retries=max_retries) + \
                 self.extract_batch(system_prompt, titles[mid:], max_retries=max_retries)
+
+
+# --- Brand-hint injection -------------------------------------------------------------
+#
+# Stage 1 is inconsistent on India-market brands (EVM, ZION, GEONIX, Ant Esports), and a
+# brand it cannot name becomes "Unknown", which the brand-led canonical key then collapses
+# into one coarse group. Appending the brands already seen in this catalogue turns that
+# from a recall problem into a recognition one. See matching.brand_registry for why the
+# list is derived from the data rather than hand-written, and for the wording that stops
+# the model attaching a brand to titles that name none.
+
+_IDENTITY_PROMPTS_BY_CATEGORY = {
+    "cpu": "CPU_IDENTITY_BATCH_PROMPT",
+    "gpu": "GPU_IDENTITY_BATCH_PROMPT",
+    "ram": "RAM_BATCH_SYSTEM_PROMPT",
+    "storage": "STORAGE_IDENTITY_BATCH_PROMPT",
+    "cooler": "COOLER_IDENTITY_BATCH_PROMPT",
+    "cabinet": "CABINET_IDENTITY_BATCH_PROMPT",
+    "psu": "PSU_IDENTITY_BATCH_PROMPT",
+    "motherboard": "MOTHERBOARD_IDENTITY_BATCH_PROMPT",
+    "monitor": "MONITOR_IDENTITY_BATCH_PROMPT",
+}
+
+
+def identity_prompt(category: str) -> str:
+    """
+    The Stage 1 identity prompt for a category, with catalogue brand hints appended.
+
+    Falls back to the bare prompt if the registry is missing or empty, so extraction
+    behaves exactly as it did before this existed rather than failing.
+    """
+    name = _IDENTITY_PROMPTS_BY_CATEGORY.get((category or "").lower())
+    if name is None:
+        raise GroqExtractionError(f"No identity prompt registered for category {category!r}")
+    base = globals()[name]
+    try:
+        from matching.brand_registry import brand_hint_block
+        return base + brand_hint_block((category or "").lower())
+    except Exception:  # noqa: BLE001 - hints are an optimisation, never a hard dependency
+        logger.warning("Brand hints unavailable; using the bare %s prompt.", name)
+        return base

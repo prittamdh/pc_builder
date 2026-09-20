@@ -21,7 +21,7 @@ from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.monitor_title_extraction import MonitorTitleExtraction
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
-from services.groq_extraction_service import GroqExtractionService, GroqExtractionError, MONITOR_IDENTITY_BATCH_PROMPT
+from services.groq_extraction_service import GroqExtractionService, GroqExtractionError, identity_prompt
 
 
 def extract_monitor_identity(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 6, sleep_s: float = 0.0):
@@ -51,7 +51,7 @@ def extract_monitor_identity(reprocess_all: bool = False, limit: int | None = No
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(MONITOR_IDENTITY_BATCH_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('monitor'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:

@@ -4,7 +4,7 @@ Implements category-specific canonical key extraction rules as specified in docs
 
 Canonical Key Rules Per Category:
 - CPU: brand + model_number
-- PSU: brand + model_number + wattage
+- PSU: brand + model_number + wattage + efficiency trim (when the title states one)
 - Cooler: brand + model_number
 - Case: brand + model_number
 - Storage: brand + series + capacity + interface
@@ -175,6 +175,56 @@ def resolve_motherboard_form_factor(designation: str | None, title: str) -> str 
     so an unsupported value is worse than no value.
     """
     return form_factor_from_designation(designation) or form_factor_from_title(title)
+
+
+_EFFICIENCY_TIERS = ("titanium", "platinum", "gold", "silver", "bronze", "standard")
+
+
+def normalize_efficiency_trim(efficiency_rating: str | None) -> str:
+    """
+    Reduces an extracted efficiency rating to its bare tier word.
+
+    Stage 1 returns this field in whatever shape the listing wrote it - "80+ Gold",
+    "80 PLUS GOLD", "Gold", "80plus gold" are all the same trim and must produce the
+    same key. Anything that names no recognised tier returns "" rather than a guess.
+    """
+    if not efficiency_rating:
+        return ""
+    text = efficiency_rating.strip().lower()
+    for tier in _EFFICIENCY_TIERS:
+        if tier in text:
+            return tier
+    return ""
+
+
+def build_psu_key_dict(brand: str | None, model_number: str | None,
+                       wattage: int | str | None, efficiency_rating: str | None) -> dict:
+    """
+    Canonical key fields for a PSU listing: brand + model_number + wattage + trim.
+
+    The trim belongs in the key because vendors ship one model name at several
+    efficiency grades - ASUS "TUF Gaming 750W" exists in Bronze and Gold, Antec's
+    HCG750 likewise - and without it those collapse into one canonical model that
+    inherits whichever rating was written last. Same defect class as the B850/B850I
+    motherboard merge.
+
+    A listing whose title states no tier contributes "", which make_canonical_key_string
+    drops, so it groups separately from every tiered variant instead of being merged
+    into one of them. That is deliberate: an untiered listing is not evidence of a
+    particular trim, and guessing would silently re-create the bug this fixes.
+
+    Only what the title itself states may be used here. Ratings recovered later from
+    retailer product pages (scripts/scrape_psu_efficiency.py) fill the specs table, not
+    the key - letting them in would make a product's identity change retroactively when
+    a page is scraped, re-keying rows that other tables already point at.
+    """
+    return {
+        "category": "psu",
+        "brand": brand or "Unknown",
+        "model_number": model_number or "",
+        "wattage": f"{wattage}w" if wattage else "",
+        "efficiency": normalize_efficiency_trim(efficiency_rating),
+    }
 
 
 def build_motherboard_key_dict(brand: str | None, chipset: str | None,

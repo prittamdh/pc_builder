@@ -20,7 +20,7 @@ from db.models.canonical_part import CanonicalPart
 from db.models.gpu_title_extraction import GPUTitleExtraction
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, GPU_IDENTITY_BATCH_PROMPT,
+    GroqExtractionService, GroqExtractionError, identity_prompt,
     MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
 )
 
@@ -52,7 +52,7 @@ def extract_gpu_identity(reprocess_all: bool = False, limit: int | None = None, 
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(GPU_IDENTITY_BATCH_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('gpu'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:

@@ -21,7 +21,7 @@ from db.models.canonical_part import CanonicalPart
 from db.models.cabinet_title_extraction import CabinetTitleExtraction
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, CABINET_IDENTITY_BATCH_PROMPT,
+    GroqExtractionService, GroqExtractionError, identity_prompt,
     MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
 )
 
@@ -53,7 +53,7 @@ def extract_cabinet_identity(reprocess_all: bool = False, limit: int | None = No
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(CABINET_IDENTITY_BATCH_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('cabinet'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:

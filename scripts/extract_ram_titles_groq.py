@@ -20,7 +20,7 @@ from db.session import SessionLocal
 from db.models.product import Product
 from db.models.ram_title_extraction import RAMTitleExtraction
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, RAM_BATCH_SYSTEM_PROMPT,
+    GroqExtractionService, GroqExtractionError, identity_prompt,
     MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
 )
 
@@ -52,7 +52,7 @@ def extract_ram_titles(reprocess_all: bool = False, limit: int | None = None, ba
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(RAM_BATCH_SYSTEM_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('ram'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:
