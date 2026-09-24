@@ -863,7 +863,7 @@ design, OPS-07): database size **127 MB**; `price_history` **386,301 rows** span
 
 **If this table is empty:** N/A - see rows above.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Exact `slowapi` 429 response shape**
    - What we know: `slowapi` raises `RateLimitExceeded`, which by convention gets mapped to a JSON
@@ -872,6 +872,7 @@ design, OPS-07): database size **127 MB**; `price_history` **386,301 rows** span
      session - package not installed).
    - Recommendation: confirm hands-on at install time; SEC-03's test only requires the body be JSON,
      so this doesn't block planning.
+   - RESOLVED: 01-05 Task 1 gates the slowapi install behind a checkpoint; SEC-03's test asserts only a JSON 429 body.
 
 2. **Whether `.env` file permissions (mode 600, owned by service user) are testable in Phase 1**
    - What we know: SEC-08 mentions this, but the referenced VM doesn't exist until Phase 3 (Oracle
@@ -880,6 +881,7 @@ design, OPS-07): database size **127 MB**; `price_history` **386,301 rows** span
    - Recommendation: treat the `.env.example` + settings.py/compose cross-check as the Phase-1
      deliverable; defer the file-permission assertion to Phase 3's `docs/DEPLOY.md`/runbook, where an
      actual VM exists to set permissions on.
+   - RESOLVED: 01-01 covers the `.env.example` cross-check; the mode-600 clause is carried to Phase 3.
 
 3. **Contact email for WEB-05's About page**
    - What we know: not yet decided (see Assumption A5); Cloudflare Email Routing on the new domain
@@ -888,6 +890,7 @@ design, OPS-07): database size **127 MB**; `price_history` **386,301 rows** span
    - Recommendation: use a clearly-marked placeholder (e.g. a note that a dedicated contact address
      is pending domain registration) so the page ships now and gets a one-line update in Phase 3
      rather than blocking WEB-05 entirely on an unrelated owner action.
+   - RESOLVED: 01-02 uses an empty `CONTACT_EMAIL` setting; the About page shows "coming soon" until the owner sets it.
 
 ## Environment Availability
 

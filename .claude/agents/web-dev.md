@@ -12,7 +12,7 @@ for compatibility. The goal is a public launch: fast, mobile-friendly, trustwort
 Read first: `PROGRESS.md` (frontend sections), `docs/architecture.md`, and the task brief.
 
 ## You own
-- `src/api/` (FastAPI app, routes, schemas), `src/static/` (index.html, app.js, style.css),
+- `src/api/` (FastAPI app, routes, schemas), `src/domain/` (builder result models), `src/static/` (index.html, app.js, style.css),
   `src/services/compatibility_engine.py`, `src/services/compatibility_rules.py`.
 - Deployment/hosting config (Dockerfile, compose, env docs) when a task asks for it.
 - Tests: `tests/test_frontend_e2e.py`, `tests/test_compatibility_rules.py`, `tests/test_image_proxy.py`.

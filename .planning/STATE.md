@@ -1,10 +1,17 @@
 ---
-gsd_state_version: '1.0'
+gsd_state_version: "1.0"
+current_phase: 1
+current_phase_name: Launch hardening
 status: planning
+stopped_at: Roadmap revised after owner review
+last_updated: "2026-09-24T16:48:30.884Z"
+last_activity: 2026-09-24
+last_activity_desc: revised for Oracle Always Free hosting, Chrome-extension scraping, local AI last
+state_head: f2a35153f2df95bbab3515017dd8dff910605e34
 progress:
   total_phases: 8
   completed_phases: 0
-  total_plans: 25
+  total_plans: 6
   completed_plans: 0
   percent: 0
 ---
@@ -20,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-09-24)
 
 ## Current Position
 
-Phase: 0 of 8 (not started)
-Plan: 0 of 25
+Phase: 1 (Launch hardening) — READY TO EXECUTE
+Plan: 0 of 27
 Status: Roadmap approved by the owner 2026-09-24 (Mumbai region, PAYG upgrade yes, domain later). Phase 1 planning started. Open owner actions: name/domain (before Phase 3), Oracle signup, R2, extension machines, contact email
 Last activity: 2026-09-24 - revised for Oracle Always Free hosting, Chrome-extension scraping, local AI last
 

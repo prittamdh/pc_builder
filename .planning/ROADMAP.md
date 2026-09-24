@@ -30,7 +30,7 @@ days to get.
 
 | When | data-engineer | web-dev | owner + manager |
 |------|---------------|---------|-----------------|
-| Phase 1 | 01-04 (checks, DB measurement, benchmark) | 01-01, then 01-02, then 01-03 | Oracle signup, VM, domain (03-01), started now |
+| Phase 1 | 01-04 (checks, DB measurement) and 01-06 (benchmark) | 01-01, then 01-02, then 01-03, then 01-05 | Oracle signup, VM, domain (03-01), started now; approve the slowapi package (01-05) |
 | Phase 2 | 02-01 (queue + protocol), then 02-02 (planner/parse split), then 02-03 (worker) | after Phase 1: 02-04 (agent API), then 02-05 (extension) | install the extension on 2+ machines |
 | Phase 3 | 03-03 (backups, restore, rebuild drill) | 03-02 (prod stack, health, Caddy) | 03-04 cutover |
 | Phase 4 + 5 | 04-01, 04-02, 04-03 | 04-04, then Phase 5 | - |
@@ -45,10 +45,11 @@ queue/pipeline modules, `src/scrapers/`, and migrations.
 ## Phase Details
 
 ### Phase 1: Launch hardening
+
 **Goal**: Nothing embarrassing or unsafe goes public. Fit checks never claim more than we know. Failures are loud, per store.
 **Depends on**: Nothing
 **Requirements**: SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06, SEC-07, SEC-08, WEB-01, WEB-02, WEB-03, WEB-04, WEB-05, FIT-01, FIT-02, FIT-03, SEO-01, OPS-05, OPS-06, OPS-07, AI-01
-**Owners**: web-dev (01-01..01-03), data-engineer (01-04)
+**Owners**: web-dev (01-01, 01-02, 01-03, 01-05), data-engineer (01-04, 01-06)
 **Success Criteria** (what must be TRUE):
   1. A build whose case has no GPU-clearance data never shows "All checks passed". It shows "No problems found - 1 check unverified" and names the case and the missing spec.
   2. A request from another site's origin gets no CORS permission. Hammering `/api/v1/images` returns 429. `/docs` is gone in production mode.
@@ -56,15 +57,26 @@ queue/pipeline modules, `src/scrapers/`, and migrations.
   4. A check fails, naming the store, when one store saves nothing for 24h.
   5. `scripts/benchmark_provider.py` reproduces 8/8 for mistral and google.
   6. The full test suite, including all Playwright tests, passes.
-**Plans**: 4 plans
+
+**Plans**: 6 plans (the draft 4 were split to keep each plan at 2-3 tasks; existing IDs kept)
 
 Plans:
-- [ ] 01-01 (web-dev): API hardening: CORS, no default DB URL, `slowapi` rate limits, image-proxy caps, security headers, docs off in prod, save-build validation, `.env.example` plus its test. Files: `src/api/main.py`, `src/api/routes/images.py`, `src/api/routes/builder.py`, `src/configs/settings.py`, `.env.example`, `requirements.txt`, new tests.
-- [ ] 01-02 (web-dev): Error pages, About/Privacy pages, SEO basics, 375px builder e2e. Files: `src/static/*`, `src/api/main.py` (exception handlers only), `tests/test_frontend_e2e.py`. Runs after 01-01 (both touch `main.py`).
-- [ ] 01-03 (web-dev): Honest fit verdict: `unverified` results, three-state verdict, wattage estimate named. Files: `src/services/compatibility_engine.py`, `src/services/compatibility_rules.py`, builder schemas, `src/static/app.js` (builder summary only), tests. Runs after 01-02 (both touch `app.js`).
-- [ ] 01-04 (data-engineer): Per-store freshness check, a loud "0 extractions with a backlog" check, read-only `scripts/measure_db_growth.py`, and `scripts/benchmark_provider.py` with an offline scoring test (the 8 titles and answers from the 2026-09-20 run). The checks are written as plain functions so the Phase 2 worker can reuse them. Files: `dags/scheduled_scraper_dag.py`, `tests/test_price_freshness.py`, the new scripts. **Parallel with 01-01..01-03.**
+**Wave 1**
+- [ ] 01-01-PLAN.md (web-dev, wave 1): Config and header hardening: explicit CORS, no default DB URL, security headers, docs off in prod, `.env.example` plus its test, and the phase's config inventory (SEC-01, 02, 05, 06, 08)
+- [ ] 01-04-PLAN.md (data-engineer, wave 1): Per-store freshness check, loud "0 extractions with a backlog" check, read-only `scripts/measure_db_growth.py` (OPS-05, 06, 07). **Parallel with web-dev.**
+- [ ] 01-06-PLAN.md (data-engineer, wave 1): `scripts/benchmark_provider.py` rebuilt from independently verified PSU cases (the originals were never committed), offline test, live mistral/google runs (AI-01). **Parallel with web-dev.**
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 01-02-PLAN.md (web-dev, wave 2): Branded 404/500, SEO basics (head tags, robots.txt, sitemap.xml), About/Privacy pages with a config placeholder for the contact address (WEB-01, 02, 05, SEO-01)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 01-03-PLAN.md (web-dev, wave 3): Honest fit verdict (`unverified`, three states, named wattage estimate), e2e skip-means-fail guard, 375px flow (FIT-01..03, WEB-03, WEB-04)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 01-05-PLAN.md (web-dev, wave 4): `slowapi` rate limits (after an owner package check), streaming image-proxy cap, save-build caps (SEC-03, 04, 07)
 
 ### Phase 2: Scrape agents
+
 **Goal**: Prices stay fresh with no dependency on any one home PC. Chrome extensions on the owner's machines fetch pages; the server hands out work, validates, parses and saves.
 **Depends on**: Phase 1 for web-dev's plans. data-engineer's plans can start alongside Phase 1.
 **Requirements**: AGENT-01, AGENT-02, AGENT-03, AGENT-04, AGENT-05, AGENT-06, AGENT-07, AGENT-08, AGENT-09, AGENT-10, AGENT-11, AGENT-12
@@ -75,6 +87,7 @@ Plans:
   3. A revoked token is refused on its next call. A request without a token gets 401.
   4. A doctored upload (wrong host, a challenge page, 6 MB, a page 1 with 0 products) is rejected with a stored reason and saves nothing.
   5. With every extension off for 24 h, `/health/pipeline` returns 503.
+
 **Plans**: 5 plans
 
 Plans:
@@ -102,6 +115,7 @@ Plans:
 - **Who fetches what**: retailer category and product pages go through agents only. Manufacturer pages (Phase 4) and the image proxy stay server-side: they are low volume, and manufacturer sites don't price-scrape-block.
 
 ### Phase 3: Go live on Oracle Always Free
+
 **Goal**: The site is public on its own domain over HTTPS at ₹0 hosting, backed up on and off Oracle, watched, and rebuildable elsewhere within hours.
 **Depends on**: Phase 2 success criteria met. The owner's Oracle signup and VM (03-01) run from day one of Phase 1.
 **Requirements**: OPS-01, OPS-02, OPS-03, OPS-04, OPS-08, OPS-09, OPS-10, WEB-06
@@ -113,6 +127,7 @@ Plans:
   4. A rebuild drill on a fresh VM from the R2 copy has been done and timed.
   5. The OCI budget alert (₹1) is set, and the resource audit shows only Always Free resources.
   6. The uptime monitor is green on `/health`, `/health/freshness` and `/health/pipeline`.
+
 **Plans**: 4 plans
 
 Plans:
@@ -147,6 +162,7 @@ HTTPS. Admin database access uses an SSH tunnel.
 UptimeRobot and Sentry are free tiers. R2 is free up to 10 GB but needs a card on file.
 
 ### Phase 4: Fit data with receipts
+
 **Goal**: Close most of the clearance, height and socket gaps from primary sources, and show where every number came from.
 **Depends on**: Phase 1 (unverified states). Phase 2 (retailer pages come through agent jobs). 04-04 depends on 04-01's contract.
 **Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, FIT-04, FIT-05, FIT-06
@@ -157,6 +173,7 @@ UptimeRobot and Sentry are free tiers. R2 is free up to 10 GB but needs a card o
   3. A 30-value random spot check per new source brand against the live manufacturer page finds 0 wrong values before that brand's values are enabled.
   4. In the builder, a user can click a case's GPU clearance and see the manufacturer URL and the exact quote.
   5. The case picker can show only cases with published clearance.
+
 **Plans**: 4 plans
 
 Plans:
@@ -166,6 +183,7 @@ Plans:
 - [ ] 04-04 (web-dev): Margin display, fit-data markers and filter, expandable source citations. **Parallel with 04-02/04-03** once 04-01's contract is fixed.
 
 ### Phase 5: Model pages and search visibility
+
 **Goal**: Every product has a page that Google can index and people can share, showing our data depth.
 **Depends on**: Phase 3 (a live domain). Phase 4 is best done first so pages show sources, but it doesn't block.
 **Requirements**: SEO-02, SEO-03, SEO-04, SEO-05, SEO-06
@@ -175,6 +193,7 @@ Plans:
   2. Google's Rich Results test accepts the Product and AggregateOffer data on a sample page.
   3. `sitemap.xml` lists every in-stock model and is submitted in Google Search Console.
   4. Pasting a shared build link into WhatsApp shows a preview with the build total.
+
 **Plans**: 2 plans
 
 Plans:
@@ -182,6 +201,7 @@ Plans:
 - [ ] 05-02 (web-dev): OG tags for shared builds, and links from cards, compare and builder to model pages.
 
 ### Phase 6: Price truth and store reliability
+
 **Goal**: Show things no Indian competitor shows: real price floors, fake-MRP evidence, and which stores' data can be trusted.
 **Depends on**: Phase 5
 **Requirements**: PRICE-01, PRICE-02, PRICE-03, PRICE-04
@@ -190,6 +210,7 @@ Plans:
   1. A model page shows "₹X now, 90-day low ₹Y across all stores, Z% above".
   2. A listing with an MRP that was never charged shows the badge and a link to the evidence chart.
   3. The Stores tab returns, with per-store reliability figures and sample sizes.
+
 **Plans**: 2 plans
 
 Plans:
@@ -197,6 +218,7 @@ Plans:
 - [ ] 06-02 (web-dev): UI for price stats, the MRP badge and the store reliability page. After 06-01's table shape is agreed.
 
 ### Phase 7: Identity quality
+
 **Goal**: False merges and false splits are caught automatically, in both directions, and the known splits are fixed.
 **Depends on**: Phase 2 (the worker runs the weekly audits)
 **Requirements**: IDEN-01, IDEN-02
@@ -204,6 +226,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. A weekly worker task runs both audits and fails when either count rises above the accepted baseline.
   2. The 62 known prefix-pair splits are re-extracted. The split audit shows the before and after counts, and no new merges appear.
+
 **Plans**: 2 plans
 
 Plans:
@@ -211,6 +234,7 @@ Plans:
 - [ ] 07-02 (data-engineer): Re-extract and re-key the prefix-pair listings. Runs after 07-01.
 
 ### Phase 8: Local AI trial (low priority)
+
 **Goal**: Find out whether the RX 9060 XT desktop can take on bulk extraction with no quota limit.
 **Depends on**: Nothing in the roadmap. Starts whenever the owner frees the desktop. AI-01 (the benchmark) is already done in Phase 1.
 **Requirements**: AI-02, AI-03
@@ -218,6 +242,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. A short written result: the backend that worked (Ollama ROCm, then Ollama Vulkan, then LM Studio), whether it ran on the GPU, VRAM used, titles/min, score out of 8, and errors over 500 titles.
   2. If the gate passes (8/8 and at least 60 titles/min), the desktop leases extraction batches from the server through the same token-and-lease protocol as the scrape agents, with no inbound ports opened. If it fails, the result is recorded and nothing is merged.
+
 **Plans**: 2 plans
 
 Plans:
@@ -259,7 +284,7 @@ free, the local-AI gate).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Launch hardening | 0/4 | Planning | - |
+| 1. Launch hardening | 0/6 | Planning | - |
 | 2. Scrape agents | 0/5 | Not started | - |
 | 3. Go live on Oracle Always Free | 0/4 | Not started | - |
 | 4. Fit data with receipts | 0/4 | Not started | - |
