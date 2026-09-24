@@ -750,7 +750,7 @@ read from product pages by `scripts/scrape_cabinet_radiators.py` - each size nee
 sizes are unioned across mounts and pages. The rule compares an **AIO's** radiator (air coolers excluded:
 their `radiator_size_mm` is a fan size) with the **largest** size the case lists, as a **warning**: pages often
 omit a mount (Cooler Master Qube 540's never mentions 240), so only "bigger than anything listed" is reliable,
-and even that can understate a case. Runs in the DAG via `fill_cabinet_radiators()`. Coverage: see the run below.
+and even that can understate a case. Runs in the DAG via `fill_cabinet_radiators()`. **Coverage: 1,017 of 1,459 cabinet models (1,636 of 2,150 listings, 76%)**; 701 sizes rejected as ungrounded. Verified live: a 360mm Cooler Master MasterLiquid in an Ant Value CV100 (240 max) warns, in a 360-capable case does not, and an air cooler in the CV100 does not.
 
 ## Scraping had silently stopped; product images blocked (2026-09-24)
 
