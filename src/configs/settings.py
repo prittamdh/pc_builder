@@ -71,7 +71,46 @@ FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.90))
 # Database Configuration
 # ---------------------------------------------------------------------
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://pc_builder:pc_builder123@localhost:5432/pc_builder"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+
+def require_database_url() -> str:
+    """Return DATABASE_URL, or fail closed if it is unset/blank.
+
+    Never raises at import time (scripts such as the Phase 1 benchmark import
+    settings on machines with no database) - callers that need a live DB call
+    this explicitly. The error names the missing variable only, never a value.
+    """
+    if not DATABASE_URL or not DATABASE_URL.strip():
+        raise RuntimeError("DATABASE_URL is not set. Copy .env.example to .env and set it.")
+    return DATABASE_URL
+
+# ---------------------------------------------------------------------
+# Runtime environment / web security
+# ---------------------------------------------------------------------
+
+ENV = os.getenv("ENV", "development")
+
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
+
+# Only when true may the rate-limit key function read the CF-Connecting-IP
+# header. Phase 3 turns this on after OPS-02 firewalls the origin to
+# Cloudflare ranges; until then the header is attacker-controlled, so the key
+# function uses the socket address instead.
+TRUST_CF_CONNECTING_IP = os.getenv("TRUST_CF_CONNECTING_IP", "false").lower() == "true"
+
+# Rate limits (used by plan 01-05's slowapi limiter). The API must run as a
+# single process - limiter counters are in memory, so extra workers multiply
+# the effective limit.
+RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
+RATE_LIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "300/minute")
+RATE_LIMIT_IMAGES = os.getenv("RATE_LIMIT_IMAGES", "120/minute")
+RATE_LIMIT_BUILDER = os.getenv("RATE_LIMIT_BUILDER", "60/minute")
+RATE_LIMIT_SAVE_BUILD = os.getenv("RATE_LIMIT_SAVE_BUILD", "10/minute")
+
+# Owner has not chosen a contact address yet (WEB-05). Empty is the clearly
+# marked placeholder - never invent one. The About page shows a
+# "contact address coming soon" note while this is empty.
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "")
