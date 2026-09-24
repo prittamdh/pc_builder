@@ -494,7 +494,7 @@ function renderProducts(models) {
                     <span class="product-badge">${m.p_category || 'Component'}</span>${conditionBadge(m.condition)}
                 </div>
                 ${m.image_url
-                    ? `<img class="product-img" src="${m.image_url}" alt="${escapeHtml(m.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.classList.add('img-missing');this.removeAttribute('src');">`
+                    ? `<img class="product-img" src="/api/v1/images?u=${encodeURIComponent(m.image_url)}" alt="${escapeHtml(m.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.classList.add('img-missing');this.removeAttribute('src');">`
                     : '<div class="product-img img-missing"></div>'}
                 <h3 class="product-title">${escapeHtml(m.name)}</h3>
             </div>

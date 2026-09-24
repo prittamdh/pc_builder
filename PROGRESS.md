@@ -729,6 +729,24 @@ It could not have found this: a false **merge** is invisible to a split-detector
 quality, check both directions — group-to-listing ratio finds over-merges, near-duplicate keys find
 under-merges.
 
+## Scraping had silently stopped; product images blocked (2026-09-24)
+
+**No prices had been saved since 2026-08-17** - the site read "Last updated 38 d ago". Two causes in
+sequence: the Airflow container did not run at all from 18 Aug to 20 Sep, and once it was back every
+scrape failed with `ProductRepository.create() got an unexpected keyword argument 'condition'`.
+287e304 (2026-09-02) added `condition` to `SearchService.save` but not to `create()`, so any batch
+holding a *new* product raised and rolled back. `execute_due_scrape_targets` catches and prints per
+target, so every run was marked **success**. Fixed, with `tests/test_product_repository.py`; a manual
+run then saved 1,229 products across 10 targets with no errors. **Worth doing:** a run that saves
+nothing should not report success - a price-freshness check would have caught this in 15 minutes.
+
+**Product images** were hot-linked from stores and the browser refused some (the failing
+`test_no_console_errors_on_load`): PCStudio sends `Cross-Origin-Resource-Policy: same-origin`, and dead
+mdcomputers links are blocked as ORB. `GET /api/v1/images?u=` (`src/api/routes/images.py`) fetches
+server-side and serves from our origin, with a "No image" placeholder for dead links. It only fetches
+store hosts (from the `stores` table, plus exactly `cdn.shopify.com` and `tlggaming.b-cdn.net`), and
+follows redirects by hand, checking each hop before requesting it. 7 tests in `tests/test_image_proxy.py`.
+
 ## Brand alone is not an identity (2026-09-24)
 
 Found while spot-checking clearance values: `case:silverstone` held **three different rackmount
