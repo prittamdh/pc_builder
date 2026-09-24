@@ -10,6 +10,7 @@ tests assert on what the user actually sees.
 Skipped automatically if Playwright's browser isn't installed, so the suite still
 runs in environments without it.
 """
+import re
 import socket
 import subprocess
 import sys
@@ -20,9 +21,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
+THIS_FILE = Path(__file__)
 
 playwright_api = pytest.importorskip("playwright.sync_api")
 sync_playwright = playwright_api.sync_playwright
+expect = playwright_api.expect
 
 
 def _free_port() -> int:
@@ -76,6 +79,21 @@ def page(browser, base_url):
     pg.console_errors = errors
     yield pg
     pg.close()
+
+
+class TestNoInPageEvalWaits:
+    """Playwright's string-form wait-for-JS-condition call re-polls its predicate via
+    new Function() inside the page after the first check, which the production CSP's
+    script-src (no 'unsafe-eval') blocks - so it only passes when the condition is
+    already true on the first check and is flaky/failing otherwise. Guard against it
+    coming back: use expect(locator)... or another wait that doesn't need in-page
+    eval instead."""
+
+    _BANNED = "wait_for_" + "function("
+
+    def test_source_has_no_wait_for_function_calls(self):
+        source = THIS_FILE.read_text(encoding="utf-8")
+        assert self._BANNED not in source
 
 
 def _open_builder(page):
@@ -134,8 +152,7 @@ class TestComponentPicker:
         _open_builder(page)
         page.locator("#slots-container button", has_text="Select").first.click()
         page.wait_for_selector("#select-modal.active")
-        page.wait_for_function(
-            "document.querySelectorAll('#select-modal-list .model-row').length > 0",
+        expect(page.locator("#select-modal-list .model-row").first).to_be_visible(
             timeout=15000)
         assert page.locator("#select-modal-list .model-row").count() > 0
 
@@ -145,10 +162,9 @@ class TestComponentPicker:
         page.locator("#slots-container button", has_text="Select").first.click()
         page.wait_for_selector("#select-modal.active")
         page.fill("#select-modal-search", "7800X3D")
-        page.wait_for_function(
-            "[...document.querySelectorAll('#select-modal-list .model-row')]"
-            ".some(c => /7800X3D/i.test(c.innerText))", timeout=15000
-        )
+        matching = page.locator(
+            "#select-modal-list .model-row", has_text=re.compile("7800X3D", re.I))
+        expect(matching.first).to_be_visible(timeout=15000)
         assert page.locator("#select-modal-list .model-row").count() > 0
 
     def test_one_row_per_model_not_per_listing(self, page):
@@ -186,8 +202,7 @@ class TestComponentPicker:
             "button").click()
         page.wait_for_selector("#select-modal.active")
         page.fill("#select-modal-search", "9060 XT 16GB")
-        page.wait_for_function(
-            "document.querySelectorAll('#select-modal-list .model-row').length > 0",
+        expect(page.locator("#select-modal-list .model-row").first).to_be_visible(
             timeout=15000)
         page.evaluate("""() => {
             const head = [...document.querySelectorAll('.model-head')]
@@ -201,8 +216,7 @@ class TestComponentPicker:
             rows[1].querySelector('button').click();
             return price;
         }""")
-        page.wait_for_function(
-            "document.getElementById('total-cost').innerText !== '₹0'", timeout=15000)
+        expect(page.locator("#total-cost")).not_to_have_text("₹0", timeout=15000)
         assert second.replace(",", "") in page.locator(
             "#total-cost").inner_text().replace(",", "")
 
@@ -274,11 +288,8 @@ class TestSavedBuilds:
         assert token
 
         page.goto(f"{base_url}/?build={token}", wait_until="networkidle")
-        page.wait_for_function(
-            "document.getElementById('slot-name-cpu')"
-            "&& !/No component/.test(document.getElementById('slot-name-cpu').innerText)",
-            timeout=15000,
-        )
+        expect(page.locator("#slot-name-cpu")).not_to_contain_text(
+            "No component", timeout=15000)
         assert "7800X3D" in page.locator("#slot-name-cpu").inner_text()
         assert "B850" in page.locator("#slot-name-motherboard").inner_text()
         assert page.locator("#build-name").input_value() == "e2e rig"
@@ -389,15 +400,11 @@ class TestCatalogSortingAndFilters:
     def test_filter_sidebar_appears_and_filters_the_grid(self, page):
         page.locator(".chip", has_text="Power Supplies").click()
         page.wait_for_selector("#filter-panel:not([hidden])")
-        page.wait_for_function(
-            "document.querySelectorAll('.filter-group').length > 0", timeout=15000)
+        expect(page.locator(".filter-group").first).to_be_visible(timeout=15000)
         before = page.locator("#result-count").inner_text()
 
         page.fill('[data-key="wattage_min"]', "750")
-        page.wait_for_function(
-            f"document.getElementById('result-count').innerText !== {before!r}",
-            timeout=15000,
-        )
+        expect(page.locator("#result-count")).not_to_have_text(before, timeout=15000)
         assert page.locator("#result-count").inner_text() != before
 
     def test_footer_lists_every_active_retailer(self, page):
@@ -405,8 +412,8 @@ class TestCatalogSortingAndFilters:
         returned to. Now a footer, so coverage is answered on every page."""
         expected = page.evaluate(
             "fetch('/api/v1/stores').then(r => r.json()).then(s => s.filter(x => x.active).length)")
-        page.wait_for_function(
-            "document.querySelectorAll('#stores-grid .store-chip').length > 0", timeout=15000)
+        expect(page.locator("#stores-grid .store-chip").first).to_be_visible(
+            timeout=15000)
         assert page.locator("#stores-grid .store-chip").count() == expected
         assert page.locator(".nav-btn", has_text="Stores").count() == 0
 
@@ -482,10 +489,8 @@ class TestCatalogLayout:
         )
 
     def test_grid_is_multi_column_with_no_category_selected(self, page):
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
-            timeout=15000,
-        )
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
+            timeout=15000)
         assert self._columns(page) > 1
 
     def test_grid_stays_multi_column_after_choosing_a_category(self, page):
@@ -498,9 +503,8 @@ class TestCatalogLayout:
         page.wait_for_selector("#filter-panel:not([hidden])")
         page.locator(".chip", has_text="All Categories").click()
         # wait_for_selector defaults to waiting for visibility, and a hidden panel is
-        # never visible - assert on the attribute instead.
-        page.wait_for_function(
-            "document.getElementById('filter-panel').hidden === true", timeout=15000)
+        # never visible - wait for it to actually be hidden instead.
+        expect(page.locator("#filter-panel")).to_be_hidden(timeout=15000)
         assert self._columns(page) > 1
 
 
@@ -512,10 +516,8 @@ class TestCatalogCredibility:
         No stock indicator: /products/models only returns in-stock models, so "In
         stock" on every card would carry no information.
         """
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
-            timeout=15000,
-        )
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
+            timeout=15000)
         cards = page.locator("#products-grid .product-card").count()
         assert page.locator("#products-grid .store-name").count() == cards
         # Each card states the cheapest price is "from" one of several offers, rather
@@ -525,8 +527,7 @@ class TestCatalogCredibility:
     def test_stat_bar_numbers_come_from_the_api(self, page):
         stats = page.evaluate(
             "fetch('/api/v1/products/stats').then(r => r.json())")
-        page.wait_for_function(
-            "document.getElementById('stat-products').innerText !== '—'", timeout=15000)
+        expect(page.locator("#stat-products")).not_to_have_text("—", timeout=15000)
         shown = page.locator("#stat-products").inner_text().replace(",", "")
         assert int(shown) == stats["products"]
         assert stats["stores"] > 0 and stats["price_snapshots"] > 0
@@ -635,10 +636,8 @@ class TestHierarchicalFilters:
 
     def test_accessories_tab_works_without_a_spec_table(self, page):
         page.locator(".chip", has_text="Accessories").click()
-        page.wait_for_function(
-            "document.getElementById('filter-panel').hidden === true", timeout=15000)
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
+        expect(page.locator("#filter-panel")).to_be_hidden(timeout=15000)
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
             timeout=15000)
         # No spec table means no filters, and the grid must take the full width.
         assert page.locator(".filter-group").count() == 0
@@ -650,22 +649,18 @@ class TestHierarchicalFilters:
         page.locator(".chip", has_text="Motherboards").click()
         page.wait_for_selector('[data-key="socket"]')
         page.select_option('[data-key="socket"]', "AM5")
-        page.wait_for_function(
-            "document.querySelectorAll('.active-chip').length === 1", timeout=15000)
+        expect(page.locator(".active-chip")).to_have_count(1, timeout=15000)
         page.select_option('[data-key="form_factor"]', "ITX")
-        page.wait_for_function(
-            "document.querySelectorAll('.active-chip').length === 2", timeout=15000)
+        expect(page.locator(".active-chip")).to_have_count(2, timeout=15000)
 
         page.locator(".active-chip", has_text="Socket").click()
-        page.wait_for_function(
-            "document.querySelectorAll('.active-chip').length === 1", timeout=15000)
+        expect(page.locator(".active-chip")).to_have_count(1, timeout=15000)
         assert "Form Factor" in page.locator(".active-chip").first.inner_text()
 
 
 class TestCatalogPaging:
     def test_pager_reports_pages_over_models_not_listings(self, page):
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
             timeout=15000)
         assert "Page 1 of" in page.locator("#pager").inner_text()
 
