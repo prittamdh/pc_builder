@@ -68,6 +68,58 @@ RULES: list[Rule] = [
     ),
 ]
 
+# Plain-English name for every spec field a rule reads. Used to tell the shopper
+# exactly which spec is missing when a check can't be run (FIT-01).
+FIELD_LABELS: dict[str, str] = {
+    "socket": "CPU socket",
+    "memory_type": "memory type",
+    "modules": "module count",
+    "memory_slots": "memory slots",
+    "capacity_gb": "memory capacity",
+    "max_memory_gb": "maximum memory",
+    "supported_sockets": "supported sockets",
+    "length_mm": "length",
+    "max_gpu_length_mm": "GPU clearance",
+    "height_mm": "height",
+    "max_cooler_height_mm": "CPU cooler clearance",
+    "aio_radiator_mm": "radiator size",
+    "max_radiator_mm": "radiator support",
+    "form_factor": "form factor",
+}
+
+# Plain-English slot names for messages ("GPU/case fit could not be checked").
+SLOT_LABELS: dict[str, str] = {
+    "cpu": "CPU", "motherboard": "motherboard", "ram": "RAM", "gpu": "GPU",
+    "case": "case", "cooler": "cooler", "psu": "PSU", "storage": "storage",
+}
+
+
+def _is_aio(cooler_type) -> bool:
+    return str(cooler_type).strip().upper().startswith("AIO")
+
+
+def rule_applies(rule: Rule, view_a, view_b) -> bool:
+    """Whether a rule is meaningful for this particular pair of parts.
+
+    A None value normally means "we don't know" (unverified). Two cooler fields are
+    the exception (Pitfall 8): an AIO has no tower height, and an air cooler has no
+    radiator, so for those the check simply doesn't apply. That decision rests on a
+    KNOWN cooler_type - when the type itself is unknown the rule applies, so the
+    shopper is honestly told it could not be checked."""
+    for slot, view in ((rule.slot_a, view_a), (rule.slot_b, view_b)):
+        if slot != "cooler":
+            continue
+        cooler_type = getattr(view, "cooler_type", None)
+        if cooler_type is None or not str(cooler_type).strip():
+            return True
+        field = rule.field_a if slot == rule.slot_a else rule.field_b
+        if field == "height_mm" and _is_aio(cooler_type):
+            return False
+        if field == "aio_radiator_mm" and not _is_aio(cooler_type):
+            return False
+    return True
+
+
 # The cooler rule compares the air cooler's own height_mm. An earlier rule used
 # radiator_size_mm, which holds a fan size for air coolers (120 - always passes) and a
 # radiator length for AIOs (360 - always warned against a 165mm tower limit).

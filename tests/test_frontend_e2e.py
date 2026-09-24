@@ -8,8 +8,11 @@ raised an error, so backend tests and a clean console both looked fine. These
 tests assert on what the user actually sees.
 
 Skipped automatically if Playwright's browser isn't installed, so the suite still
-runs in environments without it.
+runs in environments without it - UNLESS REQUIRE_E2E=1 is set (the deploy check and
+the phase gates set it). Then every skip path (playwright missing, chromium missing,
+app did not start) is a failure, so the suite can never pass by not running (WEB-03).
 """
+import os
 import re
 import socket
 import subprocess
@@ -23,9 +26,26 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 THIS_FILE = Path(__file__)
 
-playwright_api = pytest.importorskip("playwright.sync_api")
-sync_playwright = playwright_api.sync_playwright
-expect = playwright_api.expect
+REQUIRE_E2E = os.environ.get("REQUIRE_E2E") == "1"
+
+
+def _skip_or_fail(reason: str):
+    """Dev machines without a browser skip; the deploy check (REQUIRE_E2E=1) fails."""
+    if REQUIRE_E2E:
+        pytest.fail(f"REQUIRE_E2E=1 but the browser suite cannot run: {reason}", pytrace=False)
+    pytest.skip(reason)
+
+
+try:
+    from playwright.sync_api import expect, sync_playwright
+except ImportError as _exc:
+    if REQUIRE_E2E:
+        pytest.fail(f"REQUIRE_E2E=1 but playwright is not installed: {_exc}", pytrace=False)
+    pytest.skip(f"playwright not installed: {_exc}", allow_module_level=True)
+
+VERDICTS = re.compile(
+    r"^(Problems found|No problems found - 1 check unverified"
+    r"|No problems found - \d+ checks unverified|All checks passed)$")
 
 
 def _free_port() -> int:
@@ -52,7 +72,7 @@ def base_url():
             time.sleep(0.5)
     else:
         proc.terminate()
-        pytest.skip("app did not start")
+        _skip_or_fail("app did not start")
 
     yield url
     proc.terminate()
@@ -67,7 +87,7 @@ def browser():
             yield b
             b.close()
     except Exception as exc:  # browser binary not installed
-        pytest.skip(f"chromium unavailable: {exc}")
+        _skip_or_fail(f"chromium unavailable: {exc}")
 
 
 @pytest.fixture
@@ -79,6 +99,47 @@ def page(browser, base_url):
     pg.console_errors = errors
     yield pg
     pg.close()
+
+
+@pytest.fixture
+def mobile_page(browser, base_url):
+    """A phone-width page (WEB-04). Same shape as `page`; that fixture is unchanged."""
+    pg = browser.new_page(viewport={"width": 375, "height": 812})
+    errors = []
+    pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
+    pg.goto(base_url, wait_until="networkidle")
+    pg.console_errors = errors
+    yield pg
+    pg.close()
+
+
+class TestRequireE2EGuard:
+    """WEB-03: with REQUIRE_E2E=1 a missing browser is a failure, not a skip."""
+
+    def _run(self, tmp_path, require):
+        env = dict(os.environ)
+        env["PLAYWRIGHT_BROWSERS_PATH"] = str(tmp_path)  # empty: chromium is "missing"
+        env.pop("REQUIRE_E2E", None)
+        if require:
+            env["REQUIRE_E2E"] = "1"
+        return subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(THIS_FILE),
+             "-k", "TestPageLoads and test_index_html_is_served"],
+            cwd=str(ROOT), env=env, capture_output=True, text=True, timeout=180,
+        )
+
+    def test_missing_chromium_fails_under_require_e2e(self, tmp_path):
+        result = self._run(tmp_path, require=True)
+        summary = result.stdout.strip().splitlines()[-1]
+        assert result.returncode != 0, result.stdout
+        assert "skipped" not in summary, summary
+        assert "REQUIRE_E2E=1" in result.stdout
+
+    def test_missing_chromium_still_skips_on_dev_machines(self, tmp_path):
+        result = self._run(tmp_path, require=False)
+        summary = result.stdout.strip().splitlines()[-1]
+        assert result.returncode == 0, result.stdout
+        assert "skipped" in summary, summary
 
 
 class TestNoInPageEvalWaits:
@@ -121,11 +182,13 @@ class TestBuilderValidation:
     def test_empty_build_reports_compatible(self, page):
         """The regression that started it all: app.js posted the wrong field name,
         /builder/validate returned 422, the failure was swallowed, and this read
-        "Incompatibilities Detected" for every build including an empty one."""
+        "Incompatibilities Detected" for every build including an empty one.
+        The old "Verified" wording was replaced by the three FIT-02 verdicts; an
+        empty build has nothing unverified, so it reads "All checks passed"."""
         _open_builder(page)
-        page.wait_for_timeout(1200)
-        status = page.locator("#compatibility-status").inner_text()
-        assert "Verified" in status, status
+        status = page.locator("#compatibility-status")
+        expect(status).to_have_text("All checks passed", timeout=15000)
+        expect(status).to_have_class(re.compile(r"(^|\s)ok(\s|$)"))
 
     def test_validate_endpoint_is_not_rejecting_the_frontend_payload(self, page):
         """Asserts the contract in the direction that actually broke: the payload the
@@ -691,3 +754,204 @@ class TestCatalogPaging:
             return {listings: listings.total, models: models.total};
         }""")
         assert both["models"] < both["listings"], both
+
+
+# ---------------------------------------------------------------------------
+# FIT-01/02 in a real page: a missing spec reads "unverified", never "passed".
+# Ids are found read-only through the page's own API. Nothing is saved.
+# ---------------------------------------------------------------------------
+_FIND_PAIR_JS = """async (want) => {
+    const post = async (url, body) => (await fetch(url, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)})).json();
+    const firstOffer = m => ({id: m.offers[0].id, name: m.offers[0].name});
+    const gpus = (await post('/api/v1/builder/candidates',
+        {slot: 'gpu', compatible_only: false})).items.slice(0, 5).map(firstOffer);
+    const cases = (await post('/api/v1/builder/candidates',
+        {slot: 'case', compatible_only: false})).items.slice(0, 40).map(firstOffer);
+    let calls = 0;
+    for (const g of gpus) {
+        for (const c of cases.slice(0, 8)) {   // at most 8 cases per GPU, 40 calls total
+            if (calls >= 40) return {found: false, calls};
+            calls++;
+            const s = await post('/api/v1/builder/validate',
+                {selected_product_ids: [g.id, c.id]});
+            const msgs = s.warnings.map(w => w.message);
+            // A GPU with no published length can never give either outcome - next GPU.
+            if (msgs.some(m => m.includes(g.name) && m.includes('no published length'))) break;
+            if (want === 'unverified') {
+                const hit = s.unverified_count === 1 && s.verdict !== 'Problems found'
+                    && msgs.some(m => m.includes('GPU clearance') && m.includes(c.name)
+                                      && !m.includes(g.name));
+                if (hit) return {found: true, gpu: g, case_: c, calls};
+            } else if (s.verdict === 'All checks passed') {
+                return {found: true, gpu: g, case_: c, calls};
+            }
+        }
+    }
+    return {found: false, calls};
+}"""
+
+_SELECT_JS = """([gpu, cs]) => {
+    state.builderSelections.gpu = gpu;
+    state.builderSelections.case = cs;
+    document.getElementById('slot-name-gpu').innerText = gpu.name;
+    document.getElementById('slot-name-case').innerText = cs.name;
+    return validateBuild();
+}"""
+
+
+class TestHonestVerdict:
+    def test_gpu_with_case_missing_clearance_is_unverified(self, page):
+        _open_builder(page)
+        pair = page.evaluate(_FIND_PAIR_JS, "unverified")
+        assert pair["found"], (
+            f"no GPU+case pair with exactly one unverified GPU-clearance check "
+            f"in {pair['calls']} validate calls")
+        print(f"unverified pair: gpu={pair['gpu']['id']} case={pair['case_']['id']}")
+        page.evaluate(_SELECT_JS, [pair["gpu"], pair["case_"]])
+
+        status = page.locator("#compatibility-status")
+        expect(status).to_have_text("No problems found - 1 check unverified", timeout=15000)
+        expect(status).to_have_class(re.compile(r"(^|\s)unverified(\s|$)"))
+        item = page.locator("#warnings-list .warning-item.unverified")
+        expect(item).to_have_count(1)
+        expect(item).to_contain_text(pair["case_"]["name"])
+        expect(item).to_contain_text("GPU clearance")
+        expect(item).to_be_visible()
+        assert page.console_errors == [], page.console_errors
+
+    def test_fully_known_gpu_and_case_reads_all_checks_passed(self, page):
+        _open_builder(page)
+        pair = page.evaluate(_FIND_PAIR_JS, "passed")
+        assert pair["found"], f"no fully-known GPU+case pair in {pair['calls']} calls"
+        print(f"passing pair: gpu={pair['gpu']['id']} case={pair['case_']['id']}")
+        page.evaluate(_SELECT_JS, [pair["gpu"], pair["case_"]])
+        status = page.locator("#compatibility-status")
+        expect(status).to_have_text("All checks passed", timeout=15000)
+        expect(page.locator("#warnings-list .warning-item.unverified")).to_have_count(0)
+
+
+_EVIL = "Evil <img src=x onerror=\"window.__xss=1\"> Case 'O\"Brien' &quot; &amp;"
+
+
+class TestUntrustedNamesAreEscaped:
+    """Product names come from retailer titles, and warning messages now carry them."""
+
+    def test_warning_messages_are_escaped(self, page):
+        body = {
+            "compatible": True,
+            "warnings": [
+                {"level": "unverified",
+                 "message": f"Unverified: {_EVIL} has no published GPU clearance, "
+                            "so GPU/case fit could not be checked."},
+                {"level": "estimate",
+                 "message": f"Wattage estimate: {_EVIL} has no listed TDP, "
+                            "so a typical 250 W was used."},
+            ],
+            "estimated_wattage": 420, "total_min_cost": "0", "store_breakdown": [],
+            "unverified_count": 1, "verdict": "No problems found - 1 check unverified",
+            "wattage_notes": ["x"],
+        }
+        page.route("**/api/v1/builder/validate",
+                   lambda route: route.fulfill(json=body))
+        _open_builder(page)
+        page.evaluate("() => validateBuild()")
+        items = page.locator("#warnings-list .warning-item")
+        expect(items).to_have_count(2)
+        expect(items.first).to_contain_text(_EVIL)
+        expect(page.locator("#total-wattage")).to_have_text("420 W (estimate)")
+        assert page.locator("#warnings-list img").count() == 0
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_card_and_picker_handlers_pass_the_name_through_intact(self, page):
+        """Names were placed inside inline onclick JS strings; a quote in a title
+        broke the handler (or ran as script)."""
+        page.evaluate("""(name) => {
+            window.__calls = [];
+            window.openCompareModal = (n, id) => window.__calls.push(['compare', n, id]);
+            renderProducts([{name, p_category: 'Cabinet', offer_count: 1,
+                cheapest: {id: 999999, price: 1000, store: 'Test'}}]);
+        }""", _EVIL)
+        page.locator("#products-grid .card-actions button").first.click()
+        assert page.evaluate("() => window.__calls") == [["compare", _EVIL, 999999]]
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_picker_choice_keeps_an_awkward_name_intact(self, page):
+        item = {"name": _EVIL, "best_price": 1000, "offer_count": 1, "condition": None,
+                "offers": [{"id": 999998, "name": _EVIL, "price": 1000, "store": "Test",
+                            "condition": None}]}
+        page.route("**/api/v1/builder/candidates",
+                   lambda route: route.fulfill(json={"items": [item], "total": 1,
+                                                     "offer_count": 1, "filtered_out": 0}))
+        page.route("**/api/v1/builder/validate",
+                   lambda route: route.fulfill(json={
+                       "compatible": True, "warnings": [], "estimated_wattage": 0,
+                       "total_min_cost": "0", "store_breakdown": [], "unverified_count": 0,
+                       "verdict": "All checks passed", "wattage_notes": []}))
+        _open_builder(page)
+        page.locator("#slots-container .slot-card").first.get_by_role(
+            "button", name="Select").click()
+        row = page.locator("#select-modal-list .model-row").first
+        expect(row).to_be_visible(timeout=15000)
+        row.locator(".model-head").click()
+        row.locator(".offer-pick").first.click()
+        expect(page.locator("#slot-name-cpu")).to_have_text(_EVIL)
+        assert page.evaluate("() => window.__xss") is None
+
+
+# ---------------------------------------------------------------------------
+# WEB-04: the core flow at phone width (375x812).
+# ---------------------------------------------------------------------------
+def _no_horizontal_overflow(pg):
+    width = pg.evaluate("() => document.documentElement.scrollWidth")
+    assert width <= 376, f"page is {width}px wide at a 375px viewport"
+
+
+class TestMobile375:
+    def test_search_pick_verdict_compare_at_375px(self, mobile_page):
+        pg = mobile_page
+
+        # 1. Search the catalog.
+        pg.fill("#search-input", "RTX")
+        pg.press("#search-input", "Enter")
+        cards = pg.locator("#products-grid .product-card")
+        expect(cards.first).to_be_visible(timeout=15000)
+        expect(cards.first).to_contain_text(re.compile("RTX", re.I))
+        _no_horizontal_overflow(pg)
+
+        # 2. Open compare from a catalog card.
+        cards.first.locator(".card-actions button").first.click()
+        expect(pg.locator("#compare-modal")).to_have_class(re.compile(r"(^|\s)active(\s|$)"))
+        expect(pg.locator("#compare-modal .modal")).to_be_visible()
+        expect(pg.locator("#compare-modal-content h2")).to_be_visible(timeout=15000)
+        _no_horizontal_overflow(pg)
+        pg.locator("#compare-modal .modal-close").click()
+        expect(pg.locator("#compare-modal")).not_to_have_class(
+            re.compile(r"(^|\s)active(\s|$)"))
+
+        # 3. Open the builder and the picker.
+        pg.get_by_role("button", name="PC Builder").click()
+        slot = pg.locator("#slots-container .slot-card").first
+        expect(slot).to_be_visible()
+        slot.get_by_role("button", name="Select").click()
+        expect(pg.locator("#select-modal")).to_have_class(re.compile(r"(^|\s)active(\s|$)"))
+        row = pg.locator("#select-modal-list .model-row").first
+        expect(row).to_be_visible(timeout=15000)
+
+        # 4. Add a part.
+        row.locator(".model-head").click()
+        pick = row.locator(".offer-pick").first
+        expect(pick).to_be_visible()
+        pick.click()
+        expect(pg.locator("#select-modal")).not_to_have_class(
+            re.compile(r"(^|\s)active(\s|$)"))
+        expect(pg.locator("#slot-name-cpu")).not_to_have_text("No component selected")
+
+        # 5. Read the verdict.
+        status = pg.locator("#compatibility-status")
+        expect(status).to_have_text(VERDICTS, timeout=15000)
+        status.scroll_into_view_if_needed()
+        expect(status).to_be_visible()
+        _no_horizontal_overflow(pg)
+        assert pg.console_errors == [], pg.console_errors

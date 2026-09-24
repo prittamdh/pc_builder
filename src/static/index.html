@@ -10,7 +10,7 @@
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="canonical" href="/">
-    <link rel="stylesheet" href="/static/style.css?v=8">
+    <link rel="stylesheet" href="/static/style.css?v=9">
 </head>
 <body>
 
@@ -133,8 +133,8 @@
 
                 <div class="summary-card">
                     <div class="summary-title">Build Summary</div>
-                    <div id="compatibility-status" class="compatibility-status ok">
-                        ✓ Compatibility Checked
+                    <div id="compatibility-status" class="compatibility-status" aria-live="polite">
+                        Checking compatibility...
                     </div>
                     
                     <div class="warning-list" id="warnings-list"></div>
@@ -238,6 +238,6 @@
     </div>
 
     <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
-    <script src="/static/app.js?v=18"></script>
+    <script src="/static/app.js?v=19"></script>
 </body>
 </html>
