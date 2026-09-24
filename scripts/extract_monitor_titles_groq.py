@@ -21,11 +21,11 @@ from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.monitor_title_extraction import MonitorTitleExtraction
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
-from services.groq_extraction_service import GroqExtractionService, GroqExtractionError, identity_prompt
+from services.groq_extraction_service import GroqExtractionError, default_service, identity_prompt
 
 
 def extract_monitor_identity(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 6, sleep_s: float = 0.0):
-    with SessionLocal() as session, GroqExtractionService() as groq:
+    with SessionLocal() as session, default_service() as groq:
         print("=" * 80)
         print("GROQ LLM MONITOR IDENTITY EXTRACTION - Stage 1 (per listing, batched)")
         print("=" * 80)

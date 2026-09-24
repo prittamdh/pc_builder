@@ -162,6 +162,14 @@ def execute_physical_spec_extraction(limit_per_category: int = 10):
         except Exception as e:
             print(f"[Spec Extraction] {label} failed: {e}")
 
+    # Cabinet clearances come from retailer product pages, not titles. Runs after the
+    # title-based cabinet pass so any clearance a title states explicitly is already in.
+    try:
+        from scrape_cabinet_clearance import fill_cabinet_clearance
+        fill_cabinet_clearance(limit=limit_per_category)
+    except Exception as e:
+        print(f"[Spec Extraction] Cabinet clearance failed: {e}")
+
 
 def execute_catalog_policy():
     """Re-apply the supported-platform policy and the catalog data-quality fixes.

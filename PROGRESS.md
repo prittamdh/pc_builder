@@ -695,6 +695,61 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 
 ---
 
+## Cabinet false merge — colour is not an identity (2026-09-24)
+
+Found while opening the cabinet-clearance item, and it is the **same class of fault as the PSU
+trim** — a qualifier field giving an otherwise-empty key enough apparent content to escape
+`disambiguate_failed_key`'s salting:
+
+- **`case:unknown:white` had swallowed 34 different cabinets** — Coco Sports STARK Z11, Dawg Y 990,
+  TAG Gamerz Nebula, ICEMASTER Torrent — and **`case:unknown:black` another 15**, plus an Antec
+  Symphony 360 AIO *cooler* that had leaked in from another category.
+- Mechanism: brand came back `Unknown`, model empty, but the extracted **colour** was non-empty, so
+  the key read as having real content and every unresolved cabinet collapsed into one group.
+
+`_NON_IDENTIFYING_FIELDS` now covers `color`/`colour` alongside `efficiency`. **The test to apply
+before adding a field there: could this value, on its own, name a product to someone who knows the
+catalogue?** "Bronze" and "White" cannot; "750w" and a model number can. Colour still separates real
+SKUs — a white Lian Li A3 is not the black one.
+
+**Re-extraction: 2023/2023, zero failures** on `ministral-14b-latest`. The fake groups are gone; the
+largest groups are now real cabinets (Lian Li A3, Zotac Gaming Alloy, Cooler Master Qube 540).
+
+**The brand registry paid off here, measurably.** Cabinet brand `Unknown` is down to **23 of 2024
+(1.1%)**, and the India-market makes it was built for are now named rather than collapsing:
+DAWG 88, Ant Esports 185, Zebronics 56, TAG Gamerz 48. This is the first category re-extracted with
+hints in place.
+
+Also resolved by the same pass: `ram:corsair:unknown:frame_4000d_rs` — a Corsair *case* carrying a
+stale RAM-category canonical_id, now correctly `case:corsair:black:frame_4000d_rs_argb`.
+
+**Method note worth keeping.** An earlier check for this bug class in other categories looked for
+near-identical *splits* and found none, concluding wrongly that PSU was the only affected category.
+It could not have found this: a false **merge** is invisible to a split-detector. When auditing key
+quality, check both directions — group-to-listing ratio finds over-merges, near-duplicate keys find
+under-merges.
+
+## Brand alone is not an identity (2026-09-24)
+
+Found while spot-checking clearance values: `case:silverstone` held **three different rackmount
+chassis** (RM42-502, RM44, SST-RM400) and had just been given one clearance for all three. Same class
+as colour and trim — model came back empty, brand did not, so the key escaped
+`disambiguate_failed_key`'s salting. Swept all 9 categories: **26 unsalted brand-only groups, 34
+listings**, of which the real false merges were SilverStone, `motherboard:gigabyte` (H110M + H610M +
+W880 AI TOP), `case:consistent` (CIE109 + CIE110), `monitor:aoc` (a 24" and a 49"), Foxin and Lapcare.
+
+`brand`/`aib_brand` joined `_NON_IDENTIFYING_FIELDS`, the 34 listings were released and re-read by
+Stage 1; the sweep now finds 0. Each is its own model again. 3 tests in `TestBrandAloneDoesNotIdentify`.
+
+**Also found:** `extract_monitor_titles_groq.py` and `extract_cpu_titles_groq.py` were never moved to
+`default_service()` and still called the retired `llama-3.1-8b-instant` (404) — so the DAG's monitor
+and CPU Stage 1 had been failing every listing. Both fixed.
+
+**Also fixed:** `monitor:foxin:crystal` merged the 19" and 19.5" Crystal - corrected by hand ("Crystal" is a series).
+Size was *not* added to the monitor key: the other 6 groups with mixed sizes in their titles are one product with a rounded size (24.5" vs 25"),
+which a size field would wrongly split. An Arctic P14 case fan filed by the store as "Cabinet Case" now routes to Accessories
+(`_title_indicates_standalone_fan`, which spares "Elite 600 with 7 ARGB Fans").
+
 ## LLM provider strategy (settled 2026-09-20)
 
 **All extraction is AI-based; no regex hit-and-trial.** Keys were probed rather than assumed, and
@@ -760,14 +815,26 @@ where the model name settles it: `cooler_master:gold:v_platinum_v2:1600w` (model
 key says gold) and `corsair:platinum:rm750e:750w` (RM750e is 80+ Gold, key says platinum). Left for
 judgement, as the audit is designed to do.
 
+**Closed 2026-09-24 by hand — audit now reports 0.** Corrected the two listings' `efficiency_rating`
+in `psu_title_extractions` (6270 → Platinum, 16579 → Gold), and unified the Cooler Master V Platinum
+1600 V2 `model_number` across 3 listings that had split it three ways ("V Platinum", "V Platinum V2",
+"V Platinum 1600 V2" — every title states V2 1600W). Listing 19202 (untiered RM750e), held at
+`needs_review` while the group looked multi-trim, was released and picked up Gold by reconciliation.
+Re-key: 411 → 407 canonical ids, 4 retired groups. Corrected rows carry a `notes` entry saying so.
+
 ## What's Next
+
+- **Open (2026-09-24):** `test_no_console_errors_on_load` fails on 3 `ERR_BLOCKED_BY_RESPONSE.NotSameOrigin`
+  console errors — cross-origin resources (likely store-hosted images) refused by the browser. Not
+  caused by data changes; needs looking at separately.
 
 1. ~~Reconcile legacy regex `*_specs` data with LLM extraction~~ — **Resolved 2026-08-16.** `motherboard_specs`/`ram_specs`/`gpu_specs`/`psu_specs`/`cabinet_specs`/`cooler_specs`/`ssd_specs` turned out to be populated by the old regex `NormalizationService` (not empty as previously documented), and `CompatibilityEngine._merge()` was preferring those regex values over the verified LLM extraction whenever both existed. Investigated properly before fixing: an initial raw `IS DISTINCT FROM` count of 341 "disagreeing" motherboards was mostly noise (regex simply had `NULL`, not a real disagreement) — only **6 products** had both sources populated with conflicting sockets, and in all 6 the *regex* value was actually correct (MSI Z890 boards; LLM said LGA1700 instead of LGA1851). Broadening the check to every chipset→socket pairing surfaced 22 total LLM inference errors worth fixing directly: the whole H810 chipset family (14 rows, Intel's 800-series companion chipset, real systematic gap), AMD's 2025 B840 refresh chipset getting confused with Intel's similarly-numbered B860 (3 rows), three isolated Intel 400/500-series-vs-LGA1700 mixups, and one WRX80→sTR5 mixup (should always be sWRX8). Corrected those 22 rows directly in `motherboard_title_extractions`, then flipped `CompatibilityEngine._merge()`'s priority so `*_title_extractions` (LLM, now more reliable) wins over `*_specs` (uncontrolled regex leftovers) — the right general default until `*_specs` is repopulated from a real external dataset, at which point that priority should flip back (noted in the code). Re-verified the RAM DDR4/DDR5 mismatch tests still pass and confirmed the fixed Z890 board now resolves to `LGA1851` end-to-end through the engine.
 2. ~~Brand-recognition gaps~~ — **Resolved 2026-09-20.** Regional makes (EVM, ZION, GEONIX, Dawg, Coconut, Prolab Design, Circle, TAG Gamerz) were inconsistently recognized, so products the model could not name landed in one coarse "brand unknown" group. Took the hint-list option, but derived from the catalogue rather than hand-written: `src/matching/brand_registry.py` builds per-category hints from `canonical_parts` the model already named confidently (`status='OK'`, seen on ≥2 canonical models so a single garbled mis-read cannot enter), merged over a short cold-start seed of brands Stage 1 has never once named unaided. `services.groq_extraction_service.identity_prompt(category)` appends them and all 9 Stage-1 extractors now call it instead of the bare prompt constant. Rebuilt by `scripts/build_brand_registry.py`, wired into the DAG's `apply_catalog_policy` task so it refreshes every cycle — a brand recognized once on a clear title becomes a hint on terse listings of the same make next cycle, so recognition improves rather than staying flat. Two safeguards: the prompt fragment scopes the list to recognition only and restates that `Unknown` is a correct answer (handing a model a brand list otherwise invites it to attach one to every title, turning a visible Unknown into an invisible wrong answer), and the hint count is capped at emission, not only at build time — the token cost is paid per batch, and the JSON can arrive hand-edited. 7 tests in `tests/test_matching.py::TestBrandRegistry`.
 3. ~~Physical specs sourcing~~ — **Resolved 2026-08-16.** All 9 spec tables are now keyed by `canonical_id` and populated (6,951 model rows total). See the section above for per-table sourcing and coverage.
 4. ~~Motherboard canonical key merges ITX/microATX variants~~ — **Resolved** by `scripts/rekey_motherboard_canonical_ids.py`. The key now uses the board designation recovered from each listing's own title (`resolve_board_designation`), closing the fault in both directions: the B850/B850I over-merge and the B650/B650M under-merge. Deterministic and free — no Stage 1 re-run, since brand/model_number/raw_title are already persisted per listing.
 5. ~~GPU listings mistagged as CPU category~~ — **Resolved.** `CategoryClassifier` gained `_title_indicates_discrete_gpu` (which rules out CPUs merely advertising integrated graphics), plus the same class of guard for thermal material, audio gear and removable media. `scripts/fix_category_p_category_drift.py` remediates existing rows and is idempotent — a product only appears there while its `p_category` is wrong. Regression tests live in `tests/test_matching.py`.
-6. **Cabinet clearance data needs a non-LLM source** — `max_gpu_length_mm` is populated for only 5/1,405 models because those numbers aren't in retailer titles and must not be guessed. This is the one remaining spec gap where an external dataset (or scraping manufacturer product pages) would add real value, and it directly limits how often the GPU-clearance rule can fire.
+6. ~~Cabinet clearance data needs a non-LLM source~~ — **Resolved 2026-09-24.** `scripts/scrape_cabinet_clearance.py` reads retailer product pages, which usually reproduce the manufacturer's spec table (PCStudio 403s and is skipped). The LLM sees only text around GPU/VGA/cooler terms and must return a **verbatim quote** for each number; `matching.cabinet_clearance.is_grounded` discards any value whose quote is not on the page, lacks the number, or is out of physical range. Up to 2 pages per model must agree within 10% (the smaller wins — the "with front radiator" figure is what a build must meet); wider disagreement writes nothing. **GPU clearance: 5 → 779 of 1,390 live models (1,254 of 2,024 listings, 62%); cooler height 681 models.** 211 answers were rejected as ungrounded, 2 models left as conflicts (Cooler Master Cosmos Alpha cooler 165 vs 186; ASUS Prime AP303 GPU 360 vs 310). It also **replaced three recalled values that were wrong**: Fractal Torrent Compact 445 → 330, Torrent 445 → 423, Define 7 cooler 160 → 185. ASUS TUF GT502's "360mm" (a radiator size read off the title) was cleared. Rows marked "Web-verified" are never touched. 8 tests in `TestCabinetClearanceGrounding`/`TestCabinetClearanceVotes`.
+   **Follow-up same day:** the first run kept the *smallest* of several stated GPU lengths, which picked conditional figures - Deepcool CG580's "410mm, limited to 262mm if a 360mm radiator is mounted" would have been 262, and the clearance rule is a blocking error, so ordinary 300mm cards would have been rejected in a stock build. The prompt now takes the figure for the case **as sold** (included fans and cages fitted) and ignores optional-radiator limits; a full `--recheck` re-run applies it (e.g. MSI Forge 120A 300 → 330, Antec C7 280 → 390). Wired into the DAG's spec stage via `fill_cabinet_clearance()`; models whose pages state nothing are marked `Pages checked <date>` so a cycle doesn't re-fetch them. The title-based `CABINET_SPEC_BATCH_PROMPT` no longer allows recall from trained knowledge - that is where the wrong Torrent values came from.
 7. ~~`CategoryClassifier.get_p_category()` title fallback~~ — **Resolved.** `_classify_from_title()` is implemented and consulted whenever the store supplied no category or one that is unrecognized, checking discrete-GPU / removable-media / audio / thermal markers before the coarse per-category ones. It returns `None` rather than guessing when nothing is certain. This is what stopped an AMD Radeon Pro W7700 sitting in Accessories because its listing carried no category at all.
 8. ~~Wire the new Stage-2 spec extractors into the DAG~~ — **Resolved.** `dags/scheduled_scraper_dag.py` now runs `process_due_targets >> extract_canonical_identities >> extract_physical_specs >> apply_catalog_policy`. `execute_physical_spec_extraction` runs the LLM spec extractors plus the two zero-API `populate_*_from_extractions` scripts; `execute_catalog_policy` runs `classify_legacy_products`, `fix_catalog_data_quality` and (added 2026-09-20) `build_brand_registry`. Each is wrapped so one failure cannot take the stage down.
 9. ~~Frontend surfaces still untested~~ — **Resolved.** `tests/test_frontend_e2e.py` holds 51 Playwright tests asserting on what the user actually sees, written specifically because every frontend bug found on 2026-08-16 was silent — a swallowed 422 that left the sidebar permanently reading "Incompatibilities Detected", a picker that always showed an empty list, a `zip()` that truncated every candidate away. None raised, so backend tests and a clean console both looked fine. The suite skips itself automatically where Playwright's browser isn't installed.
