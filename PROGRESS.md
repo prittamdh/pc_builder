@@ -751,8 +751,10 @@ scrape failed with `ProductRepository.create() got an unexpected keyword argumen
 287e304 (2026-09-02) added `condition` to `SearchService.save` but not to `create()`, so any batch
 holding a *new* product raised and rolled back. `execute_due_scrape_targets` catches and prints per
 target, so every run was marked **success**. Fixed, with `tests/test_product_repository.py`; a manual
-run then saved 1,229 products across 10 targets with no errors. **Worth doing:** a run that saves
-nothing should not report success - a price-freshness check would have caught this in 15 minutes.
+run then saved 1,229 products across 10 targets with no errors. **Guarded since:** the scrape task now fails when
+every target fails, and a separate `check_price_freshness` task fails whenever no price has been saved in 24h
+(`tests/test_price_freshness.py`). Downstream extraction runs with `trigger_rule="all_done"`, so a failed scrape
+no longer stalls the backlog.
 
 **Product images** were hot-linked from stores and the browser refused some (the failing
 `test_no_console_errors_on_load`): PCStudio sends `Cross-Origin-Resource-Policy: same-origin`, and dead

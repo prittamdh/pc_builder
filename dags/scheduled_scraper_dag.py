@@ -225,6 +225,34 @@ def execute_catalog_policy():
         print(f"[Catalog Policy] brand registry rebuild failed: {e}")
 
 
+PRICE_MAX_AGE = timedelta(hours=24)
+
+
+def price_data_is_stale(latest: datetime | None, now: datetime, max_age: timedelta = PRICE_MAX_AGE) -> bool:
+    """True when no price has been saved within max_age (or ever)."""
+    return latest is None or now - latest > max_age
+
+
+def check_price_freshness():
+    """Fail loudly when prices stop arriving.
+
+    Scraping once stopped for five weeks with every run marked success: the scheduler was
+    down for a month, then every save raised a TypeError that was caught and printed. The
+    all-targets-failed check covers the second case; this covers everything else that
+    leaves the catalog quietly frozen - no targets coming due, a store changing its markup
+    so pages parse to nothing, saves that succeed but write no price rows.
+    """
+    from sqlalchemy import func, select
+    from db.models.price_history import PriceHistory
+
+    with SessionLocal() as session:
+        latest = session.scalar(select(func.max(PriceHistory.scraped_at)))
+    now = datetime.now(latest.tzinfo) if latest is not None and latest.tzinfo else datetime.now()
+    if price_data_is_stale(latest, now):
+        raise RuntimeError(f"No price saved since {latest} - scraping has stalled.")
+    print(f"[Freshness] latest price saved at {latest}")
+
+
 # Airflow DAG Definition (evaluated when apache-airflow is installed)
 try:
     from airflow import DAG
@@ -254,9 +282,12 @@ try:
         dag=dag,
     )
 
+    # all_done: extraction works through the backlog whether or not this cycle's scrape
+    # succeeded, so a failed scrape (which now fails its task) must not stall it.
     canonical_extraction_task = PythonOperator(
         task_id="extract_canonical_identities",
         python_callable=execute_canonical_extraction,
+        trigger_rule="all_done",
         dag=dag,
     )
 
@@ -272,8 +303,17 @@ try:
         dag=dag,
     )
 
+    freshness_task = PythonOperator(
+        task_id="check_price_freshness",
+        python_callable=check_price_freshness,
+        retries=0,
+        trigger_rule="all_done",
+        dag=dag,
+    )
+
     # Strictly ordered: identities key the spec tables, and the policy reads the spec
     # fields, so each stage depends on the one before it.
     process_targets_task >> canonical_extraction_task >> physical_specs_task >> catalog_policy_task
+    process_targets_task >> freshness_task
 except ImportError:
     pass
