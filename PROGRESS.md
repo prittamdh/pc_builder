@@ -743,6 +743,15 @@ ungrounded; values run 37mm (Noctua NH-L9) to 172mm (Deepcool Assassin IV VC Vis
 Verified live: Assassin IV (172) in a Dawg X617 (155) errors, in an ROG Strix Helios II (190) passes,
 a 360mm AIO in the X617 passes. Runs in the DAG via `fill_cooler_height()`.
 
+## AIO radiator fit (2026-09-24)
+
+`cabinet_specs.radiator_sizes` (migration `f3c9a1d6b254`) holds every radiator length a case lists at any mount,
+read from product pages by `scripts/scrape_cabinet_radiators.py` - each size needs a verbatim quote naming it, and
+sizes are unioned across mounts and pages. The rule compares an **AIO's** radiator (air coolers excluded:
+their `radiator_size_mm` is a fan size) with the **largest** size the case lists, as a **warning**: pages often
+omit a mount (Cooler Master Qube 540's never mentions 240), so only "bigger than anything listed" is reliable,
+and even that can understate a case. Runs in the DAG via `fill_cabinet_radiators()`. Coverage: see the run below.
+
 ## Scraping had silently stopped; product images blocked (2026-09-24)
 
 **No prices had been saved since 2026-08-17** - the site read "Last updated 38 d ago". Two causes in

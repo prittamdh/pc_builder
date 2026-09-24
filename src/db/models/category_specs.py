@@ -160,6 +160,8 @@ class CabinetSpecs(Base, _SpecsMetadataMixin):
     max_gpu_length_mm: Mapped[int | None] = mapped_column(Integer)
     max_cooler_height_mm: Mapped[int | None] = mapped_column(Integer)
     max_psu_length_mm: Mapped[int | None] = mapped_column(Integer)
+    # Radiator lengths supported at any mount, sorted comma list, e.g. "120,240,280,360".
+    radiator_sizes: Mapped[str | None] = mapped_column(String(64))
 
 
 class CoolerSpecs(Base, _SpecsMetadataMixin):

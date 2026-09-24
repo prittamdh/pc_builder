@@ -29,6 +29,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from db.models.product import Product
+from matching.cabinet_clearance import parse_radiator_sizes
 from db.models.category_specs import (
     CabinetSpecs, CoolerSpecs, CPUSpecs, GPUSpecs, MotherboardSpecs, PSUSpecs, RAMSpecs, SSDSpecs,
 )
@@ -143,26 +144,39 @@ class CompatibilityEngine:
                 select(CabinetSpecs).where(CabinetSpecs.canonical_id.in_(canonical_ids))
             )} if canonical_ids else {}
             ext = {e.product_id: e for e in self.session.scalars(select(CabinetTitleExtraction).where(CabinetTitleExtraction.product_id.in_(ids)))}
-            return [
+            views = [
                 _merge(specs.get(p.canonical_id), ext.get(p.id), {
                     "form_factor": "form_factor", "max_gpu_length_mm": "max_gpu_length_mm",
                     "max_cooler_height_mm": "max_cooler_height_mm", "max_psu_length_mm": "max_psu_length_mm",
+                    "radiator_sizes": "radiator_sizes",  # specs only - titles don't carry it
                 })
                 for p in products
             ]
+            # Largest radiator the case takes at any mount. Pages often list only some
+            # sizes, so only "bigger than anything listed" is a reliable mismatch.
+            for v in views:
+                sizes = parse_radiator_sizes(v.radiator_sizes)
+                v.max_radiator_mm = max(sizes) if sizes else None
+            return views
 
         if category == "cooler":
             specs = {s.canonical_id: s for s in self.session.scalars(
                 select(CoolerSpecs).where(CoolerSpecs.canonical_id.in_(canonical_ids))
             )} if canonical_ids else {}
             ext = {e.product_id: e for e in self.session.scalars(select(CoolerTitleExtraction).where(CoolerTitleExtraction.product_id.in_(ids)))}
-            return [
-                _merge(specs.get(p.canonical_id), ext.get(p.id), {
+            views = []
+            for p in products:
+                e = ext.get(p.id)
+                v = _merge(specs.get(p.canonical_id), e, {
                     "radiator_size_mm": "size_mm", "supported_sockets": "supported_sockets", "tdp_rating": "tdp_rating",
                     "height_mm": "height_mm",  # specs only - titles don't carry it
+                    "cooler_type": "cooler_type",
                 })
-                for p in products
-            ]
+                # radiator_size_mm is a fan size on air coolers, so only an AIO's counts
+                # as a radiator length.
+                v.aio_radiator_mm = v.radiator_size_mm if (v.cooler_type or "").upper().startswith("AIO") else None
+                views.append(v)
+            return views
 
         if category == "storage":
             specs = {s.canonical_id: s for s in self.session.scalars(

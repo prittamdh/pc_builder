@@ -186,6 +186,13 @@ def execute_physical_spec_extraction(limit_per_category: int = 10):
     except Exception as e:
         print(f"[Spec Extraction] Cooler height failed: {e}")
 
+    # Cabinet radiator support, for the AIO radiator-fit rule.
+    try:
+        from scrape_cabinet_radiators import fill_cabinet_radiators
+        fill_cabinet_radiators(limit=limit_per_category)
+    except Exception as e:
+        print(f"[Spec Extraction] Cabinet radiators failed: {e}")
+
 
 def execute_catalog_policy():
     """Re-apply the supported-platform policy and the catalog data-quality fixes.

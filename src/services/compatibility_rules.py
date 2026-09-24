@@ -57,6 +57,12 @@ RULES: list[Rule] = [
         lambda a, b: f"Cooler Clearance Error: cooler height ({a}mm) exceeds Cabinet max cooler height ({b}mm).",
     ),
     Rule(
+        # AIOs only (aio_radiator_mm is NULL for air coolers). A warning, not an error:
+        # case pages can omit a mount, so the listed maximum may understate the case.
+        "cooler", "aio_radiator_mm", "le", "case", "max_radiator_mm", "warning",
+        lambda a, b: f"Radiator Fit Warning: this cooler's {a}mm radiator is larger than any radiator the Cabinet lists ({b}mm max) - check the case's mounts.",
+    ),
+    Rule(
         "motherboard", "form_factor", "form_factor_fits", "case", "form_factor", "error",
         lambda a, b: f"Case Fit Error: Motherboard form factor ({a}) does not fit inside Cabinet ({b}).",
     ),

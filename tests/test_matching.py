@@ -607,3 +607,15 @@ class TestRadiatorConditionalClearance:
         assert not is_radiator_conditional("Up to 352 mm (with front fans)")
         assert not is_radiator_conditional("Max GPU Card Length 420 (w/out Radiator)")
         assert is_radiator_conditional("390 (w/ Radiator) mm")
+
+
+class TestRadiatorSizes:
+    def test_format_keeps_standard_sizes_sorted(self):
+        from matching.cabinet_clearance import format_radiator_sizes
+        assert format_radiator_sizes({360, 120, 240, 999, 150}) == "120,240,360"
+        assert format_radiator_sizes(set()) is None
+
+    def test_parse_round_trips(self):
+        from matching.cabinet_clearance import parse_radiator_sizes
+        assert parse_radiator_sizes("120,240,360") == {120, 240, 360}
+        assert parse_radiator_sizes(None) == set()
