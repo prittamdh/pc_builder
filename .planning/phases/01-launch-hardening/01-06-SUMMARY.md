@@ -75,54 +75,63 @@ recorded in the case's `evidence` field). Never the project's own
 Both run via `PYTHONIOENCODING=utf-8 python scripts/benchmark_provider.py --provider <name> --runs 2`,
 keys read from the local environment through `provider_chain()`/settings, never printed.
 
-### mistral
+**These are the current, post-fix-round-1 results, against the corrected answer key
+(case 3 expected `None`, MSI MAG A650BN locked as Bronze).** The pre-fix numbers
+that were originally reported here (against the *wrong* case-3 answer, `80+ Gold`)
+are kept below only as a clearly-labelled historical note - they do not reflect the
+current script.
+
+### mistral (current, corrected key)
 
 ```
 Provider: mistral (ministral-14b-latest)
-Score: 7/8
-Titles/min: 80.6
+Score: 8/8
+Titles/min: 78.2
 JSON failures: 0
-Score: 7/8
-Titles/min: 78.8
+Score: 8/8
+Titles/min: 86.8
 JSON failures: 0
 ```
+Mistral scores 8/8 against the corrected key: it returns `null` for case 3 (Corsair
+RM750E, Cybenetics-only title), which now matches the corrected expected answer.
 
-Miss (both runs, same case): case #3, "Corsair RM750E 750 Watt Cybenetics Gold Fully
-Modular ATX 3.1 Power Supply (CP-9020295-IN)", expected `80+ Gold`. Mistral's raw
-answer:
-```
-{'index': 3, 'brand': 'Corsair', 'model_number': 'RM750E', 'wattage': 750,
- 'efficiency_rating': None, 'confidence': 'medium',
- 'notes': 'Cybenetics rating ignored; no 80 PLUS tier specified'}
-```
-This is a real finding about `ministral-14b-latest`, not a bad case: the title states
-only a Cybenetics tier (no "80 PLUS" wording anywhere), and the model correctly
-followed the prompt's instruction to ignore Cybenetics - but then returned `null`
-instead of recognizing that this specific SKU's real 80 PLUS certification (Gold,
-independently confirmed in the registry) happens to match its stated Cybenetics
-tier. Per the owner's rule, the case was **not** edited or dropped to make this pass
-- it is flagged here for the owner as a genuine model-behavior gap, not a benchmark
-defect. (`provider_chain()`'s docstring claims `ministral-14b-latest 8/8` on the
-*original*, uncommitted 2026-09-20 set - this rebuilt set is not a like-for-like
-comparison, see the plan's "Flagged assumptions".)
-
-### google
+### google (current, corrected key)
 
 ```
 Provider: google (gemini-3.1-flash-lite)
-Score: 8/8
-Titles/min: 100.7
+Score: 7/8
+Titles/min: 146.3
 JSON failures: 0
-Score: 8/8
-Titles/min: 100.4
+Score: 7/8
+Titles/min: 88.5
 JSON failures: 0
 ```
+Google **misses** case 3 on both runs. Its raw answer:
+```
+{'index': 3, 'brand': 'Corsair', 'model_number': 'RM750E', 'wattage': 750,
+ 'efficiency_rating': '80+ Gold', 'confidence': 'high', 'notes': None}
+```
+Google reports `80+ Gold` on a title that states only a Cybenetics rating - it leaks
+the Cybenetics-adjacent (and, coincidentally, registry-true) Gold tier onto a field
+the production prompt says must be `null` when no 80 PLUS tier is stated. This is a
+genuine model finding about `gemini-3.1-flash-lite`, not a benchmark defect - the
+case was not edited or dropped to make it pass.
 
-**Verdict: mistral 7/8, google 8/8; Success Criterion 5 met: no (mistral falls one
-case short; google meets N/N).**
+**Verdict (current): mistral 8/8, google 7/8. Success Criterion 5 ("8/8 for both
+mistral and google") is NOT met**, because google leaks the Cybenetics tier on case
+3 - a genuine model-behavior finding for the owner, not a benchmark defect.
 
-No bug was found in `scripts/benchmark_provider.py` itself during these runs, so no
-change was made to it after Task 2 locked the case list.
+No bug was found in `scripts/benchmark_provider.py` itself during either round of
+live runs.
+
+### Historical note: pre-fix-round-1 numbers (against the wrong case-3 answer)
+
+Before fix round 1 corrected case 3's expected value from the wrong `80+ Gold` to
+the correct `None`, the same two commands reported: mistral 7/8 (missed case 3 by
+returning `null`, which was *correct* behavior scored as wrong against the bad key)
+and google 8/8 (reported `80+ Gold` on case 3, which happened to match the bad key).
+Both numbers are stale artifacts of the answer-key bug fixed in fix round 1 and are
+kept here only for the record, not as a current result.
 
 ## Full test suite
 
@@ -136,8 +145,9 @@ itself: `27 passed`.
 
 - The mistral miss above should go to the owner as a real (small) provider-accuracy
   finding, not something this plan can or should "fix" by editing the answer key.
-- `scripts/benchmark_provider.py` is untracked (not committed) - the manager should
-  commit `scripts/benchmark_provider.py` and `tests/test_benchmark_provider.py`.
+- `scripts/benchmark_provider.py` and `tests/test_benchmark_provider.py` were
+  committed by the manager as `10b9076`; the fix-round-1 corrections were committed
+  as `5acddf4`. Nothing outstanding to commit as of this note.
 - The dropped MSI MAG A650BN candidate surfaced a genuine 80 PLUS registry data
   inconsistency (two rows, identical model number, conflicting Silver/Bronze
   ratings) worth flagging to whoever maintains `data/raw/All_certified_psus.xlsx`
