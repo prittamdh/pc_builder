@@ -69,6 +69,24 @@ def is_grounded(value, quote: str | None, page_text: str, valid_range: tuple[int
     return re.search(rf"(?<!\d){value}(?!\d)", q) is not None
 
 
+_RADIATOR = re.compile(r"radiator", re.IGNORECASE)
+_WITHOUT = re.compile(r"\bwithout\b|\bw/o\b|\bw/out\b|\bno\s+radiator\b", re.IGNORECASE)
+
+
+def is_radiator_conditional(quote: str | None) -> bool:
+    """True when a GPU-length quote describes a radiator-mounted layout.
+
+    Cases never ship with a radiator, so such a figure is an optional-build limit, not the
+    case as sold - Deepcool CG580 "limited to 262mm if a 360mm radiator is mounted", Fractal
+    Epoch "345 mm (with front-mounted radiator)". The prompt says to skip these and the
+    model still took them about a quarter of the time, so it is enforced here. This also
+    discards some correct figures that merely share a sentence with a radiator condition;
+    losing a value is the safe direction, since an absent clearance just skips the check.
+    """
+    q = quote or ""
+    return bool(_RADIATOR.search(q)) and not _WITHOUT.search(q)
+
+
 def resolve_votes(values: list[int]) -> tuple[int | None, bool]:
     """(value, conflict). Agreeing pages give the smallest value; disagreeing give None."""
     if not values:

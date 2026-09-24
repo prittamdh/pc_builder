@@ -21,11 +21,13 @@ import argparse
 import sys
 import time
 from datetime import date
+from types import SimpleNamespace
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from db.session import SessionLocal
 from db.models.product import Product
@@ -33,7 +35,7 @@ from db.models.canonical_part import CanonicalPart
 from db.models.category_specs import CabinetSpecs
 
 from matching.cabinet_clearance import (
-    COOLER_RANGE_MM, GPU_RANGE_MM, is_grounded, resolve_votes, snippets_for_llm,
+    COOLER_RANGE_MM, GPU_RANGE_MM, is_grounded, is_radiator_conditional, resolve_votes, snippets_for_llm,
 )
 from scrapers.http_client import HttpClient
 from services.groq_extraction_service import GroqExtractionError, default_service
@@ -51,9 +53,12 @@ CRITICAL: "index" MUST equal the input's number (1-based). One result per input.
 Rules:
 - Use ONLY what the excerpt states. Never use your own knowledge of the case. No statement -> null.
 - Each quote must be copied VERBATIM from the excerpt (a short span, 5-80 characters) and must contain the number.
-- If several GPU lengths are given, report the one for the case AS SOLD (its included fans and drive cages fitted).
-  Ignore limits that only apply when an OPTIONAL radiator or fan set is added ("410mm, limited to 262mm if a 360mm radiator is mounted" -> 410).
-  Use a conditional figure only if no other GPU length is stated.
+- If several GPU lengths are given:
+  * IGNORE any limit that applies only when a RADIATOR is mounted - cases never ship with one
+    ("410mm, limited to 262mm if a 360mm radiator is mounted" -> 410; "360mm (with radiator), 390mm (without radiator)" -> 390).
+  * A limit that applies with FANS fitted DOES count - cases usually ship with them - so take the smaller
+    ("413mm / 388mm (with front fan)" -> 388; "Up to 352 mm (with front fans)" -> 352).
+  * Otherwise report the smallest.
 - Ignore radiator sizes (240mm/360mm), fan sizes, and the case's own height/width/depth.
 - Ignore any other product's specs that appear in the excerpt.
 - Convert cm to mm (40 cm -> 400)."""
@@ -71,7 +76,7 @@ def live_case_models(session, recheck: bool):
         .join(listings, listings.c.canonical_id == CanonicalPart.canonical_id)
         .outerjoin(CabinetSpecs, CabinetSpecs.canonical_id == CanonicalPart.canonical_id)
         .where(func.coalesce(CabinetSpecs.notes, "").notlike("Web-verified%"))
-        .order_by(listings.c.n.desc())
+        .order_by(listings.c.n.desc(), CanonicalPart.canonical_id)
     )
     if not recheck:
         stmt = stmt.where(
@@ -121,9 +126,16 @@ def fill_cabinet_clearance(limit: int | None = 20) -> None:
     main(limit, pages=2, apply=True, recheck=False, sleep_s=0.3, batch_size=4)
 
 
-def main(limit, pages, apply, recheck, sleep_s, batch_size):
+def main(limit, pages, apply, recheck, sleep_s, batch_size, offset=0, only_ids=None):
     with SessionLocal() as session, HttpClient() as client, default_service() as llm:
-        models = live_case_models(session, recheck)
+        # Plain snapshots, not ORM rows: the DAG's catalog clean-up can delete a
+        # canonical_parts row mid-run, and touching an expired deleted row raised
+        # ObjectDeletedError and ended a 1,386-model run at 940.
+        models = [
+            (SimpleNamespace(canonical_id=cp.canonical_id, key_fields=cp.key_fields), n)
+            for cp, n in live_case_models(session, recheck)
+            if only_ids is None or cp.canonical_id in only_ids
+        ][offset:]
         if limit:
             models = models[:limit]
         print("=" * 78)
@@ -146,7 +158,10 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                 if apply:
                     for cp, _n in batch:
                         mark_checked(session, cp, "no clearance stated")
-                    session.commit()
+                    try:
+                        session.commit()
+                    except IntegrityError:
+                        session.rollback()  # a group in this batch was deleted mid-run
                 continue
 
             try:
@@ -162,7 +177,7 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                 v = votes.setdefault(cp.canonical_id, {"cp": cp, "gpu": [], "cooler": [], "src": [], "model": res["model"]})
                 gpu, cooler = p.get("max_gpu_length_mm"), p.get("max_cooler_height_mm")
                 if gpu is not None:
-                    if is_grounded(gpu, p.get("gpu_quote"), text, GPU_RANGE_MM):
+                    if is_grounded(gpu, p.get("gpu_quote"), text, GPU_RANGE_MM) and not is_radiator_conditional(p.get("gpu_quote")):
                         v["gpu"].append(gpu)
                         v["src"].append(f"{product.product_url} \"{p.get('gpu_quote')}\"")
                     else:
@@ -215,7 +230,11 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                     row.status = "ok"
                     row.error = None
             if apply:
-                session.commit()
+                try:
+                    session.commit()
+                except IntegrityError:
+                    session.rollback()  # a group in this batch was deleted mid-run
+                    stats["failed"] += len(batch)
             print(f"  [{min(i + batch_size, len(models))}/{len(models)}] {stats}")
 
         print("=" * 78)
@@ -228,9 +247,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--offset", type=int, default=0, help="Skip the first N models (resume a run).")
+    ap.add_argument("--ids", type=str, default=None, help="File of canonical ids to restrict to.")
     ap.add_argument("--pages", type=int, default=2, help="Pages per model to read and cross-check.")
     ap.add_argument("--recheck", action="store_true", help="Also re-read models that already have a GPU value.")
     ap.add_argument("--sleep", type=float, default=0.3)
     ap.add_argument("--batch-size", type=int, default=4, help="Models per LLM call.")
     a = ap.parse_args()
-    main(a.limit, a.pages, a.apply, a.recheck, a.sleep, a.batch_size)
+    only = set(open(a.ids, encoding="utf-8").read().split()) if a.ids else None
+    main(a.limit, a.pages, a.apply, a.recheck, a.sleep, a.batch_size, a.offset, only)

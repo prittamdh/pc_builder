@@ -590,3 +590,20 @@ class TestFanNotACabinet:
         assert CategoryClassifier.get_p_category(
             "Cabinet", "Cooler Master Elite 600 with 7 ARGB Fans (White)"
         ) == "Cabinet"
+
+
+class TestRadiatorConditionalClearance:
+    def test_radiator_mounted_figures_rejected(self):
+        from matching.cabinet_clearance import is_radiator_conditional
+        assert is_radiator_conditional("Up to 345 mm (with front-mounted radiator)")
+        assert is_radiator_conditional("VGA: 370mm (with radiator)")
+        assert is_radiator_conditional("limited to 262mm if a 360mm radiator and fan set are mounted")
+
+    def test_without_radiator_and_plain_figures_kept(self):
+        from matching.cabinet_clearance import is_radiator_conditional
+        assert not is_radiator_conditional("390mm (Without radiator)")
+        assert not is_radiator_conditional("Graphics Card 360mm, 410mm (w/o front radiator)")
+        assert not is_radiator_conditional("Max GPU Length 430mm")
+        assert not is_radiator_conditional("Up to 352 mm (with front fans)")
+        assert not is_radiator_conditional("Max GPU Card Length 420 (w/out Radiator)")
+        assert is_radiator_conditional("390 (w/ Radiator) mm")

@@ -15,11 +15,13 @@ Dry-run by default. Pass --apply to write.
 import argparse
 import sys
 from datetime import date
+from types import SimpleNamespace
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 
 from db.session import SessionLocal
 from db.models.product import Product
@@ -64,7 +66,7 @@ def air_cooler_models(session, recheck: bool):
         .join(listings, listings.c.canonical_id == CanonicalPart.canonical_id)
         .outerjoin(CoolerSpecs, CoolerSpecs.canonical_id == CanonicalPart.canonical_id)
         .where(or_(CoolerSpecs.cooler_type == "Air", CanonicalPart.canonical_id.in_(air_by_extraction)))
-        .order_by(listings.c.n.desc())
+        .order_by(listings.c.n.desc(), CanonicalPart.canonical_id)
     )
     if not recheck:
         stmt = stmt.where(
@@ -85,7 +87,10 @@ def _row(session, cp) -> CoolerSpecs:
 
 def main(limit, pages, apply, recheck, sleep_s, batch_size):
     with SessionLocal() as session, HttpClient() as client, default_service() as llm:
-        models = air_cooler_models(session, recheck)
+        # Plain snapshots: the DAG's catalog clean-up can delete a canonical_parts row
+        # mid-run (see scrape_cabinet_clearance.main).
+        models = [(SimpleNamespace(canonical_id=cp.canonical_id, key_fields=cp.key_fields), n)
+                  for cp, n in air_cooler_models(session, recheck)]
         if limit:
             models = models[:limit]
         print("=" * 78)
@@ -152,7 +157,11 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                     row.height_mm = height
                     row.notes = ("Height read from retailer product page: " + "; ".join(v["src"]))[:2000]
             if apply:
-                session.commit()
+                try:
+                    session.commit()
+                except IntegrityError:
+                    session.rollback()  # a group in this batch was deleted mid-run
+                    stats["failed"] += len(batch)
             print(f"  [{min(i + batch_size, len(models))}/{len(models)}] {stats}")
 
         print("=" * 78)
