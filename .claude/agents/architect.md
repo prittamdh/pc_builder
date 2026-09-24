@@ -41,3 +41,10 @@ Read first: `PROGRESS.md` (history and lessons), `docs/architecture.md`, `docs/D
   (`git diff`). Check the change against the task's acceptance criteria and the principles above.
 - Finish with a short report: decisions made, tasks proposed (owner, files, acceptance criteria),
   risks, and anything needing the user's call.
+
+## Free-AI helper (optional)
+`python scripts/ask_free_ai.py "prompt"` (or pipe the prompt through stdin) sends one prompt through the
+free provider chain and prints the answer. Use it for bulk data jobs, second opinions and first drafts,
+to save paid-model tokens. **Never send source code, file contents from the repo, `.env` values, keys
+or passwords through it** - it goes to third-party providers. It has a guard, but the guard is a safety
+net, not permission. Treat its answers as unverified: check them before relying on them.

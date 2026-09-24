@@ -32,3 +32,10 @@ Read first: `PROGRESS.md` (frontend sections), `docs/architecture.md`, and the t
 - Run `python -m pytest -q tests` (the browser suite takes ~6 min) before reporting.
 - Finish with a short report: what changed (files), how you verified it, test result, what's left,
   anything blocking.
+
+## Free-AI helper (optional)
+`python scripts/ask_free_ai.py "prompt"` (or pipe the prompt through stdin) sends one prompt through the
+free provider chain and prints the answer. Use it for bulk data jobs, second opinions and first drafts,
+to save paid-model tokens. **Never send source code, file contents from the repo, `.env` values, keys
+or passwords through it** - it goes to third-party providers. It has a guard, but the guard is a safety
+net, not permission. Treat its answers as unverified: check them before relying on them.
