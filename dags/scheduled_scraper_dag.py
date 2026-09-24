@@ -301,14 +301,20 @@ def check_extraction_progress(backlog_before: int, progress: int) -> None:
         )
 
 
-def execute_canonical_extraction_checked(limit_per_category: int = 10):
+def execute_canonical_extraction_checked(limit_per_category: int | None = None):
     """Runs execute_canonical_extraction, then fails loudly if it made no progress on a
     non-empty backlog (OPS-06). Snapshot and re-read use separate sessions so the check
-    survives rows deleted mid-run."""
+    survives rows deleted mid-run.
+
+    limit_per_category defaults to None so the DAG's no-argument call passes through to
+    execute_canonical_extraction's own default (15) instead of silently overriding it
+    with a smaller number; pass an explicit value to override.
+    """
     with SessionLocal() as session:
         before = backlog_snapshot(session)
 
-    execute_canonical_extraction(limit_per_category=limit_per_category)
+    effective_limit = limit_per_category if limit_per_category is not None else 15
+    execute_canonical_extraction(limit_per_category=effective_limit)
 
     with SessionLocal() as session:
         after = state_of(session, before.keys())
@@ -326,6 +332,17 @@ def price_data_is_stale(latest: datetime | None, now: datetime, max_age: timedel
     return latest is None or now - latest > max_age
 
 
+def _as_naive_utc(value: datetime | None) -> datetime | None:
+    """Normalize to naive UTC. A naive datetime is assumed to already be UTC (matching
+    PriceHistory.scraped_at, saved via datetime.utcnow()). A tz-aware datetime is
+    converted with astimezone(timezone.utc).replace(tzinfo=None) - never by blindly
+    attaching a different tzinfo, which changes the instant a naive value represents
+    instead of converting it."""
+    if value is not None and value.tzinfo is not None:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
+
+
 def stale_stores(
     latest_by_store: dict[str, datetime | None],
     now: datetime,
@@ -333,14 +350,16 @@ def stale_stores(
 ) -> list[str]:
     """Names (sorted) of stores whose latest saved price is stale or missing.
 
-    Reuses price_data_is_stale per store, making `now` tz-consistent with each value
-    exactly as check_price_freshness does, so a naive `now` compared against a tz-aware
-    `latest` (or vice versa) never raises TypeError.
+    Reuses price_data_is_stale per store, comparing everything in naive UTC (see
+    _as_naive_utc) so a naive `now` and a tz-aware `latest` (or vice versa, or both
+    tz-aware in different zones) never raises TypeError and never mis-measures the real
+    elapsed time by a timezone's UTC offset.
     """
+    now_utc = _as_naive_utc(now)
     stale = []
     for name, latest in latest_by_store.items():
-        this_now = now.replace(tzinfo=latest.tzinfo) if latest is not None and latest.tzinfo else now
-        if price_data_is_stale(latest, this_now, max_age):
+        latest_utc = _as_naive_utc(latest)
+        if price_data_is_stale(latest_utc, now_utc, max_age):
             stale.append(name)
     return sorted(stale)
 
@@ -385,13 +404,35 @@ def check_price_freshness():
     with SessionLocal() as session:
         latest_by_store = latest_price_by_store(session)
 
-    now = datetime.now()
+    # Naive UTC, matching PriceHistory.scraped_at (datetime.utcnow()) - never local
+    # wall-clock time, or a worker running outside UTC (e.g. IST) would flag every store
+    # stale hours early (or late).
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     stale_names = set(stale_stores(latest_by_store, now))
     if stale_names:
         stale_pairs = [(name, latest_by_store[name]) for name in sorted(stale_names)]
         raise RuntimeError(format_stale_message(stale_pairs))
     for name, latest in latest_by_store.items():
         print(f"[Freshness] {name}: latest price saved at {latest}")
+
+
+def pipeline_failed_guard():
+    """Raise so the DagRun's overall state is `failed` whenever any stage upstream
+    failed this cycle.
+
+    Every stage below this one runs with trigger_rule="all_done" so a failed stage
+    (scraping, extraction, freshness) doesn't stop the stages after it from doing
+    whatever work they still can - but that meant the run's *last* tasks (all
+    similarly all_done/skip-tolerant) could still succeed, marking the whole run green
+    even though a stage failed loudly. Wired downstream of every stage with
+    trigger_rule="one_failed", this task only runs (and always raises) when at least
+    one upstream task failed; it is skipped, and raises nothing, when everything
+    upstream succeeded.
+    """
+    raise RuntimeError(
+        "Pipeline failed: at least one upstream stage failed this cycle - see the "
+        "failed task's log above."
+    )
 
 
 # Airflow DAG Definition (evaluated when apache-airflow is installed)
@@ -456,9 +497,30 @@ try:
         dag=dag,
     )
 
+    # one_failed: every stage above tolerates a failed predecessor and keeps working
+    # (all_done), so nothing upstream of this task stops the run - but that also meant
+    # the run itself could finish green with a stage having failed loudly. This task
+    # runs only when at least one upstream task failed, and always raises, so the
+    # DagRun's own state reflects that.
+    pipeline_failed_guard_task = PythonOperator(
+        task_id="pipeline_failed_guard",
+        python_callable=pipeline_failed_guard,
+        retries=0,
+        trigger_rule="one_failed",
+        dag=dag,
+    )
+
     # Strictly ordered: identities key the spec tables, and the policy reads the spec
     # fields, so each stage depends on the one before it.
     process_targets_task >> canonical_extraction_task >> physical_specs_task >> catalog_policy_task
     process_targets_task >> freshness_task
+
+    [
+        process_targets_task,
+        canonical_extraction_task,
+        physical_specs_task,
+        catalog_policy_task,
+        freshness_task,
+    ] >> pipeline_failed_guard_task
 except ImportError:
     pass

@@ -9,11 +9,14 @@ Prints:
   - total database size
   - the 10 largest tables by total relation size
   - price_history row count, min/max scraped_at, rows/day averaged over the last
-    7 and 30 days, and bytes per row
+    7 days, the last 30 days, and the whole history, and bytes per row
   - distinct products with a price per day over the last 7 days (the size of a
     daily low/high rollup)
   - a 12-month projection for "keep everything" vs "90 days raw plus daily
-    low/high", each checked against the 150 GB block volume (ROADMAP Phase 3)
+    low/high", each checked against the 150 GB block volume (ROADMAP Phase 3).
+    The projection uses the highest of the 7-day/30-day/whole-history rates, since
+    a short window can be dragged down by a scraping stall rather than reflecting
+    a genuinely slower period.
   - with --dump-bytes N (a compressed pg_dump size measured by hand), a 12-month
     dump-size projection against the 20 GB (OCI Object Storage) and 10 GB (R2)
     free-tier budgets, per copy - how many copies to retain is 03-03's decision.
@@ -77,6 +80,18 @@ def fits(projected_bytes: float, budget_bytes: float) -> bool:
     return projected_bytes <= budget_bytes
 
 
+def forward_rate(rows_per_day_7d: float, rows_per_day_30d: float, rows_per_day_whole: float) -> float:
+    """Pick the forward-looking rows/day rate for the 12-month projection: the highest
+    of the 7-day, 30-day and whole-history averages.
+
+    A short window average can be dragged down by a scraping stall (not a slower
+    "early" period) just as easily as it can be dragged up by a burst; either way,
+    understating growth is the riskier mistake for capacity planning, so the highest of
+    the three wins rather than picking one window and trusting it.
+    """
+    return max(rows_per_day_7d, rows_per_day_30d, rows_per_day_whole)
+
+
 def _fmt_bytes(n: float) -> str:
     n = float(n)
     for unit in ("B", "KB", "MB", "GB", "TB"):
@@ -135,14 +150,22 @@ def measure(session) -> dict:
         )
     ).scalar()
 
+    if min_scraped is not None and max_scraped is not None:
+        span_days = max((max_scraped - min_scraped).total_seconds() / 86400, 1.0)
+    else:
+        span_days = 1.0
+    rows_per_day_whole = (total_rows or 0) / span_days
+
     return {
         "db_size": db_size,
         "largest_tables": largest_tables,
         "total_rows": total_rows,
         "min_scraped": min_scraped,
         "max_scraped": max_scraped,
+        "span_days": span_days,
         "rows_per_day_7d": (rows_last_7d or 0) / 7,
         "rows_per_day_30d": (rows_last_30d or 0) / 30,
+        "rows_per_day_whole": rows_per_day_whole,
         "price_history_bytes": price_history_bytes,
         "bytes_per_row": (price_history_bytes / total_rows) if total_rows else 0,
         "rollup_rows_per_day": (distinct_products_per_day_7d or 0) / 7,
@@ -172,8 +195,12 @@ def main(dump_bytes: int | None) -> None:
         f"price_history: {data['total_rows']} rows, "
         f"{data['min_scraped']} .. {data['max_scraped']}"
     )
-    print(f"  rows/day (last 7d avg):  {data['rows_per_day_7d']:.1f}")
-    print(f"  rows/day (last 30d avg): {data['rows_per_day_30d']:.1f}")
+    print(f"  rows/day (last 7d avg):    {data['rows_per_day_7d']:.1f}")
+    print(f"  rows/day (last 30d avg):   {data['rows_per_day_30d']:.1f}")
+    print(
+        f"  rows/day (whole-history avg, {data['span_days']:.0f} days): "
+        f"{data['rows_per_day_whole']:.1f}"
+    )
     print(f"  bytes/row: {data['bytes_per_row']:.1f}")
     print(
         f"  distinct products/day with a price (last 7d avg, rollup size): "
@@ -181,10 +208,13 @@ def main(dump_bytes: int | None) -> None:
     )
     print()
 
-    # Use the higher of the two averages (typically the more recent 7-day figure) as the
+    # Use the highest of the 7-day, 30-day and whole-history averages as the
     # forward-looking rate: understating growth is the riskier mistake for capacity
-    # planning, and the 30-day average is dragged down by an early, slower-scraping period.
-    rows_per_day = max(data["rows_per_day_7d"], data["rows_per_day_30d"])
+    # planning. A short-window average being low can reflect a scraping stall rather
+    # than a genuinely slower period, so it is not assumed representative on its own.
+    rows_per_day = forward_rate(
+        data["rows_per_day_7d"], data["rows_per_day_30d"], data["rows_per_day_whole"]
+    )
 
     keep_everything = project_growth(
         current_bytes=data["db_size"],

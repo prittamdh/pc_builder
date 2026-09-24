@@ -87,30 +87,57 @@ Largest tables:
   ram_title_extractions               3.5 MB
 
 price_history: 402296 rows, 2026-07-27 20:04:52.944067 .. 2026-09-24 22:15:07.903204
-  rows/day (last 7d avg):  4535.7
-  rows/day (last 30d avg): 1058.3
+  rows/day (last 7d avg):    4535.7
+  rows/day (last 30d avg):   1058.3
+  rows/day (whole-history avg, 59 days): 6808.1
   bytes/row: 86.8
   distinct products/day with a price (last 7d avg, rollup size): 1137.4
 
 12-month projection (against the 150 GB block volume):
-  keep everything:            265.1 MB - fits: True
-  90 days raw + daily low/high: 187.7 MB - fits: True
+  keep everything:            333.8 MB - fits: True
+  90 days raw + daily low/high: 204.7 MB - fits: True
 
 Measured dump size (per copy, today): 10.5 MB
-12-month projected dump size (per copy, keep-everything growth rate): 21.7 MB
+12-month projected dump size (per copy, keep-everything growth rate): 27.3 MB
   fits OCI Object Storage (20 GB) per copy: True
   fits R2 (10 GB) per copy: True
   (how many copies to retain is decided in 03-03)
 ==============================================================================
 ```
 
+**Correction (fix round 1)**: the 30-day average (1,058 rows/day) is low because scraping
+stalled for part of that window, not because of an "early, slower period" as originally
+written here - that description was wrong and has been replaced. The script now also
+prints the whole-history average (6,808 rows/day over the full 59-day span) and projects
+from the highest of the 7-day, 30-day and whole-history rates (`forward_rate()` in
+`scripts/measure_db_growth.py`), rather than just the higher of two. Here that is the
+whole-history rate, 6,808 rows/day, higher than the 7-day figure used in the original
+run.
+
 **Plain-English answer: retention does NOT need to be applied in 03-03.** Keep-everything
-growth over 12 months projects to ~265 MB against a 150 GB volume (0.2% used) and a
-~21.7 MB compressed dump per copy against 20 GB / 10 GB free tiers (0.1-0.2% used). The
-7-day rate (4,535 rows/day) was used for the projection rather than the lower 30-day
-average, as the more conservative (higher) of the two, and it still fits comfortably.
-`price_history` retention is a non-issue at this data volume; 03-03 can defer the rollup
-unless growth rate changes by orders of magnitude.
+growth over 12 months projects to ~333.8 MB against a 150 GB volume (0.2% used) and a
+~27.3 MB compressed dump per copy against 20 GB / 10 GB free tiers (0.1-0.3% used), using
+the corrected (higher, whole-history) rate. `price_history` retention is a non-issue at
+this data volume; 03-03 can defer the rollup unless growth rate changes by orders of
+magnitude.
+
+## Fix round 1 (architect review)
+
+- `pipeline_failed_guard` (trigger_rule="one_failed", downstream of every stage) now
+  makes the DagRun's own state `failed` when any stage failed, even though every stage
+  itself uses `trigger_rule="all_done"` so downstream stages keep working. **Phase 2
+  worker must exit non-zero when any stage fails, not only the last.**
+- `execute_canonical_extraction_checked`'s `limit_per_category` now defaults to `None`
+  and falls back to 15 (matching `execute_canonical_extraction`'s own default) instead
+  of silently cutting the DAG's no-argument call down to 10.
+- `stale_stores` and `check_price_freshness` now compare in naive UTC throughout
+  (`_as_naive_utc`), instead of blindly attaching one value's tzinfo to another (which
+  changes the instant a naive value represents rather than converting it). A worker
+  running in a non-UTC local time zone (e.g. IST) no longer flags every store stale
+  hours early/late.
+- Growth-rate projection now also considers the whole-history average and uses the
+  highest of the three windows, since a short window being low can reflect a scraping
+  stall rather than a genuinely slower period (see correction above).
 
 ## Files changed
 - `dags/scheduled_scraper_dag.py`
@@ -119,4 +146,6 @@ unless growth rate changes by orders of magnitude.
 - `tests/test_db_growth.py` (new)
 
 ## Test result
-`python -m pytest -q tests --ignore=tests/test_frontend_e2e.py`: **353 passed**.
+Original: `python -m pytest -q tests --ignore=tests/test_frontend_e2e.py`: **353 passed**.
+Fix round 1: see `.superpowers/sdd/phase-01/plan-01-04-report.md` for the updated
+RED/GREEN evidence and quick-suite result.

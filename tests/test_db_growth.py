@@ -48,3 +48,10 @@ def test_project_growth_zero_rows_per_day_returns_current_bytes_unchanged():
         current_bytes=12345, bytes_per_row=10, rows_per_day=0, days=365,
         retention_days=None, rollup_rows_per_day=0,
     ) == 12345
+
+
+def test_forward_rate_picks_the_highest_of_the_three_averages():
+    # 30d dragged down by a scraping stall, not an "early slower period" - understating
+    # growth is the riskier mistake for capacity planning, so the highest wins.
+    assert m.forward_rate(rows_per_day_7d=4535.7, rows_per_day_30d=1058.3, rows_per_day_whole=6548.0) == 6548.0
+    assert m.forward_rate(rows_per_day_7d=100, rows_per_day_30d=50, rows_per_day_whole=10) == 100

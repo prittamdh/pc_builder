@@ -2,6 +2,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dags"))
 import scheduled_scraper_dag as dag  # noqa: E402
 
@@ -47,11 +49,27 @@ def test_stale_stores_empty_dict_gives_empty_list():
 
 
 def test_stale_stores_tz_aware_latest_with_naive_now_no_typeerror():
+    # naive_now is treated as already-UTC (matching how check_price_freshness builds it:
+    # datetime.now(timezone.utc).replace(tzinfo=None)); tz_aware_latest is 2h before that
+    # same UTC instant, so no TypeError and the store is fresh.
     tz_aware_latest = datetime(2026, 9, 24, 10, 0, tzinfo=timezone.utc)
     naive_now = datetime(2026, 9, 24, 12, 0)
-    # Should not raise TypeError, and 2h old is fresh.
     result = dag.stale_stores({"A": tz_aware_latest}, naive_now)
     assert result == []
+
+
+def test_stale_stores_same_instant_different_timezones_stays_fresh():
+    """A store scraped 23h ago in UTC is not stale even when 'now' is expressed in a
+    different time zone (e.g. a worker process running in IST) representing the exact
+    same real instant. Blindly attaching now's tzinfo to itself (the old bug) would
+    shift the apparent gap by the zone's UTC offset (+5:30 for IST) and wrongly report
+    28.5h - stale. Converting both sides to naive UTC keeps the true 23h gap - fresh."""
+    latest_utc = datetime(2026, 9, 24, 12, 0, tzinfo=timezone.utc)
+    true_now_utc_instant = latest_utc + timedelta(hours=23)
+    ist = timezone(timedelta(hours=5, minutes=30))
+    now_in_ist = true_now_utc_instant.astimezone(ist)
+
+    assert dag.stale_stores({"A": latest_utc}, now_in_ist) == []
 
 
 def test_stale_stores_fresh_stores_not_named():
@@ -98,14 +116,12 @@ def test_check_price_freshness_raises_with_stale_store_name(monkeypatch):
     monkeypatch.setattr(dag, "latest_price_by_store", lambda session: latest_by_store)
     monkeypatch.setattr(dag, "SessionLocal", lambda: _FakeSessionCtx())
     monkeypatch.setattr(dag, "datetime", _fixed_datetime_class(now))
-    try:
+    with pytest.raises(RuntimeError) as exc_info:
         dag.check_price_freshness()
-        assert False, "expected RuntimeError"
-    except RuntimeError as e:
-        msg = str(e)
-        assert "Stale Store" in msg
-        assert "Never Store" in msg
-        assert "Fresh Store" not in msg
+    msg = str(exc_info.value)
+    assert "Stale Store" in msg
+    assert "Never Store" in msg
+    assert "Fresh Store" not in msg
 
 
 def test_check_price_freshness_idempotent_when_all_fresh(monkeypatch):
@@ -143,11 +159,9 @@ def test_count_extraction_progress_empty_before_gives_zero():
 
 
 def test_check_extraction_progress_raises_naming_backlog_size():
-    try:
+    with pytest.raises(RuntimeError) as exc_info:
         dag.check_extraction_progress(5, 0)
-        assert False, "expected RuntimeError"
-    except RuntimeError as e:
-        assert "5" in str(e)
+    assert "5" in str(exc_info.value)
 
 
 def test_check_extraction_progress_passes_with_progress():
@@ -156,3 +170,62 @@ def test_check_extraction_progress_passes_with_progress():
 
 def test_check_extraction_progress_passes_with_zero_backlog():
     dag.check_extraction_progress(0, 0)
+
+
+# --- execute_canonical_extraction_checked (OPS-06 wiring) -------------------
+
+def test_execute_canonical_extraction_checked_defaults_to_15(monkeypatch):
+    """The DAG calls execute_canonical_extraction_checked() with no arguments; it must
+    not silently cut the underlying limit_per_category=15 default down to 10."""
+    captured = {}
+
+    def fake_execute_canonical_extraction(limit_per_category=None):
+        captured["limit_per_category"] = limit_per_category
+
+    monkeypatch.setattr(dag, "backlog_snapshot", lambda session: {})
+    monkeypatch.setattr(dag, "state_of", lambda session, ids: {})
+    monkeypatch.setattr(dag, "execute_canonical_extraction", fake_execute_canonical_extraction)
+    monkeypatch.setattr(dag, "SessionLocal", lambda: _FakeSessionCtx())
+
+    dag.execute_canonical_extraction_checked()
+
+    assert captured["limit_per_category"] == 15
+
+
+def test_execute_canonical_extraction_checked_passes_explicit_limit(monkeypatch):
+    captured = {}
+
+    def fake_execute_canonical_extraction(limit_per_category=None):
+        captured["limit_per_category"] = limit_per_category
+
+    monkeypatch.setattr(dag, "backlog_snapshot", lambda session: {})
+    monkeypatch.setattr(dag, "state_of", lambda session, ids: {})
+    monkeypatch.setattr(dag, "execute_canonical_extraction", fake_execute_canonical_extraction)
+    monkeypatch.setattr(dag, "SessionLocal", lambda: _FakeSessionCtx())
+
+    dag.execute_canonical_extraction_checked(limit_per_category=3)
+
+    assert captured["limit_per_category"] == 3
+
+
+def test_execute_canonical_extraction_checked_raises_when_runner_makes_no_progress(monkeypatch):
+    """Snapshot has one backlog product; the (fake) runner does nothing; the re-read
+    session sees the same unchanged state, so 0 progress against a backlog of 1 must
+    raise."""
+    snapshot = {1: (None, "pending")}
+
+    monkeypatch.setattr(dag, "backlog_snapshot", lambda session: dict(snapshot))
+    monkeypatch.setattr(dag, "state_of", lambda session, ids: dict(snapshot))
+    monkeypatch.setattr(dag, "execute_canonical_extraction", lambda limit_per_category=None: None)
+    monkeypatch.setattr(dag, "SessionLocal", lambda: _FakeSessionCtx())
+
+    with pytest.raises(RuntimeError) as exc_info:
+        dag.execute_canonical_extraction_checked()
+    assert "1" in str(exc_info.value)
+
+
+# --- pipeline_failed_guard (makes a partially-failed DagRun state failed) ---
+
+def test_pipeline_failed_guard_raises():
+    with pytest.raises(RuntimeError):
+        dag.pipeline_failed_guard()
