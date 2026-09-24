@@ -106,6 +106,13 @@ def fix_external_storage(session, dry_run: bool) -> dict:
         if looks_external:
             external_product_ids.add(ext.product_id)
 
+    # The title test needs no extraction, so apply it to every Storage listing too.
+    # Otherwise a freshly scraped portable drive is offered in the builder's storage
+    # slot until Stage 1 gets to it - hours, when a scrape brings in a large batch.
+    for pid, name in session.execute(select(Product.id, Product.name).where(Product.p_category == "Storage")):
+        if any(m in (name or "").upper() for m in EXTERNAL_TITLE_MARKERS):
+            external_product_ids.add(pid)
+
     for p in session.scalars(select(Product).where(Product.id.in_(external_product_ids))):
         if not p.is_legacy:
             stats["marked_external"] += 1

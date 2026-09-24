@@ -33,10 +33,16 @@ COOLER_RANGE_MM = (40, 200)
 AGREEMENT_TOLERANCE = 0.10
 
 
-def snippets_for_llm(text: str, radius: int = 160, max_chars: int = 1500) -> str:
-    """Windows of page text around clearance terms, overlapping windows merged."""
+# Air-cooler pages state height on its own or inside a W x D x H dimensions line.
+COOLER_HEIGHT_TERMS = re.compile(r"\b(?:height|dimensions?)\b", re.IGNORECASE)
+COOLER_HEIGHT_RANGE_MM = (30, 200)
+
+
+def snippets_for_llm(text: str, radius: int = 160, max_chars: int = 1500,
+                     terms: re.Pattern = CLEARANCE_TERMS) -> str:
+    """Windows of page text around the given terms, overlapping windows merged."""
     spans: list[list[int]] = []
-    for m in CLEARANCE_TERMS.finditer(text):
+    for m in terms.finditer(text):
         start, end = max(0, m.start() - radius), min(len(text), m.end() + radius)
         if spans and start <= spans[-1][1]:
             spans[-1][1] = max(spans[-1][1], end)
@@ -61,6 +67,24 @@ def is_grounded(value, quote: str | None, page_text: str, valid_range: tuple[int
     if len(q) < 6 or q not in _norm(page_text):
         return False
     return re.search(rf"(?<!\d){value}(?!\d)", q) is not None
+
+
+_RADIATOR = re.compile(r"radiator", re.IGNORECASE)
+_WITHOUT = re.compile(r"\bwithout\b|\bw/o\b|\bw/out\b|\bno\s+radiator\b", re.IGNORECASE)
+
+
+def is_radiator_conditional(quote: str | None) -> bool:
+    """True when a GPU-length quote describes a radiator-mounted layout.
+
+    Cases never ship with a radiator, so such a figure is an optional-build limit, not the
+    case as sold - Deepcool CG580 "limited to 262mm if a 360mm radiator is mounted", Fractal
+    Epoch "345 mm (with front-mounted radiator)". The prompt says to skip these and the
+    model still took them about a quarter of the time, so it is enforced here. This also
+    discards some correct figures that merely share a sentence with a radiator condition;
+    losing a value is the safe direction, since an absent clearance just skips the check.
+    """
+    q = quote or ""
+    return bool(_RADIATOR.search(q)) and not _WITHOUT.search(q)
 
 
 def resolve_votes(values: list[int]) -> tuple[int | None, bool]:

@@ -729,6 +729,38 @@ It could not have found this: a false **merge** is invisible to a split-detector
 quality, check both directions — group-to-listing ratio finds over-merges, near-duplicate keys find
 under-merges.
 
+## Air-cooler height and a real cooler clearance rule (2026-09-24)
+
+The old rule compared the cooler's `radiator_size_mm` with the cabinet's `max_cooler_height_mm`. That
+field holds a *fan* size for air coolers (120 - always passes) and a *radiator* length for AIOs (360 -
+always warned), so once 681 cabinets gained cooler heights it fired falsely on every AIO. Removed.
+
+`cooler_specs.height_mm` (migration `e7b2d4c81a03`) is filled from retailer product pages by
+`scripts/scrape_cooler_height.py` - same grounding and page-agreement rules as the cabinet reader,
+air coolers only. **105 of 163 air-cooler models** filled, 0 page conflicts, 33 answers rejected as
+ungrounded; values run 37mm (Noctua NH-L9) to 172mm (Deepcool Assassin IV VC Vision). The new rule is
+`cooler.height_mm <= case.max_cooler_height_mm`, level **error**; AIOs have no height so never trip it.
+Verified live: Assassin IV (172) in a Dawg X617 (155) errors, in an ROG Strix Helios II (190) passes,
+a 360mm AIO in the X617 passes. Runs in the DAG via `fill_cooler_height()`.
+
+## Scraping had silently stopped; product images blocked (2026-09-24)
+
+**No prices had been saved since 2026-08-17** - the site read "Last updated 38 d ago". Two causes in
+sequence: the Airflow container did not run at all from 18 Aug to 20 Sep, and once it was back every
+scrape failed with `ProductRepository.create() got an unexpected keyword argument 'condition'`.
+287e304 (2026-09-02) added `condition` to `SearchService.save` but not to `create()`, so any batch
+holding a *new* product raised and rolled back. `execute_due_scrape_targets` catches and prints per
+target, so every run was marked **success**. Fixed, with `tests/test_product_repository.py`; a manual
+run then saved 1,229 products across 10 targets with no errors. **Worth doing:** a run that saves
+nothing should not report success - a price-freshness check would have caught this in 15 minutes.
+
+**Product images** were hot-linked from stores and the browser refused some (the failing
+`test_no_console_errors_on_load`): PCStudio sends `Cross-Origin-Resource-Policy: same-origin`, and dead
+mdcomputers links are blocked as ORB. `GET /api/v1/images?u=` (`src/api/routes/images.py`) fetches
+server-side and serves from our origin, with a "No image" placeholder for dead links. It only fetches
+store hosts (from the `stores` table, plus exactly `cdn.shopify.com` and `tlggaming.b-cdn.net`), and
+follows redirects by hand, checking each hop before requesting it. 7 tests in `tests/test_image_proxy.py`.
+
 ## Brand alone is not an identity (2026-09-24)
 
 Found while spot-checking clearance values: `case:silverstone` held **three different rackmount
@@ -834,7 +866,7 @@ Re-key: 411 → 407 canonical ids, 4 retired groups. Corrected rows carry a `not
 4. ~~Motherboard canonical key merges ITX/microATX variants~~ — **Resolved** by `scripts/rekey_motherboard_canonical_ids.py`. The key now uses the board designation recovered from each listing's own title (`resolve_board_designation`), closing the fault in both directions: the B850/B850I over-merge and the B650/B650M under-merge. Deterministic and free — no Stage 1 re-run, since brand/model_number/raw_title are already persisted per listing.
 5. ~~GPU listings mistagged as CPU category~~ — **Resolved.** `CategoryClassifier` gained `_title_indicates_discrete_gpu` (which rules out CPUs merely advertising integrated graphics), plus the same class of guard for thermal material, audio gear and removable media. `scripts/fix_category_p_category_drift.py` remediates existing rows and is idempotent — a product only appears there while its `p_category` is wrong. Regression tests live in `tests/test_matching.py`.
 6. ~~Cabinet clearance data needs a non-LLM source~~ — **Resolved 2026-09-24.** `scripts/scrape_cabinet_clearance.py` reads retailer product pages, which usually reproduce the manufacturer's spec table (PCStudio 403s and is skipped). The LLM sees only text around GPU/VGA/cooler terms and must return a **verbatim quote** for each number; `matching.cabinet_clearance.is_grounded` discards any value whose quote is not on the page, lacks the number, or is out of physical range. Up to 2 pages per model must agree within 10% (the smaller wins — the "with front radiator" figure is what a build must meet); wider disagreement writes nothing. **GPU clearance: 5 → 779 of 1,390 live models (1,254 of 2,024 listings, 62%); cooler height 681 models.** 211 answers were rejected as ungrounded, 2 models left as conflicts (Cooler Master Cosmos Alpha cooler 165 vs 186; ASUS Prime AP303 GPU 360 vs 310). It also **replaced three recalled values that were wrong**: Fractal Torrent Compact 445 → 330, Torrent 445 → 423, Define 7 cooler 160 → 185. ASUS TUF GT502's "360mm" (a radiator size read off the title) was cleared. Rows marked "Web-verified" are never touched. 8 tests in `TestCabinetClearanceGrounding`/`TestCabinetClearanceVotes`.
-   **Follow-up same day:** the first run kept the *smallest* of several stated GPU lengths, which picked conditional figures - Deepcool CG580's "410mm, limited to 262mm if a 360mm radiator is mounted" would have been 262, and the clearance rule is a blocking error, so ordinary 300mm cards would have been rejected in a stock build. The prompt now takes the figure for the case **as sold** (included fans and cages fitted) and ignores optional-radiator limits; a full `--recheck` re-run applies it (e.g. MSI Forge 120A 300 → 330, Antec C7 280 → 390). Wired into the DAG's spec stage via `fill_cabinet_clearance()`; models whose pages state nothing are marked `Pages checked <date>` so a cycle doesn't re-fetch them. The title-based `CABINET_SPEC_BATCH_PROMPT` no longer allows recall from trained knowledge - that is where the wrong Torrent values came from.
+   **Follow-up same day:** the first run kept the *smallest* of several stated GPU lengths, which picked conditional figures - Deepcool CG580's "410mm, limited to 262mm if a 360mm radiator is mounted" would have been 262, and the clearance rule is a blocking error, so ordinary 300mm cards would have been rejected in a stock build. The prompt now takes the figure for the case **as sold** (included fans and cages fitted) and ignores optional-radiator limits; a full `--recheck` re-run applies it (e.g. MSI Forge 120A 300 → 330, Antec C7 280 → 390). **Radiator-mounted limits are rejected in code**, not left to the prompt: the model took them about a quarter of the time (Fractal Epoch "345 mm (with front-mounted radiator)"), so `is_radiator_conditional()` discards any GPU figure whose quote mentions a radiator without "without"/"w/o"/"w/out"; limits "with front fans" still count, since cases ship with fans. The re-run crashed at 940/1,386 on a `canonical_parts` row the DAG's clean-up deleted mid-run - both readers now work from plain snapshots and survive that - and was resumed. **Final: GPU clearance on 820 of 1,404 live cabinet models (1,336 of 2,063 listings, 65%), cooler height on 732.** Wired into the DAG's spec stage via `fill_cabinet_clearance()`; models whose pages state nothing are marked `Pages checked <date>` so a cycle doesn't re-fetch them. The title-based `CABINET_SPEC_BATCH_PROMPT` no longer allows recall from trained knowledge - that is where the wrong Torrent values came from.
 7. ~~`CategoryClassifier.get_p_category()` title fallback~~ — **Resolved.** `_classify_from_title()` is implemented and consulted whenever the store supplied no category or one that is unrecognized, checking discrete-GPU / removable-media / audio / thermal markers before the coarse per-category ones. It returns `None` rather than guessing when nothing is certain. This is what stopped an AMD Radeon Pro W7700 sitting in Accessories because its listing carried no category at all.
 8. ~~Wire the new Stage-2 spec extractors into the DAG~~ — **Resolved.** `dags/scheduled_scraper_dag.py` now runs `process_due_targets >> extract_canonical_identities >> extract_physical_specs >> apply_catalog_policy`. `execute_physical_spec_extraction` runs the LLM spec extractors plus the two zero-API `populate_*_from_extractions` scripts; `execute_catalog_policy` runs `classify_legacy_products`, `fix_catalog_data_quality` and (added 2026-09-20) `build_brand_registry`. Each is wrapped so one failure cannot take the stage down.
 9. ~~Frontend surfaces still untested~~ — **Resolved.** `tests/test_frontend_e2e.py` holds 51 Playwright tests asserting on what the user actually sees, written specifically because every frontend bug found on 2026-08-16 was silent — a swallowed 422 that left the sidebar permanently reading "Incompatibilities Detected", a picker that always showed an empty list, a `zip()` that truncated every candidate away. None raised, so backend tests and a clean console both looked fine. The suite skips itself automatically where Playwright's browser isn't installed.
@@ -943,3 +975,10 @@ Re-key: 411 → 407 canonical ids, 4 retired groups. Corrected rows carry a `not
     18 tests across `TestPSUEfficiencyTrimInKey`, `TestPSUTrimReconciliation` and
     `TestQualifierFieldsDoNotIdentify`. 231 pass. Now that the re-key has been applied, the
     gap-fill-only constraint on both efficiency importers can be revisited.
+
+    **Revisited 2026-09-24 - keep gap-fill-only.** Against live models that already carry a rating, the
+    80 PLUS registry match agrees on 94 and disagrees on 25, and the disagreements checked are the
+    *matcher* being wrong, not the data: it ignores trim (ASUS TUF Gold matched `TUF-GAMING-750B`,
+    Bronze), crosses model lines (Antec G750 -> `HCG750 Bronze`), and the registry also lists
+    230V EU internal certifications a tier above the retail box rating (Corsair RM1000e, Thermaltake
+    GF A3 -> Platinum). Overwriting would make ~25 ratings worse, so `--all` should not be used to overwrite.

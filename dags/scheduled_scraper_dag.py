@@ -29,6 +29,7 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
         if not due_targets:
             return
 
+        attempted = failed = 0
         with HttpClient() as client:
             for target in due_targets:
                 store = store_service.get(target.store_id)
@@ -38,6 +39,7 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
                 print(f"[Scheduled Scraper] Scraping target '{target.target_value}' on {store.display_name}")
 
                 target_val = str(target.target_value)
+                attempted += 1
                 try:
                     scraper = GenericScraper(client, store)
 
@@ -68,7 +70,14 @@ def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
 
                 except Exception as e:
                     session.rollback()
+                    failed += 1
                     print(f"[Scheduled Scraper Error] Failed scraping target '{target_val}': {e}")
+
+        # One bad target shouldn't sink the run, but every target failing is a broken
+        # pipeline. Catching per target once hid a TypeError for weeks: each run was
+        # marked success while no price was saved.
+        if attempted and failed == attempted:
+            raise RuntimeError(f"All {attempted} scrape targets failed - see errors above.")
 
 
 def execute_canonical_extraction(limit_per_category: int = 15):
@@ -169,6 +178,13 @@ def execute_physical_spec_extraction(limit_per_category: int = 10):
         fill_cabinet_clearance(limit=limit_per_category)
     except Exception as e:
         print(f"[Spec Extraction] Cabinet clearance failed: {e}")
+
+    # Air-cooler heights, likewise from product pages - what the cooler clearance rule reads.
+    try:
+        from scrape_cooler_height import fill_cooler_height
+        fill_cooler_height(limit=limit_per_category)
+    except Exception as e:
+        print(f"[Spec Extraction] Cooler height failed: {e}")
 
 
 def execute_catalog_policy():

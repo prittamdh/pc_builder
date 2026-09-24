@@ -52,14 +52,19 @@ RULES: list[Rule] = [
         lambda a, b: f"GPU Clearance Error: GPU length ({a}mm) exceeds Cabinet max clearance ({b}mm).",
     ),
     Rule(
-        "cooler", "radiator_size_mm", "le", "case", "max_cooler_height_mm", "warning",
-        lambda a, b: f"Cooler Clearance Check: cooler size ({a}mm) vs Cabinet max clearance ({b}mm) - verify radiator/tower mount fits.",
+        # Air coolers only: height_mm is NULL for AIOs, so the rule never fires for them.
+        "cooler", "height_mm", "le", "case", "max_cooler_height_mm", "error",
+        lambda a, b: f"Cooler Clearance Error: cooler height ({a}mm) exceeds Cabinet max cooler height ({b}mm).",
     ),
     Rule(
         "motherboard", "form_factor", "form_factor_fits", "case", "form_factor", "error",
         lambda a, b: f"Case Fit Error: Motherboard form factor ({a}) does not fit inside Cabinet ({b}).",
     ),
 ]
+
+# The cooler rule compares the air cooler's own height_mm. An earlier rule used
+# radiator_size_mm, which holds a fan size for air coolers (120 - always passes) and a
+# radiator length for AIOs (360 - always warned against a 165mm tower limit).
 
 # Ordered smallest -> largest; a cabinet rated for a given size also fits every
 # smaller form factor, not the reverse.
