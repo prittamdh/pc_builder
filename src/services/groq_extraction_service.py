@@ -535,7 +535,9 @@ class GroqExtractionService:
 
         try:
             result = self._call(system_prompt, user_content, max_retries=max_retries)
-            items = result["parsed"].get("results")
+            parsed = result["parsed"]
+            # Some models drop the {"results": ...} wrapper and return the bare array.
+            items = parsed if isinstance(parsed, list) else parsed.get("results")
             if not isinstance(items, list) or len(items) != len(titles):
                 raise GroqExtractionError(
                     f"Batch size mismatch: expected {len(titles)}, got "

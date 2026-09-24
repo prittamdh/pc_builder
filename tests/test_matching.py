@@ -509,3 +509,70 @@ class TestColourDoesNotIdentifyACase:
         from matching.canonical_key_builder import disambiguate_failed_key
         kd = {"category": "case", "brand": "Unknown", "model_number": "", "colour": "White"}
         assert "_unresolved_id" in disambiguate_failed_key(kd, 7)
+
+
+class TestCabinetClearanceGrounding:
+    """A clearance is only trusted if its quote is verbatim on the page and names the number."""
+
+    PAGE = "Specifications Max GPU Length: 410mm Max CPU Cooler Height: 170 mm Radiator 360mm"
+
+    def test_verbatim_quote_accepted(self):
+        from matching.cabinet_clearance import is_grounded, GPU_RANGE_MM
+        assert is_grounded(410, "Max GPU Length: 410mm", self.PAGE, GPU_RANGE_MM)
+
+    def test_quote_not_on_page_rejected(self):
+        from matching.cabinet_clearance import is_grounded, GPU_RANGE_MM
+        assert not is_grounded(420, "supports GPUs up to 420mm", self.PAGE, GPU_RANGE_MM)
+
+    def test_quote_without_the_number_rejected(self):
+        from matching.cabinet_clearance import is_grounded, GPU_RANGE_MM
+        assert not is_grounded(400, "Max GPU Length: 410mm", self.PAGE, GPU_RANGE_MM)
+
+    def test_out_of_range_rejected(self):
+        from matching.cabinet_clearance import is_grounded, COOLER_RANGE_MM
+        # a radiator size read as a cooler height
+        assert not is_grounded(360, "Radiator 360mm", self.PAGE, COOLER_RANGE_MM)
+
+    def test_snippet_keeps_clearance_text_only(self):
+        from matching.cabinet_clearance import snippets_for_llm
+        text = "x" * 2000 + " Max GPU Length: 410mm " + "y" * 2000
+        s = snippets_for_llm(text)
+        assert "410mm" in s and len(s) < 500
+        assert snippets_for_llm("no relevant words here") == ""
+
+
+class TestCabinetClearanceVotes:
+    def test_agreeing_pages_take_smallest(self):
+        from matching.cabinet_clearance import resolve_votes
+        assert resolve_votes([415, 400]) == (400, False)
+
+    def test_disagreeing_pages_give_nothing(self):
+        from matching.cabinet_clearance import resolve_votes
+        assert resolve_votes([140, 410]) == (None, True)
+
+    def test_no_pages(self):
+        from matching.cabinet_clearance import resolve_votes
+        assert resolve_votes([]) == (None, False)
+
+
+class TestBrandAloneDoesNotIdentify:
+    """A brand names a catalogue, not a product: brand-only keys must not merge listings."""
+
+    def test_brand_only_keys_are_salted(self):
+        from matching.canonical_key_builder import disambiguate_failed_key, make_canonical_key_string
+        kd = {"category": "case", "brand": "SilverStone", "model_number": "", "color": ""}
+        a = disambiguate_failed_key(kd, 1)
+        b = disambiguate_failed_key(kd, 2)
+        assert make_canonical_key_string("case", a) != make_canonical_key_string("case", b)
+
+    def test_gpu_aib_brand_only_is_salted(self):
+        from matching.canonical_key_builder import disambiguate_failed_key
+        assert "_unresolved_id" in disambiguate_failed_key(
+            {"category": "gpu", "aib_brand": "ASUS", "chipset": "", "variant_model": ""}, 7
+        )
+
+    def test_brand_with_model_is_stable(self):
+        from matching.canonical_key_builder import disambiguate_failed_key
+        assert "_unresolved_id" not in disambiguate_failed_key(
+            {"category": "case", "brand": "Lian Li", "model_number": "A3", "color": ""}, 1
+        )

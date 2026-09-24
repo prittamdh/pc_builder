@@ -414,7 +414,7 @@ def make_canonical_key_string(category: str, key_dict: dict) -> str:
 # The test to apply before adding a field here: could this value, on its own, name a
 # product to someone who knew the catalogue? "Bronze" and "White" cannot. "750w" and a
 # model number can.
-_NON_IDENTIFYING_FIELDS = frozenset({"category", "efficiency", "color", "colour"})
+_NON_IDENTIFYING_FIELDS = frozenset({"category", "efficiency", "color", "colour", "brand", "aib_brand"})
 
 
 def disambiguate_failed_key(key_dict: dict, product_id: int) -> dict:
@@ -438,6 +438,11 @@ def disambiguate_failed_key(key_dict: dict, product_id: int) -> dict:
     # "80+ Bronze" keys as "psu:unknown:bronze" - and every unresolved Bronze listing in
     # the catalogue then merges into that one fake group, which is precisely the false
     # merge this guard exists to prevent.
+    #
+    # Brand is excluded for the same reason: a make names a catalogue, not a product.
+    # "case:silverstone" had merged three different rackmount chassis and
+    # "motherboard:gigabyte" an H110M, an H610M and a W880 board, each listing's model
+    # having come back empty while its brand did not.
     has_signal = any(
         v for k, v in key_dict.items()
         if k not in _NON_IDENTIFYING_FIELDS and v and str(v).strip().lower() != "unknown"
