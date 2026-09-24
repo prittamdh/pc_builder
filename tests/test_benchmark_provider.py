@@ -152,24 +152,23 @@ def test_main_provider_with_unset_key_is_unavailable(monkeypatch, capsys):
 
 
 def test_main_never_falls_back_fallbacks_emptied(monkeypatch):
-    captured = {}
-
-    class RecordingService(FakeService):
-        def __init__(self, *a, **kw):
-            super().__init__(results=_fake_results_all_correct())
-            captured["fallbacks_before_clear"] = None
+    # The fake starts with a non-empty _fallbacks (as a real GroqExtractionService
+    # would, since __init__ auto-fills it from provider_chain()) - main() must clear
+    # it, not just happen to see it already empty.
+    created = {}
 
     def fake_ctor(api_key, model, api_url, **kw):
-        svc = RecordingService()
-        captured["fallbacks_seen"] = svc._fallbacks
+        svc = FakeService(results=_fake_results_all_correct())
+        svc._fallbacks = ["other"]
+        created["service"] = svc
         return svc
 
     monkeypatch.setattr(bp, "provider_chain", lambda: [("mistral", "url", "some-model", "key")])
     monkeypatch.setattr(bp, "GroqExtractionService", fake_ctor)
     rc = bp.main(["--provider", "mistral"])
     assert rc == 0
-    # _fallbacks must be emptied right after construction (grep also checks this).
-    assert captured["fallbacks_seen"] == []
+    # _fallbacks must be emptied by main(), after construction (grep also checks this).
+    assert created["service"]._fallbacks == []
 
 
 def test_main_prints_provider_name_and_score(monkeypatch, capsys):
@@ -224,6 +223,15 @@ def test_main_catches_provider_exhausted(monkeypatch, capsys):
 def test_main_requires_provider_or_url_model_keyenv(capsys):
     rc = bp.main([])
     assert rc != 0
+
+
+@pytest.mark.parametrize("runs", [0, -1])
+def test_main_rejects_runs_below_one(monkeypatch, capsys, runs):
+    # Must be rejected before any provider lookup/construction happens.
+    monkeypatch.setattr(bp, "provider_chain", lambda: [("mistral", "url", "some-model", "key")])
+    rc = bp.main(["--provider", "mistral", "--runs", str(runs)])
+    assert rc == 2
+    assert "--runs" in capsys.readouterr().err
 
 
 def test_main_url_model_keyenv_reads_key_from_env(monkeypatch):
@@ -300,9 +308,13 @@ def test_importing_benchmark_provider_never_loads_db_session():
 
 # --- source-level guarantees -------------------------------------------------------
 
-def test_source_has_no_identity_prompt_reference_and_no_bare_key_flag():
+def test_source_never_imports_or_calls_identity_prompt_and_no_bare_key_flag():
     source = Path(__file__).resolve().parent.parent.joinpath("scripts", "benchmark_provider.py").read_text(encoding="utf-8")
-    assert "identity_prompt" not in source
+    # The docstring may reference identity_prompt('psu') in prose (to explain how the
+    # bare prompt relates to production), but the code must never import or call it -
+    # that would pull in the live DB brand-hint block and break reproducibility.
+    assert "import identity_prompt" not in source
+    assert "identity_prompt(" not in source.split('"""', 2)[-1]
     assert '"--key"' not in source
     assert "'--key'" not in source
 
@@ -323,10 +335,9 @@ def test_every_case_has_complete_evidence():
 
 
 def test_case_count_matches_docstring_n():
-    n = len(bp.CASES)
-    assert n == bp.CASE_COUNT
-    assert n > 0
-    assert n <= 8
+    assert len(bp.CASES) == 8
+    assert len(bp.CASES) == bp.CASE_COUNT
+    assert "Final case count: 8" in bp.__doc__
 
 
 def test_no_case_title_matches_the_prompt_few_shot_titles():

@@ -1,9 +1,10 @@
 # 01-06 SUMMARY: PSU benchmark script (AI-01)
 
-**Date:** 2026-09-25
+**Date:** 2026-09-25 (fix round 1 appended same day)
 **Files:** `scripts/benchmark_provider.py` (new), `tests/test_benchmark_provider.py` (new)
-**Commits:** none made by this agent (per instructions, commits are the manager's job).
-`git status --short` at the time of writing shows both files as untracked (`??`).
+**Commits:** the manager committed the work described in Tasks 1-3 below as `10b9076`.
+Fix round 1 (see bottom section) is *not yet committed* - it sits uncommitted on top
+of `10b9076`, per this agent's own no-commit rule.
 
 ## What was built
 
@@ -141,3 +142,28 @@ itself: `27 passed`.
   inconsistency (two rows, identical model number, conflicting Silver/Bronze
   ratings) worth flagging to whoever maintains `data/raw/All_certified_psus.xlsx`
   imports, independent of this benchmark.
+
+---
+
+## Fix round 1 (architect review, applied on top of commit `10b9076`)
+
+The architect's review found the case-3 answer-key entry above (Corsair RM750E,
+locked as `80+ Gold`) was wrong: the title states only a Cybenetics rating, and per
+the production prompt and the grounding rule, the correct extraction from *this
+title* is `null`, even though the product's real 80 PLUS certification is
+independently Gold. Full detail, all other fixes (evidence field corrections to
+match the registry verbatim, MSI MAG A650BN re-locked as Bronze in place of dropping
+it, two test fixes, docstring corrections, `--runs < 1` rejection), and the
+post-fix live re-runs (mistral now 8/8, google now 7/8 - it leaks the Cybenetics-
+adjacent Gold tier on the corrected case) are recorded in
+`.superpowers/sdd/phase-01/plan-01-06-report.md`'s "Fix round 1" section - not
+duplicated here to avoid the two documents drifting out of sync.
+
+The case table above (rows locked/dropped) is otherwise unchanged by the fix round,
+**except**: case 3's `expected` is now `None` (not `80+ Gold`), and MSI MAG A650BN
+(650W) moved from "Dropped - registry itself is ambiguous" to **Locked** as
+`80+ Bronze`, using its unambiguous `115V Internal` / `04/10/2013` row (the `230V EU
+Internal` / `03/31/2023` Silver row is a documented later EU-certification uplift,
+per PROGRESS.md's 2026-09-24 audit, not the retail tier). MSI MAG A850GL PCIE5 was
+dropped in its place (redundant with the already-locked A750GL "GL"-suffix trap) to
+hold the case count at 8.

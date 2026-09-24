@@ -5,9 +5,15 @@ same machine) can be compared on the same terms.
 
 WRITES NOTHING TO THE DATABASE. This script never imports db.session (directly or
 indirectly) and never calls the DB-hint prompt builder that appends live catalogue
-brand names to the prompt - only the bare PSU_IDENTITY_BATCH_PROMPT constant, so a
-run is fully reproducible and needs no database at all (useful for the Phase 8
-desktop trial, which has none).
+brand names to the prompt - only the bare PSU_IDENTITY_BATCH_PROMPT constant. This
+is the same Stage 1 identity prompt production uses (services.groq_extraction_
+service.identity_prompt('psu')), minus only the brand-hint block that prompt appends
+from live DB data - the benchmark deliberately measures the Stage 1 identity call's
+efficiency_rating field (the tier as read off the retailer title), never Stage 2's
+PSU_SPEC_BATCH_PROMPT (which extracts modularity from a clean model name + listing
+pair, a different call entirely). Dropping the brand-hint block keeps a run fully
+reproducible and needing no database at all (useful for the Phase 8 desktop trial,
+which has none).
 
 How the case list was built: the original 2026-09-20 benchmark's 8 titles/answers
 were never committed anywhere (see .planning/phases/01-launch-hardening/01-RESEARCH.md,
@@ -18,14 +24,17 @@ Every case's expected answer is independently verified against either the 80 PLU
 official registry export (data/raw/All_certified_psus.xlsx, via
 scripts.import_80plus_efficiency's loader) or the manufacturer's own product page -
 never from this project's own LLM extractions, which would be circular (see Pitfall 9
-in 01-RESEARCH.md). See each case's "evidence" field for its specific source.
+in 01-RESEARCH.md). Evidence quotes the registry's Manufacturer/Model #/Voltage/
+Wattage/Certified Date/Rating fields verbatim, cell by cell - not the brand aliases
+scripts.import_80plus_efficiency.norm_brand() maps them to for matching purposes.
+See each case's "evidence" field for its specific source.
 
-Two candidates that could not be independently verified were dropped rather than
-included to hit a round number:
-  - MSI MAG A650BN (650W): the 80 PLUS registry itself contains two conflicting rows
-    for the exact same model number "MAG A650BN" at 650W - one rated Silver, one
-    rated Bronze - so the registry cannot settle the answer, and no manufacturer page
-    was found that resolves the conflict either.
+One candidate was dropped as pure redundancy, and one deliberately excluded case
+type was considered and rejected:
+  - MSI MAG A850GL PCIE5 (850W): dropped because it repeats the exact same trap as
+    the locked MSI MAG A750GL PCIE5 case (the "GL" suffix, same brand, same model
+    line, only the wattage differs) - kept out to make room for MSI MAG A650BN
+    below without exceeding 8.
   - An untiered (expected-None) case: no catalogued PSU title could be confirmed
     absent from *both* the registry and a manufacturer page (search results were
     inconclusive), so per the owner's rule ("if absence can't be confirmed from both
@@ -71,10 +80,11 @@ CASES = [
         "evidence": (
             "Manufacturer page https://www.super-flower.com.tw/products-detail/LIII-G/ "
             "(checked 2026-09-25): 750W variant listed with 'model no.: SF-750F14GE' and "
-            "'80 PLUS Gold Certified'. Cross-checked in data/raw/All_certified_psus.xlsx: "
-            "Manufacturer 'Super Flower Computer Inc.', Model # 'SF-750F14GE', Wattage 750, "
-            "Rating 'Gold' - both sources agree on Gold, independent of this project's own "
-            "extraction tables."
+            "'80 PLUS Gold Certified'. Cross-checked in data/raw/All_certified_psus.xlsx "
+            "(verbatim row): Manufacturer 'Super Flower', Model # 'SF-750F14GE', "
+            "Voltage '115V Internal', Wattage 750, Certified Date '10/28/2016', "
+            "Rating 'Gold' - both sources agree on Gold, independent of this project's "
+            "own extraction tables."
         ),
     },
     {
@@ -83,23 +93,35 @@ CASES = [
         "trap": "MSI's 'GL' model-name suffix means Gold; the title never spells out "
                 "a tier word at all, so the model must infer it from the suffix.",
         "evidence": (
-            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25): "
-            "Manufacturer 'Micro-Star International Co., Ltd.', Model # 'MAG A750GL PCIE5', "
-            "Wattage 750, Rating 'Gold' - exact model+wattage match, single unambiguous row."
+            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25) "
+            "has two verbatim rows for this model line, both agreeing on Gold: "
+            "Manufacturer 'Micro-Star International Co., Ltd.', Model # 'MAG A750GL', "
+            "Voltage '115V Internal', Wattage 750, Certified Date '12/19/2019', Rating "
+            "'Gold'; and Manufacturer 'Micro-Star International Co., Ltd.', Model # "
+            "'MAG A750GL PCIE5' (same certified date, same voltage/wattage), Rating "
+            "'Gold' - exact model+wattage match, unambiguous."
         ),
     },
     {
         "title": "Corsair RM750E 750 Watt Cybenetics Gold Fully Modular ATX 3.1 Power Supply (CP-9020295-IN)",
-        "expected": "80+ Gold",
-        "trap": "Control case: here the title's Cybenetics rating (Gold) and the real "
-                "80 PLUS tier (Gold) happen to agree, so this checks the model doesn't "
-                "over-correct by assuming Cybenetics never matches 80 PLUS.",
+        "expected": None,
+        "trap": "Cybenetics-only title: the true 80 PLUS tier (Gold, registry) must "
+                "NOT be reported because the title does not state it; an answer of "
+                "Gold means Cybenetics leakage or recall.",
         "evidence": (
-            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25): "
-            "Manufacturer 'Corsair Memory, Inc.', Model # 'RPS0177 (CP-9020262) (RM750e)', "
-            "Wattage 750, Rating 'Gold' - exact model+wattage match (the catalog title's "
-            "regional SKU suffix 'CP-9020295-IN' differs from the registry's part number, "
-            "but the model name 'RM750E' and wattage 750W match exactly)."
+            "The product's real 80 PLUS certification IS Gold - 80 PLUS registry "
+            "(data/raw/All_certified_psus.xlsx, checked 2026-09-25), two verbatim rows: "
+            "Manufacturer 'Corsair', Model # 'RPS0177 (CP-9020262) (RM750e)', Voltage "
+            "'115V Internal', Wattage 750, Certified Date '08/29/2023', Rating 'Gold'; "
+            "and Manufacturer 'Corsair', Model # 'RPS0147 (CP-9020248) (RM750e)', "
+            "same voltage/wattage, Certified Date '04/19/2021', Rating 'Gold'. But the "
+            "catalog title names only a Cybenetics rating ('Cybenetics Gold') and no "
+            "80 PLUS tier at all, and PSU_IDENTITY_BATCH_PROMPT (groq_extraction_"
+            "service.py:275) instructs the model to ignore Cybenetics and return null "
+            "when no 80 PLUS tier is determinable from the title. Per the grounding "
+            "rule, the model must not recall the tier from memory just because it "
+            "happens to be true - so the correct extraction from THIS title is null, "
+            "even though the product itself is Gold."
         ),
     },
     {
@@ -124,22 +146,38 @@ CASES = [
                 "'80 PLUS Silver' few-shot example already in the prompt (GIGABYTE "
                 "P650SS) so it is not a memorized answer.",
         "evidence": (
-            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25): "
-            "Manufacturer 'Giga-Byte Technology Co., Ltd.', Model # 'GP-P550SS', "
-            "Wattage 550, Rating 'Silver' - exact model+wattage match, single row."
+            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25), "
+            "verbatim row: Manufacturer 'Gigabyte', Model # 'GP-P550SS', Voltage "
+            "'230V EU Internal', Wattage 550, Certified Date '03/22/2024', Rating "
+            "'Silver' - exact model+wattage match. The registry row is a 230V EU "
+            "certification rather than a 115V one, but the catalog title's own text "
+            "already states '80 Plus Silver' directly, so the title itself grounds "
+            "the answer regardless of which regional certification the registry row "
+            "reflects."
         ),
     },
     {
-        "title": "MSI MAG A850GL PCIE5 WHITE 850W 80 Plus Gold Fully Modular Power Supply",
-        "expected": "80+ Gold",
-        "trap": "Same MSI 'GL' suffix as the A750GL case, at a different wattage - "
-                "here the catalog title also spells out 'Gold' explicitly, so this "
-                "case is a straightforward sanity check rather than a pure suffix "
-                "inference (the suffix-only trap is covered by the A750GL case above).",
+        "title": "MSI MAG A650BN 650 Watt 80 Plus Bronze Power Supply",
+        "expected": "80+ Bronze",
+        "trap": "MSI's 'BN' model-name suffix means Bronze (also stated directly in "
+                "production's PSU_IDENTITY_BATCH_PROMPT, groq_extraction_service.py:275, "
+                "as manufacturer-marker evidence); the registry also carries a later, "
+                "higher-tier '230V EU Internal' Silver certification for the same "
+                "model number, which is a documented EU-market re-certification "
+                "uplift, not the retail box tier this title (and the 115V US "
+                "certification) reflect.",
         "evidence": (
-            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25): "
-            "Manufacturer 'Micro-Star International Co., Ltd.', Model # 'MAG A850GL PCIE5', "
-            "Wattage 850, Rating 'Gold' - exact model+wattage match, single unambiguous row."
+            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25), "
+            "verbatim row: Manufacturer 'Micro-Star International Co., Ltd.', Model # "
+            "'MAG A650BN', Voltage '115V Internal', Wattage 650, Certified Date "
+            "'04/10/2013', Rating 'Bronze' - matches the retail tier this title states. "
+            "A second row for the identical model number, Voltage '230V EU Internal', "
+            "Certified Date '03/31/2023', Rating 'Silver', exists in the same registry "
+            "- PROGRESS.md's 2026-09-24 audit ('Revisited 2026-09-24 - keep gap-fill-"
+            "only') documents this exact pattern generally: 'the registry also lists "
+            "230V EU internal certifications a tier above the retail box rating' - so "
+            "the 115V Bronze row, not the later 230V Silver row, is the correct answer "
+            "for this retail-market title."
         ),
     },
     {
@@ -148,9 +186,11 @@ CASES = [
         "trap": "Platinum-tier diversity case at a high wattage; title states the "
                 "tier explicitly, testing plain extraction rather than inference.",
         "evidence": (
-            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25): "
-            "Manufacturer 'SilverStone', Model # 'SST-1200-PTS', Wattage 1200, "
-            "Rating 'Platinum' - exact model+wattage match, single row."
+            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25), "
+            "verbatim row: Manufacturer 'SilverStone Technology Inc.', Model # "
+            "'SST-1200-PTS', Voltage '115V Internal', Wattage 1200, Certified Date "
+            "'12/07/2018', Rating 'Platinum' - exact model+wattage match (a second row "
+            "'SST-ST1200-PTS', same date/voltage/wattage, also agrees on Platinum)."
         ),
     },
     {
@@ -160,9 +200,10 @@ CASES = [
                 "high wattage - checks the model doesn't cap out at Platinum for "
                 "flagship units.",
         "evidence": (
-            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25): "
-            "Manufacturer 'Corsair Memory, Inc.', Model # 'RPS0036 (CP-9020087) (AX1600i)', "
-            "Wattage 1600, Rating 'Titanium' - exact model+wattage match, single row."
+            "80 PLUS registry (data/raw/All_certified_psus.xlsx, checked 2026-09-25), "
+            "verbatim row: Manufacturer 'Corsair', Model # 'RPS0036 (CP-9020087) "
+            "(AX1600i)', Voltage '115V Internal', Wattage 1600, Certified Date "
+            "'01/03/2018', Rating 'Titanium' - exact model+wattage match, single row."
         ),
     },
 ]
@@ -255,6 +296,10 @@ def main(argv=None) -> int:
                      help="for keyless local servers: send a dummy placeholder key")
     ap.add_argument("--runs", type=int, default=1, help="number of benchmark runs (default 1)")
     args = ap.parse_args(argv)
+
+    if args.runs < 1:
+        print(f"benchmark_provider: --runs must be >= 1, got {args.runs}", file=sys.stderr)
+        return 2
 
     if args.provider:
         chain = provider_chain()
