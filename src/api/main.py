@@ -1,10 +1,16 @@
+import html
 from pathlib import Path
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from common.logger import get_logger
 from configs import settings
+
+logger = get_logger(__name__)
 
 # SEC-02: refuse to start before anything imports db.connection (which would
 # otherwise fail first with an unhelpful TypeError on a None DATABASE_URL).
@@ -82,7 +88,80 @@ def serve_index():
     return FileResponse(static_dir / "index.html")
 
 
+# WEB-01: a bad URL for a page shows the branded 404 page; a bad /api/* path
+# stays plain JSON (FastAPI's default behavior, kept via http_exception_handler).
+@app.exception_handler(StarletteHTTPException)
+async def branded_404(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404 and not request.url.path.startswith("/api/"):
+        return apply_security_headers(FileResponse(static_dir / "404.html", status_code=404))
+    return await http_exception_handler(request, exc)
+
+
+# WEB-02: an unhandled exception never reaches the visitor as a traceback or
+# framework-identifying text. Logged server-side only.
+@app.exception_handler(Exception)
+async def branded_500(request: Request, exc: Exception):
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    if request.url.path.startswith("/api/"):
+        return apply_security_headers(
+            JSONResponse({"detail": "Internal server error."}, status_code=500)
+        )
+    return apply_security_headers(FileResponse(static_dir / "500.html", status_code=500))
+
+
+@app.get("/privacy", include_in_schema=False)
+def serve_privacy():
+    return FileResponse(static_dir / "privacy.html")
+
+
+@app.get("/about", include_in_schema=False)
+def serve_about():
+    # Read settings.CONTACT_EMAIL at request time (not import time) so the
+    # owner's later .env change takes effect after a restart, and so tests
+    # can monkeypatch it. Never hardcode a contact address (WEB-05, owner
+    # decision #6 still open).
+    contact_email = settings.CONTACT_EMAIL
+    if contact_email:
+        safe = html.escape(contact_email)
+        contact_html = f'email us at <a href="mailto:{safe}">{safe}</a>.'
+    else:
+        contact_html = "a dedicated contact address for retailers is coming soon."
+    body = (static_dir / "about.html").read_text(encoding="utf-8")
+    body = body.replace("{{CONTACT}}", contact_html)
+    return Response(content=body, media_type="text/html")
+
+
 @app.get("/health", tags=["Health"])
 def health_check():
     """Health check endpoint."""
     return {"status": "ok", "app": "PC Builder API"}
+
+
+# SEO-01: robots.txt and a minimal sitemap. The canonical link on index.html
+# is relative because no production domain exists yet; Phase 3 (plan 03-02)
+# switches it and this sitemap's <loc> base to the real domain and turns on
+# uvicorn's proxy headers so request.base_url reports https/the real host
+# behind the proxy.
+@app.get("/robots.txt", include_in_schema=False)
+def robots_txt(request: Request):
+    sitemap_url = str(request.base_url).rstrip("/") + "/sitemap.xml"
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /api/\n"
+        f"Sitemap: {sitemap_url}\n"
+    )
+    return PlainTextResponse(body)
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+def sitemap_xml(request: Request):
+    base = str(request.base_url).rstrip("/")
+    urls = "".join(f"<url><loc>{base}/{path}</loc></url>" for path in ("", "about", "privacy"))
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"{urls}"
+        "</urlset>"
+    )
+    return Response(content=xml, media_type="application/xml")
