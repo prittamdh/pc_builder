@@ -45,4 +45,4 @@ data/exports/
 tests/html/**/*_files/
 
 # Local Scratch Artifacts
-.agents/scratch/
+.agents/scratch/tests/html/**/*.zip
