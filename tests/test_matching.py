@@ -472,3 +472,40 @@ class TestPSUPromptsRejectCybenetics:
         from matching import psu_identity
         src = inspect.getsource(psu_identity.find_trim_conflicts)
         assert "Product.canonical_id" in src, "audit must restrict to groups with listings"
+
+
+class TestColourDoesNotIdentifyACase:
+    """
+    Cabinet colour defeated disambiguate_failed_key exactly as the PSU efficiency trim
+    did. "case:unknown:white" had merged 34 different cabinets - Coco Sports, Dawg, TAG
+    Gamerz, ICEMASTER - and "case:unknown:black" another 15, because an extracted colour
+    made an otherwise-empty key look like it had content.
+    """
+
+    @staticmethod
+    def _case_key(brand, model, colour, pid):
+        from matching.canonical_key_builder import disambiguate_failed_key, make_canonical_key_string
+        kd = {"category": "case", "brand": brand or "Unknown",
+              "model_number": model or "", "color": colour or ""}
+        return make_canonical_key_string("case", disambiguate_failed_key(kd, pid))
+
+    def test_unresolved_cases_do_not_merge_on_colour(self):
+        a = self._case_key(None, None, "White", 101)
+        b = self._case_key(None, None, "White", 202)
+        assert a != b, "two unidentified white cases must not share a canonical id"
+
+    def test_named_case_keeps_colour_as_a_variant(self):
+        """Colour still separates real SKUs - a white Lian Li A3 is not the black one."""
+        w = self._case_key("Lian Li", "A3", "White", 101)
+        b = self._case_key("Lian Li", "A3", "Black", 202)
+        assert w != b
+        assert "_unresolved_id" not in w and "unresolved" not in w
+
+    def test_same_named_case_still_merges_across_stores(self):
+        assert self._case_key("Lian Li", "A3", "White", 101) == \
+               self._case_key("Lian Li", "A3", "White", 202)
+
+    def test_british_spelling_also_covered(self):
+        from matching.canonical_key_builder import disambiguate_failed_key
+        kd = {"category": "case", "brand": "Unknown", "model_number": "", "colour": "White"}
+        assert "_unresolved_id" in disambiguate_failed_key(kd, 7)

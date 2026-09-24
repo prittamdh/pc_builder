@@ -695,6 +695,40 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 
 ---
 
+## Cabinet false merge — colour is not an identity (2026-09-24)
+
+Found while opening the cabinet-clearance item, and it is the **same class of fault as the PSU
+trim** — a qualifier field giving an otherwise-empty key enough apparent content to escape
+`disambiguate_failed_key`'s salting:
+
+- **`case:unknown:white` had swallowed 34 different cabinets** — Coco Sports STARK Z11, Dawg Y 990,
+  TAG Gamerz Nebula, ICEMASTER Torrent — and **`case:unknown:black` another 15**, plus an Antec
+  Symphony 360 AIO *cooler* that had leaked in from another category.
+- Mechanism: brand came back `Unknown`, model empty, but the extracted **colour** was non-empty, so
+  the key read as having real content and every unresolved cabinet collapsed into one group.
+
+`_NON_IDENTIFYING_FIELDS` now covers `color`/`colour` alongside `efficiency`. **The test to apply
+before adding a field there: could this value, on its own, name a product to someone who knows the
+catalogue?** "Bronze" and "White" cannot; "750w" and a model number can. Colour still separates real
+SKUs — a white Lian Li A3 is not the black one.
+
+**Re-extraction: 2023/2023, zero failures** on `ministral-14b-latest`. The fake groups are gone; the
+largest groups are now real cabinets (Lian Li A3, Zotac Gaming Alloy, Cooler Master Qube 540).
+
+**The brand registry paid off here, measurably.** Cabinet brand `Unknown` is down to **23 of 2024
+(1.1%)**, and the India-market makes it was built for are now named rather than collapsing:
+DAWG 88, Ant Esports 185, Zebronics 56, TAG Gamerz 48. This is the first category re-extracted with
+hints in place.
+
+Also resolved by the same pass: `ram:corsair:unknown:frame_4000d_rs` — a Corsair *case* carrying a
+stale RAM-category canonical_id, now correctly `case:corsair:black:frame_4000d_rs_argb`.
+
+**Method note worth keeping.** An earlier check for this bug class in other categories looked for
+near-identical *splits* and found none, concluding wrongly that PSU was the only affected category.
+It could not have found this: a false **merge** is invisible to a split-detector. When auditing key
+quality, check both directions — group-to-listing ratio finds over-merges, near-duplicate keys find
+under-merges.
+
 ## LLM provider strategy (settled 2026-09-20)
 
 **All extraction is AI-based; no regex hit-and-trial.** Keys were probed rather than assumed, and
