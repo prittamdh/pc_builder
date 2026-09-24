@@ -16,15 +16,17 @@ from db.session import SessionLocal
 from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.psu_title_extraction import PSUTitleExtraction
-from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
+from matching.canonical_key_builder import (
+    make_canonical_key_string, disambiguate_failed_key, build_psu_key_dict,
+)
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, PSU_IDENTITY_BATCH_PROMPT,
-    MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
+    GroqExtractionError, identity_prompt,
+    default_service,
 )
 
 
 def extract_psu_identity(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 6, sleep_s: float = 0.0):
-    with SessionLocal() as session, GroqExtractionService(api_key=MISTRAL_API_KEY, model=MISTRAL_MODEL, api_url=MISTRAL_API_URL) as groq:
+    with SessionLocal() as session, default_service() as groq:
         print("=" * 80)
         print("GROQ LLM POWER SUPPLY IDENTITY EXTRACTION (per listing, batched)")
         print("=" * 80)
@@ -50,7 +52,7 @@ def extract_psu_identity(reprocess_all: bool = False, limit: int | None = None, 
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(PSU_IDENTITY_BATCH_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('psu'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:
@@ -70,12 +72,12 @@ def extract_psu_identity(reprocess_all: bool = False, limit: int | None = None, 
                 parsed = result["parsed"]
                 conf = parsed.get("confidence")
 
-                key_dict = {
-                    "category": "psu",
-                    "brand": parsed.get("brand") or "Unknown",
-                    "model_number": parsed.get("model_number") or "",
-                    "wattage": f"{parsed.get('wattage')}w" if parsed.get("wattage") else "",
-                }
+                key_dict = build_psu_key_dict(
+                    parsed.get("brand"),
+                    parsed.get("model_number"),
+                    parsed.get("wattage"),
+                    parsed.get("efficiency_rating"),
+                )
                 key_dict = disambiguate_failed_key(key_dict, product.id)
                 canonical_id = make_canonical_key_string("psu", key_dict)
 

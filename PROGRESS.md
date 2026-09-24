@@ -18,7 +18,7 @@
 | **Frontend UI** | ✅ | Glassmorphic dark mode UI live on `http://localhost:8000/` |
 | **PC Builder Assembly Tool** | ✅ | Component slots, socket/RAM/TDP compatibility & multi-store optimizer |
 | **100% In-Stock Purge & Guard** | ✅ | Prevents new out-of-stock seeding while tracking out-of-stock history for existing items |
-| **LLM Canonical Identity Extraction** | 🟡 In Progress | Brand/model identity extracted for 9/9 major categories, all wired to canonical grouping; physical specs and remaining data-quality gaps still open |
+| **LLM Canonical Identity Extraction** | ✅ | Identity extracted for 9/9 categories and wired to canonical grouping; all 9 spec tables keyed by `canonical_id` and populated. Both key-coarseness faults closed (motherboard ITX/mATX, PSU efficiency trim) and brand hints now rebuild every DAG cycle. Remaining gap is cabinet GPU clearance, which is a data-availability limit, not a pipeline one |
 
 ---
 
@@ -695,17 +695,82 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 
 ---
 
+## LLM provider strategy (settled 2026-09-20)
+
+**All extraction is AI-based; no regex hit-and-trial.** Keys were probed rather than assumed, and
+two of the five had never been tried:
+
+| Provider | State | Notes |
+| :--- | :--- | :--- |
+| **groq** | ✅ primary | `openai/gpt-oss-120b`. Note `llama-3.1-8b-instant` (the old `GROQ_MODEL`) was **retired upstream and 404s** — that is what pushed this project onto Mistral originally. Throttles at ~15s between calls on free tier but honours `retry-after`. |
+| **google** | ✅ fallback | `gemini-3.1-flash-lite` via Google's **OpenAI-compatible** endpoint (`/v1beta/openai/chat/completions`), so it is a drop-in — no adapter, no second code path. `gemini-2.5-flash` is retired for new users. |
+| **mistral** | ⚠ quota exhausted | A one-token probe 429s. Kept in the chain because quotas reset. |
+| **cerebras** | ❌ | Authenticates, then 402 payment required. |
+| **nvidia** | ❌ | Key valid, 82 models listed, but chat completions 500/410. |
+
+**Benchmark, not vibes.** A fixed 8-case PSU set built from titles whose answer is independently
+known (including the Cybenetics trap and the MSI "GL" inference): `groq/gpt-oss-120b` **8/8**,
+`groq/gpt-oss-20b` **8/8**, `gemini-3.1-flash-lite` **8/8**. Chain order follows that.
+
+**The prompt mattered more than the model.** Every model failed the Super Flower case until the
+prompt named the certification scheme — see below. Reach for a better prompt before a bigger model.
+
+**`default_service()` is how scripts get a client.** Fifteen scripts each hardcoded Mistral, which
+is how the whole pipeline stayed pinned to one exhausted quota and only reached the fallback chain
+after every batch had burned its full retry budget. All fifteen now call the factory.
+
+**Local inference — deferred, not rejected.** Prittam has a second desktop (RX 9060 XT, 16GB VRAM,
+Windows, Ollama installed). 16GB comfortably runs `gpt-oss-20b`, which already scored 8/8, so
+quality is there and the win is re-extracting all ~11,800 listings with no quota ceiling. Unverified
+before committing to it: the RX 9060 XT is RDNA4 and Ollama's Windows AMD path is ROCm-based.
+
+## PSU efficiency — Cybenetics vs 80 PLUS (2026-09-20)
+
+Titles routinely carry **two certification schemes at once**, and they disagree:
+
+> Super Flower LEADEX III GOLD UP ATX 3.1 750W **Cybenetics Platinum** Certified **Gold** SMPS
+
+That unit is **80 PLUS Gold** and **Cybenetics Platinum**. Every model read "Platinum" off it,
+which is not a hallucination — it is reading a real token the prompt never disambiguated. Both PSU
+prompts now state: report the 80 PLUS tier only, ignore Cybenetics entirely, and treat a tier word
+inside the **model name** as the manufacturer's own marker (Super Flower "Leadex III Gold", Cooler
+Master "MWE Gold", MSI `GL` = Gold / `BN` = Bronze).
+
+**Effect, measured by `audit_psu_trim_conflicts.py`: 18 conflicts → 2.** All 452 `psu_specs` rows
+are now grounded-LLM extracted (previously 16 carried no `llm_model` at all, predating grounded
+extraction), all `status='ok'`, 390 carrying a rating.
+
+The last 2 were MSI MAG A750GL/A850GL - a **Stage 1 key** fault rather than a spec fault: a stray
+listing keyed a Bronze group that should not exist.
+
+**Closed 2026-09-21.** Full Stage 1 re-extraction of all 1,013 PSU listings on `ministral-14b-latest`
+(**1013/1013, 0 failures**; an earlier pass on the old chain had 77 batch failures where every
+provider was exhausted). The re-key that followed produced **0 splits and merged 19 groups** - the
+spurious Bronze groups collapsing back - taking canonical ids 432 → 413. Stage 2 then filled the 61
+models that needed it, 61/61.
+
+**Audit defect found and fixed in the same pass.** `find_trim_conflicts` joined `canonical_parts` to
+`psu_specs` without checking whether a group still had listings. A re-key retires a group by leaving
+it *unreferenced* rather than deleting it, and its stale spec row stays behind - so the audit was
+reporting corpses. Of 6 reported conflicts, **4 had zero listings**, including the MSI pair a re-key
+had already dissolved. The query now joins through `products`.
+
+**True state: 2 live conflicts across 413 groups (0.5%).** Both are single-listing Stage 1 mis-reads
+where the model name settles it: `cooler_master:gold:v_platinum_v2:1600w` (model name says Platinum,
+key says gold) and `corsair:platinum:rm750e:750w` (RM750e is 80+ Gold, key says platinum). Left for
+judgement, as the audit is designed to do.
+
 ## What's Next
 
 1. ~~Reconcile legacy regex `*_specs` data with LLM extraction~~ — **Resolved 2026-08-16.** `motherboard_specs`/`ram_specs`/`gpu_specs`/`psu_specs`/`cabinet_specs`/`cooler_specs`/`ssd_specs` turned out to be populated by the old regex `NormalizationService` (not empty as previously documented), and `CompatibilityEngine._merge()` was preferring those regex values over the verified LLM extraction whenever both existed. Investigated properly before fixing: an initial raw `IS DISTINCT FROM` count of 341 "disagreeing" motherboards was mostly noise (regex simply had `NULL`, not a real disagreement) — only **6 products** had both sources populated with conflicting sockets, and in all 6 the *regex* value was actually correct (MSI Z890 boards; LLM said LGA1700 instead of LGA1851). Broadening the check to every chipset→socket pairing surfaced 22 total LLM inference errors worth fixing directly: the whole H810 chipset family (14 rows, Intel's 800-series companion chipset, real systematic gap), AMD's 2025 B840 refresh chipset getting confused with Intel's similarly-numbered B860 (3 rows), three isolated Intel 400/500-series-vs-LGA1700 mixups, and one WRX80→sTR5 mixup (should always be sWRX8). Corrected those 22 rows directly in `motherboard_title_extractions`, then flipped `CompatibilityEngine._merge()`'s priority so `*_title_extractions` (LLM, now more reliable) wins over `*_specs` (uncontrolled regex leftovers) — the right general default until `*_specs` is repopulated from a real external dataset, at which point that priority should flip back (noted in the code). Re-verified the RAM DDR4/DDR5 mismatch tests still pass and confirmed the fixed Z890 board now resolves to `LGA1851` end-to-end through the engine.
-2. **Brand-recognition gaps** — regional/lesser-known brands (EVM, ZION, GEONIX, Dawg, Coconut, Prolab Design, Circle, TAG Gamerz, etc.) are inconsistently recognized, causing some real distinct products to share a coarse "brand unknown, same specs" grouping. Options: add a known-brands hint list to the prompts, or accept as a standing limitation (currently correctly flagged `NEEDS_REVIEW`, not silently wrong).
+2. ~~Brand-recognition gaps~~ — **Resolved 2026-09-20.** Regional makes (EVM, ZION, GEONIX, Dawg, Coconut, Prolab Design, Circle, TAG Gamerz) were inconsistently recognized, so products the model could not name landed in one coarse "brand unknown" group. Took the hint-list option, but derived from the catalogue rather than hand-written: `src/matching/brand_registry.py` builds per-category hints from `canonical_parts` the model already named confidently (`status='OK'`, seen on ≥2 canonical models so a single garbled mis-read cannot enter), merged over a short cold-start seed of brands Stage 1 has never once named unaided. `services.groq_extraction_service.identity_prompt(category)` appends them and all 9 Stage-1 extractors now call it instead of the bare prompt constant. Rebuilt by `scripts/build_brand_registry.py`, wired into the DAG's `apply_catalog_policy` task so it refreshes every cycle — a brand recognized once on a clear title becomes a hint on terse listings of the same make next cycle, so recognition improves rather than staying flat. Two safeguards: the prompt fragment scopes the list to recognition only and restates that `Unknown` is a correct answer (handing a model a brand list otherwise invites it to attach one to every title, turning a visible Unknown into an invisible wrong answer), and the hint count is capped at emission, not only at build time — the token cost is paid per batch, and the JSON can arrive hand-edited. 7 tests in `tests/test_matching.py::TestBrandRegistry`.
 3. ~~Physical specs sourcing~~ — **Resolved 2026-08-16.** All 9 spec tables are now keyed by `canonical_id` and populated (6,951 model rows total). See the section above for per-table sourcing and coverage.
-4. **Motherboard canonical key merges ITX/microATX variants** — 24 groups (~1.8%) merge physically different boards (B850 ATX vs B850I ITX) under one canonical_id, so the compact variant inherits the full-size board's slot count and case requirements. Spun off as a background task 2026-08-16.
-5. **GPU listings mistagged as CPU category** — ~78 products with `p_category='CPU'` are actually graphics cards (e.g. "AMD Radeon Pro W7700... Graphics Card"), a `CategoryClassifier` leak found while spot-checking the DAG wiring. Flagged as a separate background task (spawned 2026-08-16) rather than fixed inline. The 2 thermal-paste-as-cooler products are the same class of issue.
+4. ~~Motherboard canonical key merges ITX/microATX variants~~ — **Resolved** by `scripts/rekey_motherboard_canonical_ids.py`. The key now uses the board designation recovered from each listing's own title (`resolve_board_designation`), closing the fault in both directions: the B850/B850I over-merge and the B650/B650M under-merge. Deterministic and free — no Stage 1 re-run, since brand/model_number/raw_title are already persisted per listing.
+5. ~~GPU listings mistagged as CPU category~~ — **Resolved.** `CategoryClassifier` gained `_title_indicates_discrete_gpu` (which rules out CPUs merely advertising integrated graphics), plus the same class of guard for thermal material, audio gear and removable media. `scripts/fix_category_p_category_drift.py` remediates existing rows and is idempotent — a product only appears there while its `p_category` is wrong. Regression tests live in `tests/test_matching.py`.
 6. **Cabinet clearance data needs a non-LLM source** — `max_gpu_length_mm` is populated for only 5/1,405 models because those numbers aren't in retailer titles and must not be guessed. This is the one remaining spec gap where an external dataset (or scraping manufacturer product pages) would add real value, and it directly limits how often the GPU-clearance rule can fire.
-7. **`CategoryClassifier.get_p_category()` title fallback** — currently a dead parameter; unrecognized raw categories silently dump into "Accessories" regardless of title content. Worth fixing once more scrape-source categories are seen in practice.
-8. **Wire the new Stage-2 spec extractors into the DAG** — `extract_canonical_identities` currently runs only the Stage-1 identity extractors. The 7 new `*_specs` scripts (plus the two zero-API `populate_*_from_extractions.py` scripts) should run after it so newly-scraped models get physical specs automatically. `scripts/classify_legacy_products.py` and `scripts/fix_catalog_data_quality.py` are both idempotent and belong in the same task, otherwise newly-scraped legacy or external parts reappear in the builder.
-9. **Frontend surfaces still untested** — Compare, History and the Stores tab were exercised and work, but nothing has been checked on a narrow viewport, and there are no automated frontend tests at all. Every frontend bug found on 2026-08-16 was silent (a swallowed 422, an empty list, a `zip()` truncation), so the absence of errors in the console is not evidence the UI is behaving.
+7. ~~`CategoryClassifier.get_p_category()` title fallback~~ — **Resolved.** `_classify_from_title()` is implemented and consulted whenever the store supplied no category or one that is unrecognized, checking discrete-GPU / removable-media / audio / thermal markers before the coarse per-category ones. It returns `None` rather than guessing when nothing is certain. This is what stopped an AMD Radeon Pro W7700 sitting in Accessories because its listing carried no category at all.
+8. ~~Wire the new Stage-2 spec extractors into the DAG~~ — **Resolved.** `dags/scheduled_scraper_dag.py` now runs `process_due_targets >> extract_canonical_identities >> extract_physical_specs >> apply_catalog_policy`. `execute_physical_spec_extraction` runs the LLM spec extractors plus the two zero-API `populate_*_from_extractions` scripts; `execute_catalog_policy` runs `classify_legacy_products`, `fix_catalog_data_quality` and (added 2026-09-20) `build_brand_registry`. Each is wrapped so one failure cannot take the stage down.
+9. ~~Frontend surfaces still untested~~ — **Resolved.** `tests/test_frontend_e2e.py` holds 51 Playwright tests asserting on what the user actually sees, written specifically because every frontend bug found on 2026-08-16 was silent — a swallowed 422 that left the sidebar permanently reading "Incompatibilities Detected", a picker that always showed an empty list, a `zip()` that truncated every candidate away. None raised, so backend tests and a clean console both looked fine. The suite skips itself automatically where Playwright's browser isn't installed.
 10. **PSU efficiency — 77 → 48 missing (2026-08-16).** Three sources used in order:
     - **Official 80 PLUS registry** (CLEAResult export, 14,371 units, `data/raw/All_certified_psus.xlsx`, imported by `scripts/import_80plus_efficiency.py`): closed 5. Validated by running the matcher against PSUs that already had Cybenetics ratings — matched 129/446 and **agreed with Cybenetics on 99 of 124**.
     - **Retailer product pages** (`scripts/scrape_psu_efficiency.py`): closed 24 more. Titles omit the rating that the page body states plainly.
@@ -722,4 +787,92 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
     - **Uncertified PSUs now rank last** in the builder's picker (`_rank_candidates`). Ranking by certification rather than by a brand blocklist keeps the judgement on the product, and any unit that later gains a verified rating rises automatically. A PSU is the part whose failure can damage everything attached to it, so this is the one slot where an unknown-quality option shouldn't lead.
     - **PSUs with no resolved brand are hidden entirely** (43 listings across 29 models). Identity extraction couldn't name them, and two turned out not to be power supplies at all. Several are real regional makes (Dawg, Coconut) the model doesn't recognise yet, so this is a recognition gap rather than a verdict on the brands - they return as soon as extraction can name them.
 
-    Still open: the **PSU canonical key is too coarse**. ASUS sells "TUF Gaming 750W" in both Bronze and Gold trims, Antec's HCG750 likewise, but the key is only brand+model+wattage so the variants collapse into one model and inherit whichever rating was written last — the same defect as the B850/B850I motherboard merge. Both importers therefore only fill gaps and never overwrite. Fixing it means adding the efficiency trim to the PSU canonical key and re-running identity extraction.
+    ~~Still open: the PSU canonical key is too coarse.~~ — **Resolved 2026-09-20.** ASUS sells
+    "TUF Gaming 750W" in both Bronze and Gold trims, Antec's HCG750 likewise, but the key was only
+    brand+model+wattage, so the variants collapsed into one model and inherited whichever rating was
+    written last — the same defect as the B850/B850I motherboard merge, and the reason both importers
+    were written gap-fill-only.
+
+    Stage 1 was already extracting `efficiency_rating`; the field was simply dropped when the key was
+    assembled. `build_psu_key_dict()` in `matching/canonical_key_builder.py` now carries it, with
+    `normalize_efficiency_trim()` collapsing "80+ Gold" / "80 PLUS GOLD" / "Gold" to one token and
+    returning `""` for text naming no recognised tier. `scripts/rekey_psu_canonical_ids.py` migrates
+    existing rows — deterministic, no LLM re-run, since brand/model/wattage/efficiency are persisted
+    per listing. It follows the motherboard script's carry-across rule: a group that *split* has its
+    `psu_specs` row dropped on both sides, because that row was extracted from whichever listings
+    happened to be sampled, which is exactly the contamination being undone.
+
+    Two design decisions worth keeping:
+    - **A listing stating no tier keys apart from every tiered variant** rather than merging into one.
+      An untiered title is not evidence of a grade, and merging would silently re-create the bug.
+    - **Only the title may feed the key.** Ratings recovered later from retailer product pages fill
+      `psu_specs`, never the key — otherwise scraping a page would retroactively change a product's
+      identity and re-key rows other tables already point at.
+
+    **The trim in the key is only half the fix — real data proved it.** The first dry run split
+    **47** groups, and almost all of them were wrong. Retailers print the rating inconsistently, so
+    `psu:ant_esports:fg650_v2:650w` split into a tiered and an untiered group: *one* real unit whose
+    listings simply differ in how terse the title is. That is an under-merge, the exact mirror of the
+    bug being fixed, and the same fault the motherboard path hit with B650/B650M.
+
+    `matching/psu_identity.py::reconcile_group_trims()` resolves it before keying, grouping by
+    brand + model_number + wattage (the *old* key — precisely the set the trim subdivides):
+    - **one trim stated** across the group → propagate it to the silent listings. One product.
+    - **two or more** → a genuinely multi-trim model; a listing naming none cannot be attributed to
+      either, so it keeps an empty trim and is flagged `needs_review` rather than guessed into one.
+    - A stated trim is **never** overwritten by its neighbours, so a real Bronze listing cannot be
+      rewritten to Gold by more numerous siblings.
+
+    **Applied 2026-09-20.** Reconciliation filled 55 silent listings and flagged 19 across 2 genuinely
+    ambiguous groups. Effect on the migration: splits **47 → 5**, canonical ids 446 → **450** (not 492),
+    `psu_specs` dropped **49 → 7**, models needing Stage 2 **95 → 11**. 1,016 listings mapped, 913
+    re-pointed, 379 canonical_parts created, 375 retired.
+
+    The 5 surviving splits are all genuine evidence conflicts: ASUS TUF Gaming 750W (the documented
+    Bronze/Gold case), MSI MAG A750GL and A850GL, Prolab Design XPower XP-1000P (Gold + Platinum +
+    untiered), and one brand-unknown 850W pair. **Worth a look:** MSI's "GL" suffix denotes Gold, so
+    the Bronze listings on A750GL/A850GL are more likely mis-extractions than real variants — the
+    split is still the honest response, since conflicting evidence must never be merged.
+
+    **Also fixed while building this:** the brand registry keyed cabinets as `"cabinet"` while
+    `canonical_parts` stores `"case"`, producing two silent entries — a seed-only one nothing read and
+    a derived one nothing seeded, so cabinet prompts carried 9 hints instead of 38. Both the build and
+    the lookup now run category strings through `normalize_category()`.
+
+    **Second pass, same day — three more faults the applied data exposed:**
+
+    - **The trim defeated `disambiguate_failed_key()`.** That guard salts a key with the product id
+      when extraction produced nothing identifying, so unresolved listings never collide into one fake
+      group. The trim counted as "real content", so a listing with no brand, no model and no wattage
+      but a readable "80+ Bronze" keyed as `psu:unknown:bronze` — and every unresolved Bronze listing
+      in the catalogue merged into it. Efficiency is a *qualifier*: it subdivides an already-identified
+      model and names no product alone. `_NON_IDENTIFYING_FIELDS` now excludes it from the signal test,
+      and a second re-key split those fake groups back apart.
+    - **Stage 2 treated a failed row as done.** `already_done` matched on the existence of a `psu_specs`
+      row, not its status, so a transient API error was permanent: the placeholder blocked the model
+      from ever being retried and looked identical to a model with no specs available. 15 PSU models
+      were stuck this way. Now only `status='ok'` counts as done.
+    - **A single provider is a single point of failure, and it fails quietly.** Mistral's free tier was
+      exhausted (a one-token probe 429s), so every batch burned its retries and wrote `status='failed'`
+      — recording a *provider outage* as a fact about the data. `provider_chain()` + `ProviderExhausted`
+      now roll to the next provider instead of bisecting into the same wall. Note `GROQ_MODEL`
+      (`llama-3.1-8b-instant`) has been retired by Groq and 404s; the working model is
+      `openai/gpt-oss-120b`. Cerebras authenticates but returns 402. With the chain in place the 15
+      stuck models extracted **15/15** on the Groq fallback.
+
+    Verified end to end: ASUS TUF Gaming 750W now resolves Bronze→`80+ Bronze`, Gold→`80+ Gold`. All
+    452 `psu_specs` rows are `status='ok'`, no orphans.
+
+    **`audit_psu_trim_conflicts.py` (new, read-only)** cross-checks the key trim against the Stage 2
+    spec trim — independent evidence, so a disagreement means one side mis-read. It found **18**, and
+    the attribution matters: **16 carry no `llm_model`**, i.e. pre-LLM rows that predate grounded
+    extraction, mostly `gold -> platinum` on models whose own names say Gold (Super Flower "Leadex III
+    Gold", Cooler Master "MWE Gold 750 V3", Thermaltake Toughpower GF A3). Those are pre-existing bad
+    data this audit surfaced for the first time, **not** a regression from the provider swap — the only
+    two conflicts from `openai/gpt-oss-120b` are MSI MAG A750GL/A850GL, where Stage 2 is *correct*
+    ("GL" is MSI's own Gold marker) and Stage 1 mis-read a title. Left for judgement rather than
+    auto-merged: a conflict proves a group is wrong, not which side is right.
+
+    18 tests across `TestPSUEfficiencyTrimInKey`, `TestPSUTrimReconciliation` and
+    `TestQualifierFieldsDoNotIdentify`. 231 pass. Now that the re-key has been applied, the
+    gap-fill-only constraint on both efficiency importers can be revisited.

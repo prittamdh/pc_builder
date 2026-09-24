@@ -10,7 +10,9 @@ import time
 import httpx
 
 from common.logger import get_logger
-from configs.settings import GROQ_API_KEY, MISTRAL_API_KEY
+from configs.settings import (
+    CEREBRAS_API_KEY, GOOGLE_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY,
+)
 
 logger = get_logger(__name__)
 
@@ -85,7 +87,65 @@ def as_bool(value) -> bool | None:
 # llama-3.1-8b-instant tier turned out to be in practice - same OpenAI-compatible
 # chat completions shape, so it's a drop-in swap via GroqExtractionService(api_url=...).
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_MODEL = "mistral-small-latest"
+# NOT mistral-small-latest: Mistral's Free plan stopped serving the mistral-small and
+# magistral-small families, which 429 on a single one-token call even with the whole
+# $10 monthly allowance unspent and 1 req/sec respected. The ministral-* family is still
+# served on Free. ministral-3b was measured too and is NOT a substitute - it missed both
+# Bronze cases on the 8-case set.
+MISTRAL_MODEL = "ministral-14b-latest"
+
+CEREBRAS_API_URL = "https://api.cerebras.ai/v1/chat/completions"
+CEREBRAS_MODEL = "gpt-oss-120b"
+
+# Current Groq catalogue. The long-standing GROQ_MODEL above ("llama-3.1-8b-instant")
+# has since been retired by Groq and now 404s, which is what pushed this project onto
+# Mistral in the first place.
+GROQ_OSS_MODEL = "openai/gpt-oss-120b"
+
+# Google exposes an OpenAI-compatible endpoint, so Gemini is a drop-in on the same
+# request/response shape as every other provider here - no adapter, no second code path.
+# Note the plain generativelanguage .../models/{m}:generateContent route is NOT this one.
+GOOGLE_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+GOOGLE_MODEL = "gemini-3.1-flash-lite"
+
+
+def provider_chain() -> list[tuple[str, str, str, str]]:
+    """
+    Providers to try in order, as (name, api_url, model, api_key), skipping any whose
+    key is unset.
+
+    A chain exists because a single provider's quota is a single point of failure, and
+    the failure is quiet: when Mistral's free tier was exhausted, every batch 429'd
+    through its retries, each model was written with status "failed", and Stage 2 then
+    treated those rows as done - so 15 PSU models were permanently stuck until both the
+    query and the provider were fixed. Rolling to the next provider keeps an exhausted
+    quota from being recorded as a fact about the data.
+
+    Order is by measured accuracy first, then measured throughput - not by habit.
+
+    Accuracy, on a fixed 8-case PSU set built from titles whose answer is independently
+    known (it includes the Cybenetics trap and the MSI "GL" inference):
+    ministral-14b-latest 8/8, gemini-3.1-flash-lite 8/8, gemini-3.6-flash 8/8,
+    groq/gpt-oss-120b 8/8, groq/gpt-oss-20b 8/8, nvidia/mistral-nemotron 7/8,
+    ministral-3b-latest 6/8 (misses both Bronze cases - not a substitute for 14b).
+
+    Throughput breaks the tie, and it is not close. Back-to-back batches of 8 titles:
+    ministral-14b ~210 titles/min (3/3 calls), gemini-3.1-flash-lite ~108 (6/6),
+    groq/gpt-oss-120b 1/6 calls accepted - its free limiter rejects most requests, so a
+    re-extraction of 1,016 PSU listings managed 14 calls in 40 minutes there versus ~10
+    minutes on gemini. groq stays in the chain because a single call is fast when it is
+    allowed through; it is simply unusable for bulk.
+
+    cerebras authenticates then returns 402, and gemini-3.6-flash is frequently 503, so
+    neither leads. nvidia's key is valid but its endpoint is intermittent.
+    """
+    candidates = [
+        ("mistral", MISTRAL_API_URL, MISTRAL_MODEL, MISTRAL_API_KEY),
+        ("google", GOOGLE_API_URL, GOOGLE_MODEL, GOOGLE_API_KEY),
+        ("groq", GROQ_API_URL, GROQ_OSS_MODEL, GROQ_API_KEY),
+        ("cerebras", CEREBRAS_API_URL, CEREBRAS_MODEL, CEREBRAS_API_KEY),
+    ]
+    return [c for c in candidates if c[3]]
 
 # Kept compact deliberately: this system prompt is resent on every call and free-tier
 # Groq plans are TPM-bound (llama-3.1-8b-instant: 6000 TPM), so trimming tokens here
@@ -212,7 +272,7 @@ CRITICAL: "index" MUST equal the input title's number (1-based). Titles are ofte
 brand: manufacturer (Corsair, Cooler Master, Thermaltake, GIGABYTE, MSI, Seasonic, Antec, Ant Esports, Deepcool, etc), title-cased.
 model_number: the series/model name, e.g. "Toughpower GF A3", "V SFX", "P650SS", "Smart BM3". Null if truly generic.
 wattage: number only, e.g. "1050 Watt" -> 1050, "650W" -> 650.
-efficiency_rating: normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium" if stated, else null.
+efficiency_rating: report the 80 PLUS tier ONLY. Many titles also carry a CYBENETICS rating - a different certification body on its own scale, which frequently disagrees ("LEADEX III GOLD UP ... Cybenetics Platinum Certified Gold" is 80 PLUS **Gold**). Ignore Cybenetics entirely; never let it set the tier. A tier word inside the MODEL NAME is the manufacturer's own marker and is valid evidence (Super Flower "Leadex III Gold", Cooler Master "MWE Gold", MSI's "GL" suffix = Gold, "BN" = Bronze). Normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium" if determinable, else null.
 confidence: high=clear series+wattage, medium=some inferred, low=guessing or non-PSU title. notes: short reason if not high, else null. Never refuse; always give best guess.
 
 Titles (2 total, respond with exactly 2 results, each carrying its own index):
@@ -292,7 +352,7 @@ PSU_SPEC_BATCH_PROMPT = """For each PSU model, you get its clean identity (brand
 Return STRICT JSON only: {"results": [{"index": number, "efficiency_rating": string|null, "modularity": string|null, "confidence": "high"|"medium"|"low", "notes": string|null}, ...]}
 CRITICAL: "index" MUST equal the input model's number (1-based). One result per input model, exact count, any order (index is authoritative, not array position).
 These specs are almost always stated directly in PSU retail titles - if not present in the title, mark low confidence rather than guessing from trained knowledge (efficiency tier and modularity are marketing-critical, retailers virtually never omit them, so their absence usually means the LISTING is ambiguous, not that you should recall it).
-efficiency_rating: normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium", null if not stated. modularity: "Full"|"Semi"|"Non", null if not stated.
+efficiency_rating: report the 80 PLUS tier ONLY. Many titles also carry a CYBENETICS rating - a different certification body on its own scale, which frequently disagrees ("LEADEX III GOLD UP ... Cybenetics Platinum Certified Gold" is 80 PLUS **Gold**). Ignore Cybenetics entirely; never let it set the tier. A tier word inside the MODEL NAME is the manufacturer's own marker and is valid evidence (Super Flower "Leadex III Gold", Cooler Master "MWE Gold", MSI's "GL" suffix = Gold, "BN" = Bronze). Normalize to "80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|"80+ Titanium", null if not determinable. modularity: "Full"|"Semi"|"Non", null if not stated.
 notes: short reason if not high confidence, else null.
 
 Models (2 total, respond with exactly 2 results, each carrying its own index):
@@ -353,6 +413,16 @@ class GroqExtractionError(Exception):
     pass
 
 
+class ProviderExhausted(GroqExtractionError):
+    """
+    This provider is unavailable (rate limit, quota, retired model) - the data is fine.
+
+    Distinguished from GroqExtractionError so callers can roll to the next provider
+    instead of recording a provider outage as a failed extraction, which is what made
+    15 PSU models permanently unextractable when Mistral's free tier ran out.
+    """
+
+
 class GroqExtractionService:
     def __init__(
         self,
@@ -367,6 +437,11 @@ class GroqExtractionService:
         self.model = model
         self.api_url = api_url
         self.client = httpx.Client(timeout=timeout)
+        # Providers to fall back to, in order, skipping the one already in use.
+        self._fallbacks = [
+            p for p in provider_chain()
+            if p[1] != self.api_url and p[3] != self.api_key
+        ]
 
     def close(self):
         self.client.close()
@@ -432,7 +507,14 @@ class GroqExtractionService:
                 "model": self.model,
             }
 
-        raise GroqExtractionError(f"Groq API failed after {max_retries} attempts: {last_error}")
+        raise ProviderExhausted(
+            f"{self.model} failed after {max_retries} attempts: {last_error}"
+        )
+
+    def _switch_to(self, name: str, api_url: str, model: str, api_key: str) -> None:
+        logger.warning("Provider %s exhausted; falling back to %s (%s).",
+                       self.model, name, model)
+        self.api_url, self.model, self.api_key = api_url, model, api_key
 
     def extract_batch(self, system_prompt: str, titles: list[str], max_retries: int = 4) -> list[dict]:
         """
@@ -473,6 +555,15 @@ class GroqExtractionService:
                 {"parsed": by_index[i], "raw_response": result["raw_response"], "model": result["model"]}
                 for i in range(1, len(titles) + 1)
             ]
+        except ProviderExhausted as e:
+            # The provider is down or out of quota - the titles are fine, so bisecting
+            # would just burn the same wall against smaller batches. Move to the next
+            # provider and retry this batch whole.
+            if not self._fallbacks:
+                raise
+            self._switch_to(*self._fallbacks.pop(0))
+            logger.warning("Retrying batch of %d on the next provider (%s).", len(titles), e)
+            return self.extract_batch(system_prompt, titles, max_retries=max_retries)
         except GroqExtractionError as e:
             if len(titles) == 1:
                 raise
@@ -480,3 +571,60 @@ class GroqExtractionService:
             mid = len(titles) // 2
             return self.extract_batch(system_prompt, titles[:mid], max_retries=max_retries) + \
                 self.extract_batch(system_prompt, titles[mid:], max_retries=max_retries)
+
+
+# --- Brand-hint injection -------------------------------------------------------------
+#
+# Stage 1 is inconsistent on India-market brands (EVM, ZION, GEONIX, Ant Esports), and a
+# brand it cannot name becomes "Unknown", which the brand-led canonical key then collapses
+# into one coarse group. Appending the brands already seen in this catalogue turns that
+# from a recall problem into a recognition one. See matching.brand_registry for why the
+# list is derived from the data rather than hand-written, and for the wording that stops
+# the model attaching a brand to titles that name none.
+
+_IDENTITY_PROMPTS_BY_CATEGORY = {
+    "cpu": "CPU_IDENTITY_BATCH_PROMPT",
+    "gpu": "GPU_IDENTITY_BATCH_PROMPT",
+    "ram": "RAM_BATCH_SYSTEM_PROMPT",
+    "storage": "STORAGE_IDENTITY_BATCH_PROMPT",
+    "cooler": "COOLER_IDENTITY_BATCH_PROMPT",
+    "cabinet": "CABINET_IDENTITY_BATCH_PROMPT",
+    "psu": "PSU_IDENTITY_BATCH_PROMPT",
+    "motherboard": "MOTHERBOARD_IDENTITY_BATCH_PROMPT",
+    "monitor": "MONITOR_IDENTITY_BATCH_PROMPT",
+}
+
+
+def identity_prompt(category: str) -> str:
+    """
+    The Stage 1 identity prompt for a category, with catalogue brand hints appended.
+
+    Falls back to the bare prompt if the registry is missing or empty, so extraction
+    behaves exactly as it did before this existed rather than failing.
+    """
+    name = _IDENTITY_PROMPTS_BY_CATEGORY.get((category or "").lower())
+    if name is None:
+        raise GroqExtractionError(f"No identity prompt registered for category {category!r}")
+    base = globals()[name]
+    try:
+        from matching.brand_registry import brand_hint_block
+        return base + brand_hint_block((category or "").lower())
+    except Exception:  # noqa: BLE001 - hints are an optimisation, never a hard dependency
+        logger.warning("Brand hints unavailable; using the bare %s prompt.", name)
+        return base
+
+
+def default_service(timeout: float = 30.0) -> "GroqExtractionService":
+    """
+    A service pointed at the first provider in the chain, with the rest as fallbacks.
+
+    Extraction scripts should use this rather than naming a provider. Fifteen scripts
+    each hardcoding Mistral is how the pipeline became pinned to one exhausted quota:
+    the fallback chain was only reached after every batch had burned its full retry
+    budget against a provider already known to be out.
+    """
+    chain = provider_chain()
+    if not chain:
+        raise GroqExtractionError("No provider API keys are configured.")
+    _name, api_url, model, api_key = chain[0]
+    return GroqExtractionService(api_key=api_key, model=model, api_url=api_url, timeout=timeout)

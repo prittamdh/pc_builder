@@ -179,6 +179,7 @@ def execute_catalog_policy():
 
     from classify_legacy_products import classify
     from fix_catalog_data_quality import main as fix_data_quality
+    from build_brand_registry import main as build_brand_registry
 
     try:
         classify(dry_run=False)
@@ -189,6 +190,15 @@ def execute_catalog_policy():
         fix_data_quality(dry_run=False)
     except Exception as e:
         print(f"[Catalog Policy] data-quality fixes failed: {e}")
+
+    # Refresh the brand hints Stage 1 reads. Rebuilt after extraction, not before, so
+    # every brand named confidently this cycle becomes a hint on the terse listings of
+    # the same make next cycle - recognition of India-market brands improves instead of
+    # staying flat. One grouped query, no API calls.
+    try:
+        build_brand_registry(apply=True)
+    except Exception as e:
+        print(f"[Catalog Policy] brand registry rebuild failed: {e}")
 
 
 # Airflow DAG Definition (evaluated when apache-airflow is installed)

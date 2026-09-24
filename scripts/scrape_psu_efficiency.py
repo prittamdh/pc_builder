@@ -111,7 +111,7 @@ def ask_llm(title: str, snippet: str) -> str | None:
     try:
         from services.groq_extraction_service import (
             GroqExtractionService, GroqExtractionError,
-            MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
+            default_service,
         )
     except Exception:
         return None
@@ -124,7 +124,7 @@ def ask_llm(title: str, snippet: str) -> str | None:
         'the unit may genuinely be uncertified, and a guess here is worse than no answer.\n'
     )
     try:
-        with GroqExtractionService(api_key=MISTRAL_API_KEY, model=MISTRAL_MODEL, api_url=MISTRAL_API_URL) as svc:
+        with default_service() as svc:
             out = svc.extract_batch(prompt, [f'"{title}" | PAGE: {snippet[:1500]}'])
         value = (out[0]["parsed"] or {}).get("efficiency_rating")
         return value if value in TIER_LABEL.values() else None

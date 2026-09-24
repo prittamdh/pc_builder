@@ -20,13 +20,13 @@ from db.models.canonical_part import CanonicalPart
 from db.models.storage_title_extraction import StorageTitleExtraction
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
 from services.groq_extraction_service import (
-    GroqExtractionService, GroqExtractionError, STORAGE_IDENTITY_BATCH_PROMPT,
-    MISTRAL_API_KEY, MISTRAL_API_URL, MISTRAL_MODEL,
+    GroqExtractionError, identity_prompt,
+    default_service,
 )
 
 
 def extract_storage_identity(reprocess_all: bool = False, limit: int | None = None, batch_size: int = 6, sleep_s: float = 0.0):
-    with SessionLocal() as session, GroqExtractionService(api_key=MISTRAL_API_KEY, model=MISTRAL_MODEL, api_url=MISTRAL_API_URL) as groq:
+    with SessionLocal() as session, default_service() as groq:
         print("=" * 80)
         print("GROQ LLM STORAGE IDENTITY EXTRACTION (per listing, batched)")
         print("=" * 80)
@@ -52,7 +52,7 @@ def extract_storage_identity(reprocess_all: bool = False, limit: int | None = No
             titles = [p.name for p in batch]
 
             try:
-                results = groq.extract_batch(STORAGE_IDENTITY_BATCH_PROMPT, titles)
+                results = groq.extract_batch(identity_prompt('storage'), titles)
             except GroqExtractionError as e:
                 print(f"[batch @ {batch_start}] FAILED entire batch of {len(batch)}: {e}")
                 for product in batch:
