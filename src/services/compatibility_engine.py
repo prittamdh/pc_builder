@@ -159,6 +159,7 @@ class CompatibilityEngine:
             return [
                 _merge(specs.get(p.canonical_id), ext.get(p.id), {
                     "radiator_size_mm": "size_mm", "supported_sockets": "supported_sockets", "tdp_rating": "tdp_rating",
+                    "height_mm": "height_mm",  # specs only - titles don't carry it
                 })
                 for p in products
             ]

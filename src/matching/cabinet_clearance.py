@@ -33,10 +33,16 @@ COOLER_RANGE_MM = (40, 200)
 AGREEMENT_TOLERANCE = 0.10
 
 
-def snippets_for_llm(text: str, radius: int = 160, max_chars: int = 1500) -> str:
-    """Windows of page text around clearance terms, overlapping windows merged."""
+# Air-cooler pages state height on its own or inside a W x D x H dimensions line.
+COOLER_HEIGHT_TERMS = re.compile(r"\b(?:height|dimensions?)\b", re.IGNORECASE)
+COOLER_HEIGHT_RANGE_MM = (30, 200)
+
+
+def snippets_for_llm(text: str, radius: int = 160, max_chars: int = 1500,
+                     terms: re.Pattern = CLEARANCE_TERMS) -> str:
+    """Windows of page text around the given terms, overlapping windows merged."""
     spans: list[list[int]] = []
-    for m in CLEARANCE_TERMS.finditer(text):
+    for m in terms.finditer(text):
         start, end = max(0, m.start() - radius), min(len(text), m.end() + radius)
         if spans and start <= spans[-1][1]:
             spans[-1][1] = max(spans[-1][1], end)

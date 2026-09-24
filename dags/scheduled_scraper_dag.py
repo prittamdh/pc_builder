@@ -179,6 +179,13 @@ def execute_physical_spec_extraction(limit_per_category: int = 10):
     except Exception as e:
         print(f"[Spec Extraction] Cabinet clearance failed: {e}")
 
+    # Air-cooler heights, likewise from product pages - what the cooler clearance rule reads.
+    try:
+        from scrape_cooler_height import fill_cooler_height
+        fill_cooler_height(limit=limit_per_category)
+    except Exception as e:
+        print(f"[Spec Extraction] Cooler height failed: {e}")
+
 
 def execute_catalog_policy():
     """Re-apply the supported-platform policy and the catalog data-quality fixes.

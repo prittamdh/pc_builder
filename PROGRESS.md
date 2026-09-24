@@ -729,6 +729,20 @@ It could not have found this: a false **merge** is invisible to a split-detector
 quality, check both directions — group-to-listing ratio finds over-merges, near-duplicate keys find
 under-merges.
 
+## Air-cooler height and a real cooler clearance rule (2026-09-24)
+
+The old rule compared the cooler's `radiator_size_mm` with the cabinet's `max_cooler_height_mm`. That
+field holds a *fan* size for air coolers (120 - always passes) and a *radiator* length for AIOs (360 -
+always warned), so once 681 cabinets gained cooler heights it fired falsely on every AIO. Removed.
+
+`cooler_specs.height_mm` (migration `e7b2d4c81a03`) is filled from retailer product pages by
+`scripts/scrape_cooler_height.py` - same grounding and page-agreement rules as the cabinet reader,
+air coolers only. **105 of 163 air-cooler models** filled, 0 page conflicts, 33 answers rejected as
+ungrounded; values run 37mm (Noctua NH-L9) to 172mm (Deepcool Assassin IV VC Vision). The new rule is
+`cooler.height_mm <= case.max_cooler_height_mm`, level **error**; AIOs have no height so never trip it.
+Verified live: Assassin IV (172) in a Dawg X617 (155) errors, in an ROG Strix Helios II (190) passes,
+a 360mm AIO in the X617 passes. Runs in the DAG via `fill_cooler_height()`.
+
 ## Scraping had silently stopped; product images blocked (2026-09-24)
 
 **No prices had been saved since 2026-08-17** - the site read "Last updated 38 d ago". Two causes in
@@ -961,3 +975,10 @@ Re-key: 411 → 407 canonical ids, 4 retired groups. Corrected rows carry a `not
     18 tests across `TestPSUEfficiencyTrimInKey`, `TestPSUTrimReconciliation` and
     `TestQualifierFieldsDoNotIdentify`. 231 pass. Now that the re-key has been applied, the
     gap-fill-only constraint on both efficiency importers can be revisited.
+
+    **Revisited 2026-09-24 - keep gap-fill-only.** Against live models that already carry a rating, the
+    80 PLUS registry match agrees on 94 and disagrees on 25, and the disagreements checked are the
+    *matcher* being wrong, not the data: it ignores trim (ASUS TUF Gold matched `TUF-GAMING-750B`,
+    Bronze), crosses model lines (Antec G750 -> `HCG750 Bronze`), and the registry also lists
+    230V EU internal certifications a tier above the retail box rating (Corsair RM1000e, Thermaltake
+    GF A3 -> Platinum). Overwriting would make ~25 ratings worse, so `--all` should not be used to overwrite.

@@ -176,6 +176,8 @@ class CoolerSpecs(Base, _SpecsMetadataMixin):
     fan_size_mm: Mapped[int | None] = mapped_column(Integer)
     supported_sockets: Mapped[str | None] = mapped_column(String(255))
     tdp_rating: Mapped[int | None] = mapped_column(Integer)
+    # Air coolers only: what must fit under the cabinet's max_cooler_height_mm.
+    height_mm: Mapped[int | None] = mapped_column(Integer)
 
 
 class MonitorSpecs(Base):

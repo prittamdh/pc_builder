@@ -82,8 +82,9 @@ def live_case_models(session, recheck: bool):
     return session.execute(stmt).all()
 
 
-def fetch_pages(session, client, cid: str, pages: int, sleep_s: float) -> list[tuple[Product, str, str]]:
-    """(product, page_text, snippet) for up to `pages` listings whose page mentions clearance terms."""
+def fetch_pages(session, client, cid: str, pages: int, sleep_s: float,
+                terms=None) -> list[tuple[Product, str, str]]:
+    """(product, page_text, snippet) for up to `pages` listings whose page mentions the terms."""
     out = []
     for product in session.scalars(select(Product).where(Product.canonical_id == cid)):
         if len(out) >= pages:
@@ -99,7 +100,7 @@ def fetch_pages(session, client, cid: str, pages: int, sleep_s: float) -> list[t
             if sleep_s:
                 time.sleep(sleep_s)
         text = strip_html(html)
-        snippet = snippets_for_llm(text)
+        snippet = snippets_for_llm(text, terms=terms) if terms is not None else snippets_for_llm(text)
         if snippet:
             out.append((product, text, snippet))
     return out
