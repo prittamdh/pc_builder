@@ -1,0 +1,53 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "Launch hardening",
+      "status": "pending"
+    },
+    {
+      "number": "2",
+      "name": "Scrape agents",
+      "status": "pending"
+    },
+    {
+      "number": "3",
+      "name": "Go live on Oracle Always Free",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Fit data with receipts",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "Model pages and search visibility",
+      "status": "pending"
+    },
+    {
+      "number": "6",
+      "name": "Price truth and store reliability",
+      "status": "pending"
+    },
+    {
+      "number": "7",
+      "name": "Identity quality",
+      "status": "pending"
+    },
+    {
+      "number": "8",
+      "name": "Local AI trial (low priority)",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step (plan phase 1)",
+    "reason": "Phase 1 of 8 — needs a plan"
+  },
+  "updated_at": "2026-09-24T16:48:30.982Z"
+}
