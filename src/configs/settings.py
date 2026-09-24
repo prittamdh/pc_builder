@@ -89,7 +89,14 @@ def require_database_url() -> str:
 # Runtime environment / web security
 # ---------------------------------------------------------------------
 
-ENV = os.getenv("ENV", "development")
+_ALLOWED_ENVS = ("development", "production")
+_env_raw = os.getenv("ENV", "development")
+ENV = _env_raw.strip().lower()
+if ENV not in _ALLOWED_ENVS:
+    raise RuntimeError(
+        f"ENV must be one of {_ALLOWED_ENVS} (case/whitespace-insensitive); "
+        f"got {_env_raw!r}."
+    )
 
 CORS_ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
