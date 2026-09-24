@@ -1,9 +1,14 @@
 import os
 from sqlalchemy import create_engine
 
-from configs.settings import DATABASE_URL
+from configs.settings import require_database_url
 
-db_url = DATABASE_URL
+# Fails closed with a clear message naming DATABASE_URL when it is unset/blank,
+# instead of passing None/"" into create_engine() and getting an opaque TypeError or
+# sqlalchemy.exc.ArgumentError with no mention of the missing setting. Every script and
+# DAG that imports db.connection (directly or via db.session) needs this, not only
+# src/api/main.py.
+db_url = require_database_url()
 
 import sqlalchemy
 
