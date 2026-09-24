@@ -6,6 +6,7 @@ to re-run after new products are scraped. Flagged products stay fully price-trac
 they're only hidden from the PC Builder's component pickers.
 """
 import argparse
+import re
 import sys
 
 from sqlalchemy import select
@@ -58,6 +59,13 @@ def classify(dry_run: bool = False) -> None:
             mem = ram_type_by_canonical.get(ext.canonical_id) or ext.memory_type
             if is_ram_legacy(mem):
                 legacy_ram_products.add(ext.product_id)
+
+        # A title naming the generation needs no extraction, so check every RAM listing
+        # too - otherwise a freshly scraped DDR3 kit is offered until Stage 1 reaches it.
+        for pid, name in session.execute(select(Product.id, Product.name).where(Product.p_category == "RAM")):
+            m = re.search(r"\bDDR(\d)L?\b", name or "", re.IGNORECASE)
+            if m and is_ram_legacy(f"DDR{m.group(1)}"):
+                legacy_ram_products.add(pid)
 
         # PSUs whose brand couldn't be resolved. Two of these turned out not to be
         # power supplies at all (a soundbar and a speaker), and an unidentifiable PSU is

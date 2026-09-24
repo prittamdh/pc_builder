@@ -743,6 +743,15 @@ ungrounded; values run 37mm (Noctua NH-L9) to 172mm (Deepcool Assassin IV VC Vis
 Verified live: Assassin IV (172) in a Dawg X617 (155) errors, in an ROG Strix Helios II (190) passes,
 a 360mm AIO in the X617 passes. Runs in the DAG via `fill_cooler_height()`.
 
+## AIO radiator fit (2026-09-24)
+
+`cabinet_specs.radiator_sizes` (migration `f3c9a1d6b254`) holds every radiator length a case lists at any mount,
+read from product pages by `scripts/scrape_cabinet_radiators.py` - each size needs a verbatim quote naming it, and
+sizes are unioned across mounts and pages. The rule compares an **AIO's** radiator (air coolers excluded:
+their `radiator_size_mm` is a fan size) with the **largest** size the case lists, as a **warning**: pages often
+omit a mount (Cooler Master Qube 540's never mentions 240), so only "bigger than anything listed" is reliable,
+and even that can understate a case. Runs in the DAG via `fill_cabinet_radiators()`. **Coverage: 1,017 of 1,459 cabinet models (1,636 of 2,150 listings, 76%)**; 701 sizes rejected as ungrounded. Verified live: a 360mm Cooler Master MasterLiquid in an Ant Value CV100 (240 max) warns, in a 360-capable case does not, and an air cooler in the CV100 does not.
+
 ## Scraping had silently stopped; product images blocked (2026-09-24)
 
 **No prices had been saved since 2026-08-17** - the site read "Last updated 38 d ago". Two causes in
@@ -751,8 +760,10 @@ scrape failed with `ProductRepository.create() got an unexpected keyword argumen
 287e304 (2026-09-02) added `condition` to `SearchService.save` but not to `create()`, so any batch
 holding a *new* product raised and rolled back. `execute_due_scrape_targets` catches and prints per
 target, so every run was marked **success**. Fixed, with `tests/test_product_repository.py`; a manual
-run then saved 1,229 products across 10 targets with no errors. **Worth doing:** a run that saves
-nothing should not report success - a price-freshness check would have caught this in 15 minutes.
+run then saved 1,229 products across 10 targets with no errors. **Guarded since:** the scrape task now fails when
+every target fails, and a separate `check_price_freshness` task fails whenever no price has been saved in 24h
+(`tests/test_price_freshness.py`). Downstream extraction runs with `trigger_rule="all_done"`, so a failed scrape
+no longer stalls the backlog.
 
 **Product images** were hot-linked from stores and the browser refused some (the failing
 `test_no_console_errors_on_load`): PCStudio sends `Cross-Origin-Resource-Policy: same-origin`, and dead

@@ -15,3 +15,8 @@ def test_gpu_clearance_rule_still_present():
 def test_cooler_height_rule_uses_the_coolers_own_height():
     rule = next(r for r in RULES if r.field_b == "max_cooler_height_mm")
     assert (rule.slot_a, rule.field_a, rule.op, rule.level) == ("cooler", "height_mm", "le", "error")
+
+
+def test_radiator_rule_is_aio_only_and_a_warning():
+    rule = next(r for r in RULES if r.field_b == "max_radiator_mm")
+    assert (rule.slot_a, rule.field_a, rule.op, rule.level) == ("cooler", "aio_radiator_mm", "le", "warning")

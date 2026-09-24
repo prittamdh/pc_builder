@@ -69,6 +69,21 @@ def is_grounded(value, quote: str | None, page_text: str, valid_range: tuple[int
     return re.search(rf"(?<!\d){value}(?!\d)", q) is not None
 
 
+# Cabinet pages list radiator support per mount: "Front: 120/240/280/360mm, Top: 240mm".
+RADIATOR_TERMS = re.compile(r"\b(?:radiators?|AIO|liquid\s*cool\w*|water\s*cool\w*)\b", re.IGNORECASE)
+RADIATOR_SIZES_MM = frozenset({120, 140, 240, 280, 360, 420, 480})
+
+
+def format_radiator_sizes(sizes) -> str | None:
+    """Sorted comma list of valid radiator lengths, or None if there are none."""
+    valid = sorted({s for s in sizes if s in RADIATOR_SIZES_MM})
+    return ",".join(str(s) for s in valid) or None
+
+
+def parse_radiator_sizes(value: str | None) -> set[int]:
+    return {int(p) for p in (value or "").split(",") if p.strip().isdigit()}
+
+
 _RADIATOR = re.compile(r"radiator", re.IGNORECASE)
 _WITHOUT = re.compile(r"\bwithout\b|\bw/o\b|\bw/out\b|\bno\s+radiator\b", re.IGNORECASE)
 
