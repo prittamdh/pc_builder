@@ -10,9 +10,13 @@ these helpers decide what it sees and whether its answer is trusted:
 - is_grounded() rejects any value whose quote is not verbatim on the page or does not
   contain the number - the check that stops a recalled or invented figure landing.
 - resolve_votes() combines several pages for one model. Pages agreeing within
-  tolerance give the SMALLEST value (a spec sheet's "with front radiator" figure is
-  what a real build must satisfy); pages disagreeing beyond it give nothing, since
+  tolerance give the smaller value; pages disagreeing beyond it give nothing, since
   one of them has mis-read and a wrong clearance green-lights a card that won't fit.
+
+Which figure a page's several GPU lengths reduce to is the prompt's job: the case as
+sold, not with an optional radiator added. The clearance drives a blocking error, and
+Deepcool's CG580 ("410mm, limited to 262mm if a 360mm radiator is mounted") read as
+262 would have rejected ordinary 300mm cards in a stock build.
 """
 import re
 

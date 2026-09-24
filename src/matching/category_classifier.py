@@ -1,3 +1,4 @@
+import re
 """
 Category Classifier for PC Hardware.
 Classifies raw store/target category strings into canonical p_category values via direct dictionary mapping.
@@ -163,6 +164,21 @@ def _title_indicates_removable_media(title: str | None) -> bool:
     return any(marker in t for marker in REMOVABLE_MEDIA_INDICATORS)
 
 
+# A standalone case fan filed under the cabinet category. Cases sold "with 7 Fans" also
+# mention fans, so the title must name a fan, no enclosure word, and no "with N fans"
+# (Cooler Master's "Elite 600 with 7 ARGB Fans" names no enclosure word at all).
+_FAN_RE = re.compile(r"\bfans?\b", re.IGNORECASE)
+_ENCLOSURE_RE = re.compile(r"\b(?:cabinet|case|chassis|tower)\b", re.IGNORECASE)
+
+
+_BUNDLED_FANS_RE = re.compile(r"\bwith\s+\d+\s+(?:\w+\s+)?fans?\b", re.IGNORECASE)
+
+
+def _title_indicates_standalone_fan(title: str | None) -> bool:
+    t = title or ""
+    return bool(_FAN_RE.search(t)) and not _ENCLOSURE_RE.search(t) and not _BUNDLED_FANS_RE.search(t)
+
+
 # High-confidence title markers, used only when the store gave us no usable category.
 # Order matters: the first match wins, so the more specific phrases come first.
 # Everything here has to be unambiguous on its own, because there is no raw category
@@ -240,6 +256,11 @@ class CategoryClassifier:
 
         # Audio devices are not power supplies, whatever the store filed them under.
         if p_cat == "Power Supply" and _title_indicates_audio(title):
+            return "Accessories"
+
+        # A case fan is not a cabinet: an Arctic P14 filed as "Cabinet Case" was offered
+        # in the builder's cabinet slot.
+        if p_cat == "Cabinet" and _title_indicates_standalone_fan(title):
             return "Accessories"
 
         # A memory card is not a graphics card. Removable media has no build slot, so

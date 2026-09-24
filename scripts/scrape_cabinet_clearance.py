@@ -12,11 +12,15 @@ Rows marked "Web-verified" (scripts/seed_cabinet_clearance.py) are never touched
 existing value - including earlier LLM recall - is replaced when a page states otherwise,
 and the change is printed.
 
+A model whose pages yield nothing usable is marked "Pages checked <date>" so the scheduled
+run does not re-fetch the same silent pages every cycle; --recheck ignores the marker.
+
 Dry-run by default. Pass --apply to write.
 """
 import argparse
 import sys
 import time
+from datetime import date
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -27,6 +31,7 @@ from db.session import SessionLocal
 from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.category_specs import CabinetSpecs
+
 from matching.cabinet_clearance import (
     COOLER_RANGE_MM, GPU_RANGE_MM, is_grounded, resolve_votes, snippets_for_llm,
 )
@@ -37,6 +42,7 @@ sys.path.insert(0, "scripts")
 from scrape_psu_efficiency import strip_html  # noqa: E402
 
 BLOCKED_HOSTS = ("pcstudio.in",)
+CHECKED_MARKER = "Pages checked"
 
 PROMPT = """Each input is a PC cabinet's listing title plus text excerpts from its retailer product page.
 Report the cabinet's maximum supported graphics card length and maximum CPU cooler height, in millimetres.
@@ -45,7 +51,9 @@ CRITICAL: "index" MUST equal the input's number (1-based). One result per input.
 Rules:
 - Use ONLY what the excerpt states. Never use your own knowledge of the case. No statement -> null.
 - Each quote must be copied VERBATIM from the excerpt (a short span, 5-80 characters) and must contain the number.
-- If several GPU lengths are given (e.g. with and without a front radiator), report the SMALLEST.
+- If several GPU lengths are given, report the one for the case AS SOLD (its included fans and drive cages fitted).
+  Ignore limits that only apply when an OPTIONAL radiator or fan set is added ("410mm, limited to 262mm if a 360mm radiator is mounted" -> 410).
+  Use a conditional figure only if no other GPU length is stated.
 - Ignore radiator sizes (240mm/360mm), fan sizes, and the case's own height/width/depth.
 - Ignore any other product's specs that appear in the excerpt.
 - Convert cm to mm (40 cm -> 400)."""
@@ -66,7 +74,11 @@ def live_case_models(session, recheck: bool):
         .order_by(listings.c.n.desc())
     )
     if not recheck:
-        stmt = stmt.where(CabinetSpecs.max_gpu_length_mm.is_(None))
+        stmt = stmt.where(
+            CabinetSpecs.max_gpu_length_mm.is_(None),
+            func.coalesce(CabinetSpecs.notes, "").notlike(f"{CHECKED_MARKER}%"),
+            func.coalesce(CabinetSpecs.notes, "").notlike("Read from retailer%"),
+        )
     return session.execute(stmt).all()
 
 
@@ -93,6 +105,21 @@ def fetch_pages(session, client, cid: str, pages: int, sleep_s: float) -> list[t
     return out
 
 
+def mark_checked(session, cp, reason: str) -> None:
+    """Record that this model's pages were read and gave nothing usable, unless it has a value."""
+    row = session.scalar(select(CabinetSpecs).where(CabinetSpecs.canonical_id == cp.canonical_id))
+    if row is None:
+        row = CabinetSpecs(canonical_id=cp.canonical_id, brand=(cp.key_fields or {}).get("brand"), status="ok")
+        session.add(row)
+    if row.max_gpu_length_mm is None:
+        row.notes = f"{CHECKED_MARKER} {date.today().isoformat()}: {reason}."
+
+
+def fill_cabinet_clearance(limit: int | None = 20) -> None:
+    """Scheduled entry point: new or unchecked models only, most-listed first."""
+    main(limit, pages=2, apply=True, recheck=False, sleep_s=0.3, batch_size=4)
+
+
 def main(limit, pages, apply, recheck, sleep_s, batch_size):
     with SessionLocal() as session, HttpClient() as client, default_service() as llm:
         models = live_case_models(session, recheck)
@@ -115,6 +142,10 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                     inputs.append(f'TITLE: {product.name} | EXCERPT: {snippet}')
             if not inputs:
                 stats["no_statement"] += len(batch)
+                if apply:
+                    for cp, _n in batch:
+                        mark_checked(session, cp, "no clearance stated")
+                    session.commit()
                 continue
 
             try:
@@ -145,6 +176,8 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                 v = votes.get(cp.canonical_id)
                 if not v or not (v["gpu"] or v["cooler"]):
                     stats["no_statement"] += 1
+                    if apply:
+                        mark_checked(session, cp, "no clearance stated")
                     continue
                 gpu, gpu_conflict = resolve_votes(v["gpu"])
                 cooler, cooler_conflict = resolve_votes(v["cooler"])
@@ -152,6 +185,8 @@ def main(limit, pages, apply, recheck, sleep_s, batch_size):
                     stats["conflicts"] += 1
                     print(f"  CONFLICT {cp.canonical_id}: gpu={v['gpu']} cooler={v['cooler']}")
                 if gpu is None and cooler is None:
+                    if apply:
+                        mark_checked(session, cp, f"pages disagree (gpu={v['gpu']} cooler={v['cooler']})")
                     continue
 
                 row = session.scalar(select(CabinetSpecs).where(CabinetSpecs.canonical_id == cp.canonical_id))

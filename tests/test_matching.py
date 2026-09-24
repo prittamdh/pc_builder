@@ -576,3 +576,17 @@ class TestBrandAloneDoesNotIdentify:
         assert "_unresolved_id" not in disambiguate_failed_key(
             {"category": "case", "brand": "Lian Li", "model_number": "A3", "color": ""}, 1
         )
+
+
+class TestFanNotACabinet:
+    def test_standalone_fan_leaves_cabinet(self):
+        from matching.category_classifier import CategoryClassifier
+        assert CategoryClassifier.get_p_category(
+            "Cabinet Case", "Arctic P14 PWM PST 140 mm PWM Fan with Cable Splitter (White)"
+        ) == "Accessories"
+
+    def test_case_sold_with_fans_stays_cabinet(self):
+        from matching.category_classifier import CategoryClassifier
+        assert CategoryClassifier.get_p_category(
+            "Cabinet", "Cooler Master Elite 600 with 7 ARGB Fans (White)"
+        ) == "Cabinet"
