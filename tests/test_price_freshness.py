@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dags"))
@@ -18,3 +18,141 @@ def test_day_old_prices_are_stale():
 
 def test_no_prices_at_all_is_stale():
     assert dag.price_data_is_stale(None, datetime(2026, 9, 24))
+
+
+def test_exactly_24h_is_fresh():
+    now = datetime(2026, 9, 24, 12, 0)
+    assert not dag.price_data_is_stale(now - timedelta(hours=24), now)
+
+
+def test_24h_plus_1s_is_stale():
+    now = datetime(2026, 9, 24, 12, 0)
+    assert dag.price_data_is_stale(now - timedelta(hours=24, seconds=1), now)
+
+
+# --- stale_stores ---------------------------------------------------------
+
+def test_stale_stores_returns_sorted_names_of_stale_stores():
+    now = datetime(2026, 9, 24, 12, 0)
+    latest_by_store = {
+        "A": now - timedelta(hours=2),
+        "B": now - timedelta(hours=25),
+        "C": None,
+    }
+    assert dag.stale_stores(latest_by_store, now) == ["B", "C"]
+
+
+def test_stale_stores_empty_dict_gives_empty_list():
+    assert dag.stale_stores({}, datetime(2026, 9, 24)) == []
+
+
+def test_stale_stores_tz_aware_latest_with_naive_now_no_typeerror():
+    tz_aware_latest = datetime(2026, 9, 24, 10, 0, tzinfo=timezone.utc)
+    naive_now = datetime(2026, 9, 24, 12, 0)
+    # Should not raise TypeError, and 2h old is fresh.
+    result = dag.stale_stores({"A": tz_aware_latest}, naive_now)
+    assert result == []
+
+
+def test_stale_stores_fresh_stores_not_named():
+    now = datetime(2026, 9, 24, 12, 0)
+    latest_by_store = {"A": now - timedelta(hours=2)}
+    assert dag.stale_stores(latest_by_store, now) == []
+
+
+# --- format_stale_message --------------------------------------------------
+
+def test_format_stale_message_contains_names_and_never():
+    msg = dag.format_stale_message([("B", datetime(2026, 9, 23, 10, 0)), ("C", None)])
+    assert "B" in msg
+    assert "C" in msg
+    assert "never" in msg
+
+
+# --- latest_price_by_store / check_price_freshness (pure-function behavior) --
+
+def _fixed_datetime_class(fixed_now):
+    class _FixedDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed_now.replace(tzinfo=tz) if tz else fixed_now
+
+    return _FixedDatetime
+
+
+class _FakeSessionCtx:
+    def __enter__(self):
+        return object()
+
+    def __exit__(self, *a):
+        return False
+
+
+def test_check_price_freshness_raises_with_stale_store_name(monkeypatch):
+    now = datetime(2026, 9, 24, 12, 0)
+    latest_by_store = {
+        "Fresh Store": now - timedelta(hours=1),
+        "Stale Store": now - timedelta(hours=48),
+        "Never Store": None,
+    }
+    monkeypatch.setattr(dag, "latest_price_by_store", lambda session: latest_by_store)
+    monkeypatch.setattr(dag, "SessionLocal", lambda: _FakeSessionCtx())
+    monkeypatch.setattr(dag, "datetime", _fixed_datetime_class(now))
+    try:
+        dag.check_price_freshness()
+        assert False, "expected RuntimeError"
+    except RuntimeError as e:
+        msg = str(e)
+        assert "Stale Store" in msg
+        assert "Never Store" in msg
+        assert "Fresh Store" not in msg
+
+
+def test_check_price_freshness_idempotent_when_all_fresh(monkeypatch):
+    now = datetime(2026, 9, 24, 12, 0)
+    latest_by_store = {"Fresh Store": now - timedelta(hours=1)}
+    monkeypatch.setattr(dag, "latest_price_by_store", lambda session: latest_by_store)
+    monkeypatch.setattr(dag, "SessionLocal", lambda: _FakeSessionCtx())
+    monkeypatch.setattr(dag, "datetime", _fixed_datetime_class(now))
+    dag.check_price_freshness()
+    dag.check_price_freshness()
+
+
+# --- count_extraction_progress / check_extraction_progress (OPS-06) --------
+
+def test_count_extraction_progress_counts_canonical_id_set():
+    before = {1: (None, "pending"), 2: (None, "pending")}
+    after = {1: ("k1", "extracted"), 2: (None, "pending")}
+    assert dag.count_extraction_progress(before, after) == 1
+
+
+def test_count_extraction_progress_failed_status_does_not_count():
+    before = {1: (None, "pending")}
+    after = {1: (None, "failed")}
+    assert dag.count_extraction_progress(before, after) == 0
+
+
+def test_count_extraction_progress_canonical_id_set_counts_even_if_status_unchanged():
+    before = {1: (None, "pending")}
+    after = {1: ("k1", "pending")}
+    assert dag.count_extraction_progress(before, after) == 1
+
+
+def test_count_extraction_progress_empty_before_gives_zero():
+    assert dag.count_extraction_progress({}, {}) == 0
+
+
+def test_check_extraction_progress_raises_naming_backlog_size():
+    try:
+        dag.check_extraction_progress(5, 0)
+        assert False, "expected RuntimeError"
+    except RuntimeError as e:
+        assert "5" in str(e)
+
+
+def test_check_extraction_progress_passes_with_progress():
+    dag.check_extraction_progress(5, 1)
+
+
+def test_check_extraction_progress_passes_with_zero_backlog():
+    dag.check_extraction_progress(0, 0)
