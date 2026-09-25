@@ -85,7 +85,7 @@ See `.planning/REQUIREMENTS.md`.
 | Grounded page reading for clearances, with 2 pages agreeing within 10% | Titles never state clearances; recalled values were wrong | ✓ Good |
 | Compare prices to the observed 90-day floor, never to MRP | Indian MRPs are inflated | ✓ Good |
 | No price alerts | Owner's call; compete on depth | ✓ Firm |
-| **Hosting: Oracle Cloud Always Free, one Ampere A1 VM (4 OCPU / 24 GB) in an Indian region, with Cloudflare free in front** | Owner's decision: budget as close to zero as possible | ✓ Decided 2026-09-24 |
+| **Hosting: Oracle Cloud Always Free, one Ampere A1 VM (2 OCPU / 12 GB; Oracle's free A1 allowance was cut from 4/24, rechecked 2026-09-25) in an Indian region, with Cloudflare free in front** | Owner's decision: budget as close to zero as possible | ✓ Decided 2026-09-24 |
 | **Scraping by a Chrome extension on the owner's machines, pulling leased jobs from the server** | Pages come from residential browsers and IPs; the server needs no home PC and no tunnel | ✓ Decided 2026-09-24 |
 | **No Airflow in production. A small worker process runs the existing task functions on a schedule and records every run** | `airflow standalone` is a dev mode; a proper Airflow is 3-4 extra services for one 15-minute chain. Run history goes in a table, so failures stay loud | — Pending review after Phase 2 |
 | **Tailscale dropped** | Everything server-side lives on one VM; extensions use the public HTTPS API with per-install tokens | ✓ Decided 2026-09-24 |
