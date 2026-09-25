@@ -58,10 +58,15 @@ def _free_port() -> int:
 def base_url():
     """Boot the real app on a scratch port, so tests never touch the dev server."""
     port = _free_port()
+    # SEC-03: this one test process drives hundreds of requests from
+    # 127.0.0.1 in a single run - without this, the browser suite would trip
+    # its own rate limits. The limiter itself is covered by tests/test_rate_limits.py.
+    env = {**os.environ, "RATE_LIMIT_ENABLED": "false"}
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "api.main:app",
          "--host", "127.0.0.1", "--port", str(port), "--app-dir", str(SRC)],
         cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=env,
     )
     url = f"http://127.0.0.1:{port}"
     for _ in range(60):

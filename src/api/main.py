@@ -5,8 +5,11 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from api.rate_limit import limiter
 from common.logger import get_logger
 from configs import settings
 
@@ -69,6 +72,32 @@ def apply_security_headers(response):
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
     return apply_security_headers(response)
+
+
+# SEC-03: per-IP rate limiting. app.state.limiter is where slowapi's own
+# middleware/decorators look up the limiter for a given app; SlowAPIMiddleware
+# enforces default_limits on every route (even ones with no @limiter.limit of
+# their own, e.g. /health), while /images and /builder/* add tighter,
+# route-specific limits directly on their endpoints.
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+# The handler is a plain sync function, not `async def`, on purpose: slowapi's
+# SlowAPIMiddleware enforces default_limits by calling the matched exception
+# handler directly and synchronously (read from the installed package this
+# session - it falls back to slowapi's own generic handler whenever the
+# registered handler is a coroutine function), so an async handler here would
+# silently never run for a default-limit rejection. Applying the security
+# headers inside the handler itself (rather than relying on the middleware
+# stack's ordering) guarantees a 429 always carries them.
+def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    return apply_security_headers(
+        JSONResponse({"detail": "Too many requests. Please slow down."}, status_code=429)
+    )
+
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 
 # Register routers

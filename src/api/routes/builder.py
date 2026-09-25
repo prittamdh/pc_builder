@@ -1,12 +1,14 @@
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
 from api.filters import has_usable_price
+from api.rate_limit import limiter
+from configs import settings
 from db.models.product import Product
 from db.models.category_specs import PSUSpecs
 from db.models.saved_build import SavedBuild
@@ -16,6 +18,19 @@ from services.builder_service import BuilderService
 from services.compatibility_engine import CompatibilityEngine
 
 router = APIRouter(prefix="/builder", tags=["PC Builder"])
+
+MAX_BODY_BYTES = 10_000
+
+
+async def cap_body_size(request: Request) -> None:
+    """SEC-07: reject an oversized request body before it is parsed into a
+    model or touches the database. Starlette caches the raw body on the
+    request the first time it's read, so this doesn't stop the route's own
+    model parsing from working - it just reads the same cached bytes again.
+    """
+    body = await request.body()
+    if len(body) > MAX_BODY_BYTES:
+        raise HTTPException(status_code=413, detail="Request body too large.")
 
 # Builder slot -> normalized p_category used to pull candidates.
 SLOT_CATEGORY = {
@@ -49,13 +64,16 @@ class SaveBuildRequest(BaseModel):
 
 
 @router.get("/slots", response_model=list[ComponentSlot])
-def list_component_slots():
+@limiter.limit(lambda: settings.RATE_LIMIT_BUILDER)
+def list_component_slots(request: Request):
     """Retrieve PC component slots required for building a system."""
     return BuilderService.get_slots()
 
 
 @router.post("/validate", response_model=BuildSummary)
+@limiter.limit(lambda: settings.RATE_LIMIT_BUILDER)
 def validate_build(
+    request: Request,
     selection: BuildSelection,
     db: Session = Depends(get_db),
 ):
@@ -162,7 +180,9 @@ def _group_by_model(db: Session, candidates: list[Product]) -> list[dict]:
 
 
 @router.post("/candidates")
+@limiter.limit(lambda: settings.RATE_LIMIT_BUILDER)
 def list_slot_candidates(
+    request: Request,
     req: CandidateRequest,
     limit: int = Query(60, ge=1, le=200),
     db: Session = Depends(get_db),
@@ -229,8 +249,9 @@ def list_slot_candidates(
     }
 
 
-@router.post("/builds")
-def save_build(req: SaveBuildRequest, db: Session = Depends(get_db)):
+@router.post("/builds", dependencies=[Depends(cap_body_size)])
+@limiter.limit(lambda: settings.RATE_LIMIT_SAVE_BUILD)
+def save_build(request: Request, req: SaveBuildRequest, db: Session = Depends(get_db)):
     """Persist an assembled build and return a share token.
 
     Stores product ids rather than prices: the ten stores reprice constantly and the
@@ -240,6 +261,11 @@ def save_build(req: SaveBuildRequest, db: Session = Depends(get_db)):
     selections = {slot: pid for slot, pid in (req.selections or {}).items() if pid}
     if not selections:
         raise HTTPException(status_code=400, detail="Cannot save an empty build.")
+
+    # SEC-07: cheap to check even though only 9 slots exist today - forward
+    # compatible with a future slot holding more than one line item.
+    if len(selections) > 20:
+        raise HTTPException(status_code=400, detail="Too many selections (max 20).")
 
     unknown_slots = set(selections) - set(SLOT_CATEGORY)
     if unknown_slots:
@@ -276,7 +302,8 @@ def save_build(req: SaveBuildRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/builds/{share_token}")
-def load_build(share_token: str, db: Session = Depends(get_db)):
+@limiter.limit(lambda: settings.RATE_LIMIT_BUILDER)
+def load_build(request: Request, share_token: str, db: Session = Depends(get_db)):
     """Re-hydrate a saved build, re-validated and re-costed against current data.
 
     Components can go out of stock or be repriced between save and load, so the stored
