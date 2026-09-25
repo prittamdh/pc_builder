@@ -62,22 +62,23 @@ queue/pipeline modules, `src/scrapers/`, and migrations.
 
 Plans:
 **Wave 1**
-- [ ] 01-01-PLAN.md (web-dev, wave 1): Config and header hardening: explicit CORS, no default DB URL, security headers, docs off in prod, `.env.example` plus its test, and the phase's config inventory (SEC-01, 02, 05, 06, 08)
-- [ ] 01-04-PLAN.md (data-engineer, wave 1): Per-store freshness check, loud "0 extractions with a backlog" check, read-only `scripts/measure_db_growth.py` (OPS-05, 06, 07). **Parallel with web-dev.**
-- [ ] 01-06-PLAN.md (data-engineer, wave 1): `scripts/benchmark_provider.py` rebuilt from independently verified PSU cases (the originals were never committed), offline test, live mistral/google runs (AI-01). **Parallel with web-dev.**
+- [x] 01-01-PLAN.md (web-dev, wave 1): Config and header hardening: explicit CORS, no default DB URL, security headers, docs off in prod, `.env.example` plus its test, and the phase's config inventory (SEC-01, 02, 05, 06, 08)
+- [x] 01-04-PLAN.md (data-engineer, wave 1): Per-store freshness check, loud "0 extractions with a backlog" check, read-only `scripts/measure_db_growth.py` (OPS-05, 06, 07). **Parallel with web-dev.**
+- [x] 01-06-PLAN.md (data-engineer, wave 1): `scripts/benchmark_provider.py` rebuilt from independently verified PSU cases (the originals were never committed), offline test, live mistral/google runs (AI-01). **Parallel with web-dev.**
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 01-02-PLAN.md (web-dev, wave 2): Branded 404/500, SEO basics (head tags, robots.txt, sitemap.xml), About/Privacy pages with a config placeholder for the contact address (WEB-01, 02, 05, SEO-01)
+- [x] 01-02-PLAN.md (web-dev, wave 2): Branded 404/500, SEO basics (head tags, robots.txt, sitemap.xml), About/Privacy pages with a config placeholder for the contact address (WEB-01, 02, 05, SEO-01)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 01-03-PLAN.md (web-dev, wave 3): Honest fit verdict (`unverified`, three states, named wattage estimate), e2e skip-means-fail guard, 375px flow (FIT-01..03, WEB-03, WEB-04)
+- [x] 01-03-PLAN.md (web-dev, wave 3): Honest fit verdict (`unverified`, three states, named wattage estimate), e2e skip-means-fail guard, 375px flow (FIT-01..03, WEB-03, WEB-04)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 01-05-PLAN.md (web-dev, wave 4): `slowapi` rate limits (after an owner package check), streaming image-proxy cap, save-build caps (SEC-03, 04, 07)
+- [x] 01-05-PLAN.md (web-dev, wave 4): `slowapi` rate limits (after an owner package check), streaming image-proxy cap, save-build caps (SEC-03, 04, 07)
 
 **Carry-forwards from Phase 1 (recorded 2026-09-25 from the final review):**
 - 02-03: move the 01-04 check functions out of `dags/scheduled_scraper_dag.py` into `src/pipeline/checks.py` (the worker must not import from `dags/`); the worker needs its own equivalent of `pipeline_failed_guard` (run every stage, record each, exit non-zero if any failed). Recheck the backlog check can't go permanently red on unparseable rows (the extractor selects with no ORDER BY).
 - 03-02: set `TRUST_CF_CONNECTING_IP=true` once ingress is Cloudflare-only, tested from two IPs (behind Caddy every visitor otherwise shares one counter); `deploy.sh` sets `REQUIRE_E2E=1`; body-size limit at Caddy/Cloudflare; HSTS plus the production curl check; sitemap and canonical use the configured domain (replaces the Host-header value).
+- Before go-live (web-dev): replace the slowapi route-lookup shim in `src/api/rate_limit.py` with `@limiter.limit` on the 9 undecorated `/api/v1` routes, plus a test asserting every `/api/v1` route has a limit; until then fastapi/starlette/limits are pinned.
 - Phase 3 polish: clear stale warnings/wattage when `/validate` fails; friendly text for a 429 in the picker; style `.footer-links`.
 - Phase 3 (SEC-08): `.env` mode 600, owned by the service user.
 - Phase 4: a fixed rule dropping any 80 PLUS tier the title doesn't state ("80" + tier word), catching Cybenetics leakage from any provider; normalise CEB/EEB form factors; clearer wording for unknown-type coolers.
@@ -291,7 +292,7 @@ free, the local-AI gate).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Launch hardening | 0/6 | Planning | - |
+| 1. Launch hardening | 6/6 | Executed, awaiting owner sign-off | - |
 | 2. Scrape agents | 0/5 | Not started | - |
 | 3. Go live on Oracle Always Free | 0/4 | Not started | - |
 | 4. Fit data with receipts | 0/4 | Not started | - |

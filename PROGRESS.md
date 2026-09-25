@@ -695,6 +695,34 @@ Also had to pass the Mistral/Groq/etc. API keys into the Airflow container (`doc
 
 ---
 
+## Phase 1 launch hardening (2026-09-25)
+
+First phase run by the virtual team (plans in `.planning/phases/01-launch-hardening/`). Six plans,
+each built test-first by its owner, reviewed by the architect, then a whole-phase review. 603 tests
+pass, including all 62 Playwright tests with none skipped.
+
+- **Honest fit verdict.** A rule with a missing value used to return nothing, which read as a pass.
+  It now returns an `unverified` item naming the part and the spec, and the build shows one of
+  "Problems found" / "No problems found - N checks unverified" / "All checks passed". A cooler whose
+  type is the extractor's literal "Unknown" counts as unknown; a PSU with no wattage is unverified.
+- **Old bug the verdict exposed:** `form_factor_index` read E-ATX and Micro-ATX as ATX, so an E-ATX
+  board in an ATX case would have shown a green pass. Fixed (longest alias first).
+- **Security:** CORS allow-list, no default DB password, `ENV` must be development|production,
+  security headers on every response type, docs off in production, per-client rate limits
+  (slowapi, keyed per endpoint - the default per-URL key left `/products/{id}` unlimited), a
+  streamed 5 MB image cap, save-build caps, blank `.env` values mean the default.
+  fastapi/starlette/limits are pinned because the limiter relies on routing internals.
+- **Loud failures:** per-store freshness check (it immediately named PCStudio, stale since
+  2026-08-17); extraction fails when a cycle makes no progress on a backlog; a final DAG task turns
+  the run red when any stage failed.
+- **Browser tests and the CSP:** string-form `page.wait_for_function` re-polls with `new Function()`,
+  which the CSP blocks, so those waits passed only when already true. All replaced with `expect()`.
+- **Benchmark (`scripts/benchmark_provider.py`):** the 2026-09-20 cases were never committed, so 8
+  were rebuilt from the official 80 PLUS registry. Review caught a wrong key: a title that states
+  only "Cybenetics Gold" grounds no 80 PLUS tier, so the answer is null. Result: ministral-14b 8/8,
+  gemini-3.1-flash-lite 7/8 - **google reports Gold from the Cybenetics token**, and it is second
+  in the provider chain.
+
 ## Cabinet false merge — colour is not an identity (2026-09-24)
 
 Found while opening the cabinet-clearance item, and it is the **same class of fault as the PSU
