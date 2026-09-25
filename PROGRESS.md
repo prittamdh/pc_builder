@@ -723,6 +723,43 @@ pass, including all 62 Playwright tests with none skipped.
   gemini-3.1-flash-lite 7/8 - **google reports Gold from the Cybenetics token**, and it is second
   in the provider chain.
 
+## PSU tiers the title does not state - cleared (2026-09-25)
+
+Owner ruling: **"absent beats wrong".** `audit_psu_title_tier_grounding.py` found 59 PSU
+title extractions whose stored 80 PLUS tier the title does not state: 12 Cybenetics-only
+titles and 47 with no tier wording at all. All 59 were cleared, plus 2 White-colour
+misreads (below), 61 in total, by `scripts/clear_ungrounded_psu_tiers.py`. Each cleared
+row keeps its old value in `notes` ("tier cleared 2026-09-25: efficiency_rating was ..."),
+so the change is reversible. The re-key followed.
+
+- **Order matters.** All 61 were cleared *before* the re-key's reconciliation ran, so a
+  listing could only take a tier back from a sibling whose own title states it. 47 did
+  (e.g. Corsair RM750e "Cybenetics Gold" -> gold from its 80 Plus Gold siblings; AX1600i
+  Gold -> **Titanium**, which its grounded sibling states). 14 now have no tier (e.g. all 5
+  Antec Atom V550 V2 listings, whose Bronze/Gold had no source at all).
+- **Numbers:** extraction rows with a tier 975 -> 978 (61 cleared; reconciliation re-filled
+  47 and gave 17 silent listings a tier for the first time), live PSU canonical ids
+  429 -> 423 (0 splits, 6 merges, all real), psu_specs 652 -> 644 rows (8 dropped from
+  merged groups, 0 needing Stage 2).
+- **Audit now counts a bare tier word ("... 750W Gold SMPS") as grounded** (owner, same
+  day). It also separates reconciliation fills backed by a grounded sibling from values
+  grounded nowhere. After the run: **0 grounded nowhere** in every bucket.
+- **White-as-colour trap.** `normalize_efficiency_trim` lacked the 80 PLUS White tier, so
+  genuine White units (Ant Esports VS400L-VS700L) keyed as untiered. It is added now, *after*
+  every metal tier, because White is usually the colour. Two listings had it stored as the
+  tier: "Gigabyte Aorus Elite P1000W 80 Plus **Platinum White**" and "MSI MAG A850GL **White
+  Gold**". With the fix alone, both would have keyed as White. Both were cleared and now
+  sit in their real Platinum/Gold groups. The audit's "80 Plus" check now grounds only the
+  tier word nearest the marker.
+- **Left for Phase 4:** 7 psu_specs rows still hold an LLM-derived tier on groups whose key
+  now has none: `corsair:rme_series_rm850e` Gold, `deepcool:dq850m-v3l` Gold,
+  `gigabyte:p550b` Bronze, `superflower:leadex_titanium` Titanium, `corsair:vs500` Bronze
+  (looks doubtful), `gamdias:helios_e1` White, `circle:cg_rawpower_pro` "80+". Also
+  `find_trim_conflicts` reports 3: Ant Esports VS600L/VS700L (key White, as the titles
+  state, vs an LLM psu_specs Bronze, which is the wrong side), new because of the White
+  fix; and Cooler Master MWE V3 650W (key Bronze, spec Gold), from a 2026-09-24 extraction
+  that this run did not touch.
+
 ## Cabinet false merge — colour is not an identity (2026-09-24)
 
 Found while opening the cabinet-clearance item, and it is the **same class of fault as the PSU

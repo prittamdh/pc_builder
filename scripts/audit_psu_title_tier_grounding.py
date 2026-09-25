@@ -29,6 +29,16 @@ Grounding rules (reused verbatim from the prompt text, not invented here):
      Gold") is explicitly NOT grounding, even though the tier word is literally on
      the page - the prompt says to ignore Cybenetics entirely because it is a
      different certification scheme that frequently disagrees with 80 PLUS.
+  4. A bare tier word in the title ("... 750W Gold SMPS") with no "80" wording
+     COUNTS AS GROUNDED - owner decision 2026-09-25 (a bare "Gold" is something the
+     title states, not a value from memory). Three exclusions keep rule 3 and the
+     colour case intact: a tier word directly after "Cybenetics" is not bare; a title
+     whose only certification wording is Cybenetics (no 80 wording) gets no bare-word
+     grounding at all; and "White" is excluded because as a bare word it is far more
+     often the colour (live row 20725, "MSI MAG A850GL ... White Gold", stored 80+ White).
+
+Also: an "80 PLUS" marker grounds only the tier nearest to it. In "80 Plus Platinum
+White" (live row 3993, stored 80+ White) the marker names Platinum, not the colour.
 
 Three report buckets:
   a) cybenetics_leak - title mentions Cybenetics, states no 80 PLUS wording anywhere,
@@ -38,8 +48,9 @@ Three report buckets:
      at all (not even via Cybenetics) - a candidate for pure recall from memory.
   c) grounded - for scale.
   (a small residual "other_ungrounded" bucket catches ungrounded rows that fit
-  neither a) nor b) - e.g. the tier word appears as ordinary text unrelated to any
-  80 PLUS/Cybenetics wording - so nothing is silently dropped from the count.)
+  neither a) nor b). Since the 2026-09-25 bare-word ruling that means a tier word
+  that appears only as a Cybenetics rating or as the colour "White" - so nothing is
+  silently dropped from the count.)
 
 Usage:
     python scripts/audit_psu_title_tier_grounding.py
@@ -63,16 +74,17 @@ from db.models.category_specs import PSUSpecs  # noqa: E402
 
 # The 80 PLUS tiers, exactly as PSU_IDENTITY_BATCH_PROMPT / PSU_SPEC_BATCH_PROMPT
 # enumerate them ("80+ White"|"80+ Bronze"|"80+ Silver"|"80+ Gold"|"80+ Platinum"|
-# "80+ Titanium"). Deliberately NOT matching.canonical_key_builder's
-# normalize_efficiency_trim(): that tuple omits "white" (it has "standard" instead,
-# which is not one of the prompt's six tiers), so reusing it here would silently
-# misclassify every White-tier row in this audit as having "no recognisable tier" -
-# found while building this script against live data (Ant Esports VS500L/600L/700L
-# and the Gigabyte Aorus Elite P1000W all carry "80+ White"). That is a separate,
-# pre-existing gap in the canonical-key normalizer, out of scope for this read-only
-# audit (this script and its test are the only files touched here) - worth a look by
-# whoever owns matching/canonical_key_builder.py next.
+# "80+ Titanium"). Kept separate from matching.canonical_key_builder's
+# normalize_efficiency_trim(): that tuple also carries "standard", which is not one of
+# the prompt's six tiers. (It used to omit "white" too - fixed 2026-09-25 after this
+# audit found the gap.)
 _TIER_WORDS = ("titanium", "platinum", "gold", "silver", "bronze", "white")
+
+# Owner decision 2026-09-25: a bare tier word counts as grounding, except "white" (as
+# a bare word it is usually the colour) and a tier word that is part of a Cybenetics
+# rating ("Cybenetics Gold"), which the prompt says to ignore.
+_BARE_WORD_EXCLUDED = frozenset({"white"})
+_CYBENETICS_BEFORE = re.compile(r"cybenetics\s*$")
 
 
 def _extract_tier_word(stored_tier: str | None) -> str:
@@ -130,13 +142,28 @@ def is_tier_grounded(title: str, stored_tier: str | None) -> tuple[bool, str]:
         if rule_tier == tier and pattern.search(title):
             return True, f"manufacturer model-name rule ({pattern.pattern!r})"
 
+    title_l = title.lower()
     eighty_spans = [m.span() for m in _EIGHTY_MARKER.finditer(title)]
     if eighty_spans:
-        for m in re.finditer(re.escape(tier), title.lower()):
+        for m in re.finditer(re.escape(tier), title_l):
             t_start, t_end = m.span()
             for e_start, e_end in eighty_spans:
                 if abs(t_start - e_end) <= _PROXIMITY_CHARS or abs(e_start - t_end) <= _PROXIMITY_CHARS:
+                    # The marker names the tier nearest to it: in "80 Plus Platinum
+                    # White" (live row 3993) it names Platinum, and White is the colour.
+                    between = title_l[min(e_end, t_end):max(e_start, t_start)]
+                    if any(other in between for other in _TIER_WORDS if other != tier):
+                        continue
                     return True, "80 PLUS wording near the tier word"
+
+    # Owner decision 2026-09-25: a bare tier word the title states counts as grounded.
+    # Not for Cybenetics-only titles (rule 3 wins there), not for a tier word that is
+    # part of "Cybenetics <tier>", and not for "white".
+    cybenetics_only = "cybenetics" in title_l and not eighty_spans
+    if tier not in _BARE_WORD_EXCLUDED and not cybenetics_only:
+        for m in re.finditer(rf"\b{tier}\b", title_l):
+            if not _CYBENETICS_BEFORE.search(title_l[:m.start()]):
+                return True, "bare tier word in title (grounded by owner decision 2026-09-25)"
 
     return False, "no 80 PLUS wording near the tier word and no manufacturer rule matched"
 
@@ -159,6 +186,42 @@ def classify_row(title: str, stored_tier: str | None) -> str:
     if not tier_word_present:
         return "no_tier_wording"
     return "other_ungrounded"
+
+
+def sibling_backed(rows) -> set[int]:
+    """product_ids of rows whose stored tier is NOT grounded in their own title but IS
+    the single tier that title-grounded siblings of the same model state.
+
+    matching.psu_identity.reconcile_group_trims() writes exactly such values: a listing
+    whose title is silent takes the trim its same-model siblings agree on. Per row that
+    reads as b) no_tier_wording (or a) for a Cybenetics-only title), yet the value is
+    grounded - in the sibling's title. Grouping (brand + model_number + wattage, status
+    'ok' only) matches reconciliation. Siblings that are themselves ungrounded never
+    back anything, so a group whose tiered rows are all ungrounded backs nobody.
+    """
+    groups: dict[tuple, list] = {}
+    for row in rows:
+        if getattr(row, "status", "ok") != "ok":
+            continue
+        key = ((row.brand or "").strip().lower(), (row.model_number or "").strip().lower(),
+               row.wattage)
+        groups.setdefault(key, []).append(row)
+
+    backed: set[int] = set()
+    for members in groups.values():
+        classes = {r.product_id: classify_row(r.raw_title, r.efficiency_rating) for r in members}
+        grounded_tiers = {
+            _extract_tier_word(r.efficiency_rating)
+            for r in members if classes[r.product_id] == "grounded"
+        }
+        grounded_tiers.discard("")
+        if len(grounded_tiers) != 1:
+            continue
+        tier = next(iter(grounded_tiers))
+        for r in members:
+            if classes[r.product_id] != "grounded" and _extract_tier_word(r.efficiency_rating) == tier:
+                backed.add(r.product_id)
+    return backed
 
 
 # --- Report ---------------------------------------------------------------------
@@ -215,6 +278,16 @@ def main(limit: int) -> None:
             print(f"  b) no_tier_wording   : {len(buckets['no_tier_wording'])}")
             print(f"  c) grounded          : {len(buckets['grounded'])}")
             print(f"  (other_ungrounded)   : {len(buckets['other_ungrounded'])}")
+            print()
+            # Title-only buckets count reconciliation fills too. Split them out so a) and
+            # b) can be read as "grounded nowhere" - see sibling_backed().
+            backed = sibling_backed(rows)
+            print("Of the ungrounded rows, how many are reconciliation fills backed by a")
+            print("title-grounded sibling of the same model (legitimate), vs grounded nowhere:")
+            for key in ("cybenetics_leak", "no_tier_wording", "other_ungrounded"):
+                n_backed = sum(1 for r in buckets[key] if r.product_id in backed)
+                print(f"  {key:18s}: {n_backed:3d} sibling-backed, "
+                      f"{len(buckets[key]) - n_backed:3d} grounded nowhere")
             print()
 
             print("Per-provider counts, bucket a) cybenetics_leak:")

@@ -128,10 +128,98 @@ def test_classify_row_buckets_grounded():
     assert audit.classify_row(title, "80+ Gold") == "grounded"
 
 
-def test_classify_row_buckets_other_ungrounded_when_tier_word_present_but_not_near_80():
-    """Tier word present in the title as ordinary text, unrelated to any 80 PLUS or
-    Cybenetics wording and no manufacturer rule - still ungrounded, but not the
-    Cybenetics leak or the pure-recall case, so it gets its own bucket rather than
-    being miscounted into either."""
-    title = "Ant Esports Gold Series Cabinet Fan Pack (Not a Real PSU Title) 650W SMPS"
+def test_bare_tier_word_is_grounded_by_owner_ruling():
+    """Owner decision 2026-09-25: a title that states the tier word without any "80"
+    wording ("Asus ROG Strix 750W Gold SMPS") counts as grounded. This used to be the
+    residual other_ungrounded bucket (262 live rows)."""
+    title = "MSI Mag A850GL PCIE5.1 ATX 3.1 Gold Fully Modular SMPS"
+    grounded, reason = audit.is_tier_grounded("Asus ROG Strix 750W Gold SMPS", "80+ Gold")
+    assert grounded is True
+    assert "2026-09-25" in reason
+    assert audit.classify_row(title, "80+ Gold") == "grounded"
+    assert audit.classify_row("Deepcool PX1000P 1000W Platinum SMPS", "platinum") == "grounded"
+
+
+def test_bare_tier_word_rule_does_not_rescue_cybenetics_only_titles():
+    """The owner ruling covers bare tier words, not Cybenetics wording: a title whose
+    only tier word is "Cybenetics Gold" stays the Cybenetics leak."""
+    title = "CORSAIR RM850e Cybenetics Gold Modular 850W Power Supply CP-9020296-IN"
+    assert audit.classify_row(title, "80+ Gold") == "cybenetics_leak"
+    # A tier word inside a model name next to a Cybenetics token still leaves the
+    # title Cybenetics-only (no 80 wording): stays in a), as the audit found it.
+    title = "Super Flower Leadex Titanium 2800W ATX 3.1 Cybenetics  Fully Modular PSU"
+    assert audit.classify_row(title, "80+ Titanium") == "cybenetics_leak"
+
+
+def test_tier_word_only_in_cybenetics_phrase_is_not_bare_grounding():
+    """80 wording for one tier and "Cybenetics <tier>" for another: the stored
+    Cybenetics tier has no grounding, bare or otherwise."""
+    title = "Corsair RM750x 80 Plus Bronze ATX PSU Cybenetics Gold"
+    assert audit.is_tier_grounded(title, "80+ Gold")[0] is False
     assert audit.classify_row(title, "80+ Gold") == "other_ungrounded"
+
+
+def test_bare_white_is_a_colour_not_a_tier():
+    """The bare-word ruling excludes White: it is far more often the colour. Live row
+    20725 stored "80+ White" for an MSI A850GL (GL = Gold) titled "White Gold"."""
+    title = "MSI MAG A850GL PCIE5 White Gold ATX 3.1 Fully Modular SMPS"
+    assert audit.is_tier_grounded(title, "80+ White")[0] is False
+    assert audit.classify_row(title, "80+ White") == "other_ungrounded"
+
+
+def test_80_marker_names_the_tier_right_after_it_not_a_later_colour():
+    """Live row 3993: "80 Plus Platinum White" was stored as "80+ White". The 80
+    marker is followed by Platinum; the White after it is the colour."""
+    title = ("Gigabyte Aorus Elite P1000W 80 Plus Platinum White Fully Modular "
+             "PCIe 5.0 Power Supply GP-AE1000PM PG5 ICE")
+    assert audit.is_tier_grounded(title, "80+ White")[0] is False
+    assert audit.is_tier_grounded(title, "80+ Platinum")[0] is True
+    # Genuine White units stay grounded.
+    assert audit.is_tier_grounded(
+        "ANT ESPORTS VS500L 500W 80+ White Non Modular ATX 2.0 Power Supply", "80+ White"
+    )[0] is True
+
+
+class _Row:
+    """Stand-in for PSUTitleExtraction for the group-level check."""
+    def __init__(self, product_id, title, rating, model="M1", status="ok"):
+        self.product_id, self.raw_title, self.efficiency_rating = product_id, title, rating
+        self.brand, self.model_number, self.wattage, self.status = "Brand", model, 650, status
+
+
+def test_reconciliation_fill_from_a_grounded_sibling_is_backed():
+    """reconcile_group_trims() writes a sibling's trim into a listing whose title is
+    silent. Per row that looks like b) no_tier_wording, but the value is grounded in
+    the sibling's title - the audit must say so rather than flag it as recalled."""
+    rows = [
+        _Row(1, "Ant Esports FG650 V2 650 Watt Fully Modular SMPS", "gold"),
+        _Row(2, "Ant Esports FG650 V2 650W 80 Plus Gold SMPS", "80+ Gold"),
+        _Row(3, "Corsair RM750e Cybenetics Gold SMPS", "gold", model="M2"),
+        _Row(4, "Corsair RM750e 750W 80 Plus Gold", "80+ Gold", model="M2"),
+    ]
+    assert audit.classify_row(rows[0].raw_title, "gold") == "no_tier_wording"
+    assert audit.sibling_backed(rows) == {1, 3}
+
+
+def test_ungrounded_siblings_do_not_back_each_other():
+    """Antec Atom V550 V2: every tiered listing is ungrounded, so none backs another."""
+    rows = [
+        _Row(1, "Antec Atom V550 V2 SMPS", "bronze"),
+        _Row(2, "Antec Atom V550 V2 550 Watt Power Supply", "bronze"),
+    ]
+    assert audit.sibling_backed(rows) == set()
+
+
+def test_sibling_backing_needs_one_agreed_trim_and_status_ok():
+    rows = [
+        _Row(1, "ASUS TUF Gaming 750W SMPS", "gold"),
+        _Row(2, "ASUS TUF Gaming 750W 80+ Bronze", "80+ Bronze"),
+        _Row(3, "ASUS TUF Gaming 750W 80+ Gold", "80+ Gold"),
+        _Row(4, "Other X 650W SMPS", "gold", model="M9"),
+        _Row(5, "Other X 650W 80 Plus Gold", "80+ Gold", model="M9", status="needs_review"),
+        _Row(6, "Brand Z 650W SMPS", "gold", model="M8"),
+        _Row(7, "Brand Z 650W 80 Plus Bronze", "80+ Bronze", model="M8"),
+    ]
+    # 1: grounded siblings disagree; 4: its only grounded sibling is not status ok;
+    # 6: the grounded sibling states a different trim.
+    assert audit.sibling_backed(rows) == set()

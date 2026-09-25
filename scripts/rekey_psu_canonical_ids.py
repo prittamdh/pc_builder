@@ -101,151 +101,171 @@ def choose_spec_source(new_id: str, old_ids: set[str], new_by_old: dict[str, set
     return max(clean, key=lambda o: old_sizes.get(o, 0))
 
 
-def rekey(apply: bool = False):
-    with SessionLocal() as session:
-        print("=" * 80)
-        print(f"PSU CANONICAL RE-KEY ({'APPLY' if apply else 'DRY RUN'})")
-        print("=" * 80)
+def rekey(apply: bool = False, session=None) -> dict | None:
+    """
+    Runs the re-key. Pass `session` to run inside a caller's transaction - used by
+    scripts/clear_ungrounded_psu_tiers.py --preview-rekey to show what the re-key would
+    do *after* an uncommitted clear, then roll both back. With a caller's session and
+    apply=False nothing is committed; the caller owns the transaction.
 
-        rows, mapping = plan(session)
-        if not mapping:
-            print("  no extracted PSU listings found - nothing to do.")
-            return
+    Returns a summary of the plan (None when there was nothing to map).
+    """
+    if session is not None:
+        return _rekey(session, apply)
+    with SessionLocal() as own_session:
+        return _rekey(own_session, apply)
 
-        old_ids_all = {old for old, _, _ in mapping.values()}
-        new_by_old = collections.defaultdict(set)
-        old_by_new = collections.defaultdict(set)
-        old_sizes = collections.Counter()
-        key_by_new = {}
-        for old, new, kd in mapping.values():
-            new_by_old[old].add(new)
-            old_by_new[new].add(old)
-            old_sizes[old] += 1
-            key_by_new[new] = kd
 
-        changed = {pid: v for pid, v in mapping.items() if v[0] != v[1]}
-        splits = {o: n for o, n in new_by_old.items() if len(n) > 1}
-        merges = {n: o for n, o in old_by_new.items() if len(o) > 1}
-        trimmed = sum(1 for kd in key_by_new.values() if kd.get("efficiency"))
+def _rekey(session, apply: bool) -> dict | None:
+    print("=" * 80)
+    print(f"PSU CANONICAL RE-KEY ({'APPLY' if apply else 'DRY RUN'})")
+    print("=" * 80)
 
-        print(f"  listings mapped:        {len(mapping)}")
-        print(f"  canonical ids: {len(old_ids_all)} -> {len(old_by_new)}")
-        print(f"  listings re-pointed:    {len(changed)}")
-        print(f"  groups split by trim:   {len(splits)}")
-        print(f"  groups merged into one: {len(merges)}")
-        print(f"  new groups with a stated trim: {trimmed} of {len(old_by_new)}")
+    rows, mapping = plan(session)
+    if not mapping:
+        print("  no extracted PSU listings found - nothing to do.")
+        return None
 
-        # canonical_id is a global primary key, so a new id has to be checked against
-        # every category, not just PSUs, before it can be inserted.
-        existing_cp = {
-            cp.canonical_id: cp for cp in session.scalars(
-                select(CanonicalPart).where(
-                    (CanonicalPart.category == "psu")
-                    | (CanonicalPart.canonical_id.in_(list(old_by_new)))
-                )
+    old_ids_all = {old for old, _, _ in mapping.values()}
+    new_by_old = collections.defaultdict(set)
+    old_by_new = collections.defaultdict(set)
+    old_sizes = collections.Counter()
+    key_by_new = {}
+    for old, new, kd in mapping.values():
+        new_by_old[old].add(new)
+        old_by_new[new].add(old)
+        old_sizes[old] += 1
+        key_by_new[new] = kd
+
+    changed = {pid: v for pid, v in mapping.items() if v[0] != v[1]}
+    splits = {o: n for o, n in new_by_old.items() if len(n) > 1}
+    merges = {n: o for n, o in old_by_new.items() if len(o) > 1}
+    trimmed = sum(1 for kd in key_by_new.values() if kd.get("efficiency"))
+
+    print(f"  listings mapped:        {len(mapping)}")
+    print(f"  canonical ids: {len(old_ids_all)} -> {len(old_by_new)}")
+    print(f"  listings re-pointed:    {len(changed)}")
+    print(f"  groups split by trim:   {len(splits)}")
+    print(f"  groups merged into one: {len(merges)}")
+    print(f"  new groups with a stated trim: {trimmed} of {len(old_by_new)}")
+
+    # canonical_id is a global primary key, so a new id has to be checked against
+    # every category, not just PSUs, before it can be inserted.
+    existing_cp = {
+        cp.canonical_id: cp for cp in session.scalars(
+            select(CanonicalPart).where(
+                (CanonicalPart.category == "psu")
+                | (CanonicalPart.canonical_id.in_(list(old_by_new)))
             )
-        }
-        foreign = [c for c, cp in existing_cp.items() if cp.category != "psu"]
-        if foreign:
-            raise SystemExit(
-                f"Refusing to run: {len(foreign)} target canonical_id(s) already exist under a "
-                f"different category, e.g. {foreign[:3]}"
-            )
+        )
+    }
+    foreign = [c for c, cp in existing_cp.items() if cp.category != "psu"]
+    if foreign:
+        raise SystemExit(
+            f"Refusing to run: {len(foreign)} target canonical_id(s) already exist under a "
+            f"different category, e.g. {foreign[:3]}"
+        )
 
-        # Destination ids can already carry a spec row from an earlier run, so they are
-        # loaded too - a move must never collide with a row that is already there.
-        spec_scope = old_ids_all | set(old_by_new)
-        spec_rows = {
-            s.canonical_id: s for s in session.scalars(
-                select(PSUSpecs).where(PSUSpecs.canonical_id.in_(spec_scope))
-            )
-        } if spec_scope else {}
+    # Destination ids can already carry a spec row from an earlier run, so they are
+    # loaded too - a move must never collide with a row that is already there.
+    spec_scope = old_ids_all | set(old_by_new)
+    spec_rows = {
+        s.canonical_id: s for s in session.scalars(
+            select(PSUSpecs).where(PSUSpecs.canonical_id.in_(spec_scope))
+        )
+    } if spec_scope else {}
 
-        to_create = [n for n in old_by_new if n not in existing_cp]
-        spec_plan = {
-            n: choose_spec_source(n, o, new_by_old, old_sizes, spec_rows)
-            for n, o in old_by_new.items()
-        }
-        spec_moves = {n: s for n, s in spec_plan.items() if s is not None and s != n}
-        spec_keeps = {n for n, s in spec_plan.items() if s == n}
-        spec_needed = [n for n, s in spec_plan.items() if s is None]
-        spec_dropped = set(spec_rows) - set(spec_plan.values())
+    to_create = [n for n in old_by_new if n not in existing_cp]
+    spec_plan = {
+        n: choose_spec_source(n, o, new_by_old, old_sizes, spec_rows)
+        for n, o in old_by_new.items()
+    }
+    spec_moves = {n: s for n, s in spec_plan.items() if s is not None and s != n}
+    spec_keeps = {n for n, s in spec_plan.items() if s == n}
+    spec_needed = [n for n, s in spec_plan.items() if s is None]
+    spec_dropped = set(spec_rows) - set(spec_plan.values())
 
-        # Only retire rows this migration stranded. canonical_parts that already had no
-        # listings before it ran are pre-existing cruft from earlier pipeline runs -
-        # unrelated to this fix, so they are reported and left alone.
-        orphan_cp = sorted(old_ids_all - set(old_by_new))
-        pre_existing_orphans = len(existing_cp) - len(old_ids_all)
+    # Only retire rows this migration stranded. canonical_parts that already had no
+    # listings before it ran are pre-existing cruft from earlier pipeline runs -
+    # unrelated to this fix, so they are reported and left alone.
+    orphan_cp = sorted(old_ids_all - set(old_by_new))
+    pre_existing_orphans = len(existing_cp) - len(old_ids_all)
 
-        print(f"  canonical_parts to create: {len(to_create)}")
-        print(f"  canonical_parts retired:   {len(orphan_cp)}")
-        print(f"  (pre-existing unreferenced canonical_parts, left as-is: {pre_existing_orphans})")
-        print(f"  psu_specs kept:            {len(spec_keeps)}")
-        print(f"  psu_specs moved:           {len(spec_moves)}")
-        print(f"  psu_specs dropped:         {len(spec_dropped)}")
-        print(f"  models needing Stage 2:    {len(spec_needed)}")
+    print(f"  canonical_parts to create: {len(to_create)}")
+    print(f"  canonical_parts retired:   {len(orphan_cp)}")
+    print(f"  (pre-existing unreferenced canonical_parts, left as-is: {pre_existing_orphans})")
+    print(f"  psu_specs kept:            {len(spec_keeps)}")
+    print(f"  psu_specs moved:           {len(spec_moves)}")
+    print(f"  psu_specs dropped:         {len(spec_dropped)}")
+    print(f"  models needing Stage 2:    {len(spec_needed)}")
 
-        print("\n  sample splits (one model name, several trims):")
-        for old, news in sorted(splits.items())[:12]:
-            print(f"    {old}\n        -> {sorted(news)}")
+    print("\n  sample splits (one model name, several trims):")
+    for old, news in sorted(splits.items())[:12]:
+        print(f"    {old}\n        -> {sorted(news)}")
 
-        if not apply:
-            print("\nDry run - nothing written. Re-run with --apply.")
-            return
+    summary = {
+        "mapping": mapping, "splits": splits, "merges": merges,
+        "spec_rows": spec_rows, "spec_plan": spec_plan, "spec_dropped": spec_dropped,
+        "spec_needed": spec_needed, "orphan_cp": orphan_cp, "to_create": to_create,
+    }
+    if not apply:
+        print("\nDry run - nothing written. Re-run with --apply.")
+        return summary
 
-        # 1. Create the canonical_parts rows the new ids need, before anything points at them.
-        titles_by_new = collections.defaultdict(list)
-        for row in rows:
-            titles_by_new[mapping[row.product_id][1]].append(row.raw_title)
-        for new_id in to_create:
-            kd = key_by_new[new_id]
-            source = next((existing_cp[o] for o in sorted(old_by_new[new_id]) if o in existing_cp), None)
-            session.add(CanonicalPart(
-                canonical_id=new_id,
-                category="psu",
-                brand=kd.get("brand") or "Unknown",
-                key_fields=kd,
-                from_title=titles_by_new[new_id][:5],
-                status=source.status if source is not None else "OK",
-            ))
-        session.flush()
+    # 1. Create the canonical_parts rows the new ids need, before anything points at them.
+    titles_by_new = collections.defaultdict(list)
+    for row in rows:
+        titles_by_new[mapping[row.product_id][1]].append(row.raw_title)
+    for new_id in to_create:
+        kd = key_by_new[new_id]
+        source = next((existing_cp[o] for o in sorted(old_by_new[new_id]) if o in existing_cp), None)
+        session.add(CanonicalPart(
+            canonical_id=new_id,
+            category="psu",
+            brand=kd.get("brand") or "Unknown",
+            key_fields=kd,
+            from_title=titles_by_new[new_id][:5],
+            status=source.status if source is not None else "OK",
+        ))
+    session.flush()
 
-        # 2. Refresh key_fields on the ids that survive, so they match the new key shape.
-        for new_id, cp in existing_cp.items():
-            if new_id in old_by_new:
-                cp.key_fields = key_by_new[new_id]
-        session.flush()
+    # 2. Refresh key_fields on the ids that survive, so they match the new key shape.
+    for new_id, cp in existing_cp.items():
+        if new_id in old_by_new:
+            cp.key_fields = key_by_new[new_id]
+    session.flush()
 
-        # 3. Re-point the listings and their extraction rows.
-        for row in rows:
-            _, new_id, _ = mapping[row.product_id]
-            row.canonical_id = new_id
-        session.flush()
-        for pid, (_, new_id, _) in mapping.items():
-            session.execute(
-                Product.__table__.update().where(Product.id == pid).values(canonical_id=new_id)
-            )
-        session.flush()
+    # 3. Re-point the listings and their extraction rows.
+    for row in rows:
+        _, new_id, _ = mapping[row.product_id]
+        row.canonical_id = new_id
+    session.flush()
+    for pid, (_, new_id, _) in mapping.items():
+        session.execute(
+            Product.__table__.update().where(Product.id == pid).values(canonical_id=new_id)
+        )
+    session.flush()
 
-        # 4. Move spec rows that still describe their unit; drop the unattributable ones.
-        #    Deletes run first so a move can never collide with a row being retired.
-        for old_id in sorted(spec_dropped):
-            session.delete(spec_rows[old_id])
-        session.flush()
-        for new_id, old_id in sorted(spec_moves.items()):
-            spec_rows[old_id].canonical_id = new_id
-        session.flush()
+    # 4. Move spec rows that still describe their unit; drop the unattributable ones.
+    #    Deletes run first so a move can never collide with a row being retired.
+    for old_id in sorted(spec_dropped):
+        session.delete(spec_rows[old_id])
+    session.flush()
+    for new_id, old_id in sorted(spec_moves.items()):
+        spec_rows[old_id].canonical_id = new_id
+    session.flush()
 
-        # 5. Retire canonical_parts nothing points at any more.
-        for cid in orphan_cp:
-            session.delete(existing_cp[cid])
-        session.flush()
+    # 5. Retire canonical_parts nothing points at any more.
+    for cid in orphan_cp:
+        session.delete(existing_cp[cid])
+    session.flush()
 
-        session.commit()
-        print("\nApplied.")
-        print(f"Next: python scripts/extract_psu_specs_groq.py   ({len(spec_needed)} models need Stage 2)")
-        print("Then: python scripts/import_80plus_efficiency.py and scripts/scrape_psu_efficiency.py")
-        print("      to refill ratings on the groups that just split.")
+    session.commit()
+    print("\nApplied.")
+    print(f"Next: python scripts/extract_psu_specs_groq.py   ({len(spec_needed)} models need Stage 2)")
+    print("Then: python scripts/import_80plus_efficiency.py and scripts/scrape_psu_efficiency.py")
+    print("      to refill ratings on the groups that just split.")
+    return summary
 
 
 if __name__ == "__main__":
