@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
+from api.filters import from_active_store
 from db.models.price_history import PriceHistory
 from db.models.product import Product
 from db.models.store import Store
@@ -70,10 +71,10 @@ def compare_product(
             canonical_id = anchor.canonical_id
 
     if canonical_id:
-        stmt = select(Product).where(Product.canonical_id == canonical_id)
+        stmt = select(Product).where(Product.canonical_id == canonical_id, from_active_store())
         matched_by = "canonical_id"
     else:
-        stmt = select(Product).where(Product.name.ilike(f"%{q}%"))
+        stmt = select(Product).where(Product.name.ilike(f"%{q}%"), from_active_store())
 
     products = list(db.scalars(stmt))
 

@@ -1,6 +1,20 @@
 """Shared query predicates for the product-facing endpoints."""
 
+from sqlalchemy import select
+
 from db.models.product import Product
+from db.models.store import Store
+
+
+def from_active_store():
+    """True for listings whose store is active.
+
+    A store is set inactive when its prices can no longer be refreshed (PCStudio went
+    behind a Cloudflare bot check on 2026-09-25, last price 2026-08-17). Its old prices
+    would otherwise show as current. The flag is read at query time, so re-enabling the
+    store brings its listings back with no other change.
+    """
+    return Product.sid.in_(select(Store.id).where(Store.active.is_(True)))
 
 
 def has_usable_price():
