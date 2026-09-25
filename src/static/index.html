@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PC Builder 2 - Hardware Price Comparison & Assembly Engine</title>
-    <link rel="stylesheet" href="/static/style.css?v=8">
+    <meta name="description" content="Compare PC component prices across 10 Indian retailers and check build compatibility before you buy.">
+    <meta property="og:title" content="PC Builder 2 - Hardware Price Comparison & Assembly Engine">
+    <meta property="og:description" content="Compare PC component prices across 10 Indian retailers and check build compatibility before you buy.">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="canonical" href="/">
+    <link rel="stylesheet" href="/static/style.css?v=10">
 </head>
 <body>
 
@@ -127,8 +133,8 @@
 
                 <div class="summary-card">
                     <div class="summary-title">Build Summary</div>
-                    <div id="compatibility-status" class="compatibility-status ok">
-                        ✓ Compatibility Checked
+                    <div id="compatibility-status" class="compatibility-status" aria-live="polite">
+                        Checking compatibility...
                     </div>
                     
                     <div class="warning-list" id="warnings-list"></div>
@@ -179,6 +185,10 @@
                 Prices are scraped directly from each retailer and re-checked continuously.
                 We are not affiliated with any of them, and always link to the shop's own page.
             </p>
+            <nav class="footer-links">
+                <a href="/about">About &amp; disclaimer</a>
+                <a href="/privacy">Privacy</a>
+            </nav>
         </div>
     </footer>
 
@@ -228,6 +238,6 @@
     </div>
 
     <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
-    <script src="/static/app.js?v=18"></script>
+    <script src="/static/app.js?v=20"></script>
 </body>
 </html>

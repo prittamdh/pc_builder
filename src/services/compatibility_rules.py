@@ -68,6 +68,66 @@ RULES: list[Rule] = [
     ),
 ]
 
+# Plain-English name for every spec field a rule reads. Used to tell the shopper
+# exactly which spec is missing when a check can't be run (FIT-01).
+FIELD_LABELS: dict[str, str] = {
+    "socket": "CPU socket",
+    "memory_type": "memory type",
+    "modules": "module count",
+    "memory_slots": "memory slots",
+    "capacity_gb": "memory capacity",
+    "max_memory_gb": "maximum memory",
+    "supported_sockets": "supported sockets",
+    "length_mm": "length",
+    "max_gpu_length_mm": "GPU clearance",
+    "height_mm": "height",
+    "max_cooler_height_mm": "CPU cooler clearance",
+    "aio_radiator_mm": "radiator size",
+    "max_radiator_mm": "radiator support",
+    "form_factor": "form factor",
+}
+
+# Plain-English slot names for messages ("GPU/case fit could not be checked").
+SLOT_LABELS: dict[str, str] = {
+    "cpu": "CPU", "motherboard": "motherboard", "ram": "RAM", "gpu": "GPU",
+    "case": "case", "cooler": "cooler", "psu": "PSU", "storage": "storage",
+}
+
+
+def cooler_kind(cooler_type) -> str | None:
+    """"aio", "air", or None when the type is not known. The title extractor stores
+    the literal "Unknown" when a title doesn't say, so only an explicit AIO/Air
+    prefix counts as known - anything else ("Unknown", "", "Liquid") is unknown."""
+    t = str(cooler_type or "").strip().upper()
+    if t.startswith("AIO"):
+        return "aio"
+    if t.startswith("AIR"):
+        return "air"
+    return None
+
+
+def rule_applies(rule: Rule, view_a, view_b) -> bool:
+    """Whether a rule is meaningful for this particular pair of parts.
+
+    A None value normally means "we don't know" (unverified). Two cooler fields are
+    the exception (Pitfall 8): an AIO has no tower height, and an air cooler has no
+    radiator, so for those the check simply doesn't apply. That decision rests on a
+    KNOWN cooler_type - when the type itself is unknown the rule applies, so the
+    shopper is honestly told it could not be checked."""
+    for slot, view in ((rule.slot_a, view_a), (rule.slot_b, view_b)):
+        if slot != "cooler":
+            continue
+        kind = cooler_kind(getattr(view, "cooler_type", None))
+        if kind is None:
+            return True  # "Unknown", blank or missing: check applies, shows unverified
+        field = rule.field_a if slot == rule.slot_a else rule.field_b
+        if field == "height_mm" and kind == "aio":
+            return False
+        if field == "aio_radiator_mm" and kind == "air":
+            return False
+    return True
+
+
 # The cooler rule compares the air cooler's own height_mm. An earlier rule used
 # radiator_size_mm, which holds a fan size for air coolers (120 - always passes) and a
 # radiator length for AIOs (360 - always warned against a 165mm tower limit).
@@ -76,15 +136,34 @@ RULES: list[Rule] = [
 # smaller form factor, not the reverse.
 FORM_FACTOR_ORDER = ["ITX", "MATX", "ATX", "EATX"]
 
+# Spelling (upper-cased, spaces/hyphens removed) -> index in FORM_FACTOR_ORDER, or
+# None for sizes outside that scale (XL-ATX, SSI CEB/EEB) that we can't place.
+# Longest spellings are matched first: "EATX" contains "ATX" and "MINIITX" contains
+# "ITX", and matching the short name first read an E-ATX board as ATX (a false pass
+# in an ATX-only case). "MICROATX" doesn't contain "MATX", so it needs its own entry.
+_FORM_FACTOR_ALIASES = {
+    "EXTENDEDATX": 3, "MICROATX": 1, "MINIITX": 0, "XLATX": None,
+    "EATX": 3, "MATX": 1, "UATX": 1, "MITX": 0, "ITX": 0, "ATX": 2,
+}
+_ALIASES_LONGEST_FIRST = sorted(_FORM_FACTOR_ALIASES, key=len, reverse=True)
+
 
 def form_factor_index(value: str | None) -> int | None:
+    """Size index of a form factor, or None when it can't be placed on the scale.
+    A value listing several sizes ("ATX/Micro-ATX/Mini-ITX", as case titles do)
+    returns the largest, since a case fits everything up to its largest size."""
     if not value:
         return None
     v = value.strip().upper().replace("-", "").replace(" ", "")
-    for i, ff in enumerate(FORM_FACTOR_ORDER):
-        if ff in v:
-            return i
-    return None
+    found: list[int] = []
+    for alias in _ALIASES_LONGEST_FIRST:
+        if alias in v:
+            idx = _FORM_FACTOR_ALIASES[alias]
+            if idx is None:
+                return None  # a size we can't compare - unverified, never guessed
+            found.append(idx)
+            v = v.replace(alias, "/")  # consume it so "ATX" doesn't re-match inside "EATX"
+    return max(found) if found else None
 
 
 # Wattage is an aggregate (sum), not a pairwise rule - kept separate from RULES.

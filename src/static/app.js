@@ -451,7 +451,7 @@ async function fetchProducts() {
         renderPager();
         syncUrl();
     } catch (err) {
-        grid.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1/-1;">Failed to load catalog products: ${err.message}</div>`;
+        grid.innerHTML = `<div style="color: var(--danger); text-align: center; grid-column: 1/-1;">Failed to load catalog products: ${escapeHtml(err.message)}</div>`;
     }
 }
 
@@ -491,7 +491,7 @@ function renderProducts(models) {
         <div class="product-card">
             <div>
                 <div class="card-top">
-                    <span class="product-badge">${m.p_category || 'Component'}</span>${conditionBadge(m.condition)}
+                    <span class="product-badge">${escapeHtml(m.p_category || 'Component')}</span>${conditionBadge(m.condition)}
                 </div>
                 ${m.image_url
                     ? `<img class="product-img" src="/api/v1/images?u=${encodeURIComponent(m.image_url)}" alt="${escapeHtml(m.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.classList.add('img-missing');this.removeAttribute('src');">`
@@ -511,7 +511,7 @@ function renderProducts(models) {
                     ${spread ? `<span class="price-spread">${spread}</span>` : ''}
                 </div>
                 <div class="card-actions">
-                    <button class="btn-secondary" onclick="openCompareModal('${escapeHtml(m.name)}', ${c.id})">
+                    <button class="btn-secondary" onclick="openCompareModal(${escapeHtml(JSON.stringify(m.name || ''))}, ${c.id})">
                         ${m.offer_count > 1 ? 'Compare ' + m.offer_count + ' stores' : 'View offer'}
                     </button>
                     <button class="btn-secondary" onclick="openHistoryModal(${c.id})">Price history</button>
@@ -725,7 +725,7 @@ async function loadSlotCandidates() {
                         <span class="offer-price">₹${Number(o.price).toLocaleString('en-IN')}
                             ${oi === 0 && m.offer_count > 1 ? '<em class="offer-best">lowest</em>' : ''}</span>
                         <button class="btn-primary offer-pick"
-                                onclick="selectComponentForSlot('${slotKey}', ${o.id}, ${JSON.stringify(o.name).replace(/"/g, '&quot;')})">
+                                onclick="selectComponentForSlot('${slotKey}', ${o.id}, ${escapeHtml(JSON.stringify(o.name || ''))})">
                             Choose
                         </button>
                     </div>`).join('')}
@@ -768,9 +768,21 @@ function selectComponentForSlot(slotKey, productId, productName) {
     validateBuild();
 }
 
+// Each validate call gets a number; only the newest one may paint the sidebar, so a
+// slow earlier response can't overwrite a newer verdict with a stale one.
+let validateSeq = 0;
+
 async function validateBuild() {
     const selectedProducts = Object.values(state.builderSelections).filter(Boolean);
     const productIds = selectedProducts.map(p => p.id);
+    const seq = ++validateSeq;
+
+    // Don't leave the previous build's verdict showing for the new one.
+    const pendingEl = document.getElementById('compatibility-status');
+    if (pendingEl && productIds.length) {
+        pendingEl.className = 'compatibility-status';
+        pendingEl.innerText = 'Checking compatibility...';
+    }
 
     try {
         const res = await fetch(`${API_BASE}/builder/validate`, {
@@ -784,6 +796,7 @@ async function validateBuild() {
             throw new Error(`validate failed: ${res.status} ${await res.text()}`);
         }
         const summary = await res.json();
+        if (seq !== validateSeq) return;  // a newer check has started; let it paint
 
         // Render Summary Sidebar
         const statusEl = document.getElementById('compatibility-status');
@@ -791,23 +804,37 @@ async function validateBuild() {
         const costEl = document.getElementById('total-cost');
         const wattageEl = document.getElementById('total-wattage');
 
-        if (summary.compatible) {
-            statusEl.className = 'compatibility-status ok';
-            statusEl.innerText = '✓ Compatibility Checked & Verified';
-        } else {
+        // Exactly three verdicts, computed server-side (FIT-02). A pass-style look is
+        // only ever used for "All checks passed"; any unverified check is amber.
+        statusEl.innerText = summary.verdict;
+        if (summary.verdict === 'Problems found') {
             statusEl.className = 'compatibility-status error';
-            statusEl.innerText = '⚠ Incompatibilities Detected';
+        } else if (summary.unverified_count > 0) {
+            statusEl.className = 'compatibility-status unverified';
+        } else {
+            statusEl.className = 'compatibility-status ok';
         }
 
+        // Messages carry product names from retailer titles - always escape them.
+        const levelClass = l => (['error', 'warning', 'unverified', 'estimate'].includes(l) ? l : 'warning');
         warningsEl.innerHTML = (summary.warnings || []).map(w => `
-            <div class="warning-item ${w.level}">${w.message}</div>
+            <div class="warning-item ${levelClass(w.level)}">${escapeHtml(w.message)}</div>
         `).join('');
 
-        wattageEl.innerText = `${summary.estimated_wattage || 0} W`;
+        // A wattage built on a typical TDP is labelled as an estimate (FIT-03).
+        const isEstimate = (summary.wattage_notes || []).length > 0;
+        wattageEl.innerText = `${summary.estimated_wattage || 0} W${isEstimate ? ' (estimate)' : ''}`;
         costEl.innerText = `₹${Number(summary.total_min_cost || 0).toLocaleString('en-IN')}`;
 
     } catch (err) {
         console.error('Validation error:', err);
+        if (seq !== validateSeq) return;
+        // Never leave an earlier (possibly passing) verdict on screen.
+        const statusEl = document.getElementById('compatibility-status');
+        if (statusEl) {
+            statusEl.className = 'compatibility-status unverified';
+            statusEl.innerText = 'Could not check compatibility - please try again';
+        }
     }
 }
 
@@ -849,17 +876,19 @@ async function openCompareModal(productName, productId) {
                 <tbody>
                     ${(data.offers || []).map(o => `
                         <tr>
-                            <td>${o.store_name}</td>
+                            <td>${escapeHtml(o.store_name)}</td>
                             <td style="color: var(--accent-cyan); font-weight: 700;">₹${Number(o.price).toLocaleString('en-IN')}</td>
                             <td>${o.in_stock ? 'In Stock' : 'Out of Stock'}</td>
-                            <td><a href="${o.url}" target="_blank" class="btn-primary" style="padding: 0.3rem 0.8rem; text-decoration: none; font-size: 0.85rem;">Buy</a></td>
+                            <td>${safeHttpUrl(o.url)
+                                ? `<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="padding: 0.3rem 0.8rem; text-decoration: none; font-size: 0.85rem;">Buy</a>`
+                                : ''}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
         `;
     } catch (err) {
-        content.innerHTML = `<div style="color: var(--danger);">Failed to load comparison data: ${err.message}</div>`;
+        content.innerHTML = `<div style="color: var(--danger);">Failed to load comparison data: ${escapeHtml(err.message)}</div>`;
     }
 }
 
@@ -952,9 +981,21 @@ async function openHistoryModal(productId) {
     }
 }
 
+// Store links come from scraped data: only http(s) may become a clickable href, so
+// a javascript: or data: URL can never run in the page.
+function safeHttpUrl(url) {
+    try {
+        const u = new URL(String(url || '').trim());  // no base: relative URLs are rejected
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch (e) {
+        return false;
+    }
+}
+
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 // Saved builds -------------------------------------------------------------

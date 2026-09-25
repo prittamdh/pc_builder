@@ -8,8 +8,12 @@ raised an error, so backend tests and a clean console both looked fine. These
 tests assert on what the user actually sees.
 
 Skipped automatically if Playwright's browser isn't installed, so the suite still
-runs in environments without it.
+runs in environments without it - UNLESS REQUIRE_E2E=1 is set (the deploy check and
+the phase gates set it). Then every skip path (playwright missing, chromium missing,
+app did not start) is a failure, so the suite can never pass by not running (WEB-03).
 """
+import os
+import re
 import socket
 import subprocess
 import sys
@@ -20,9 +24,28 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
+THIS_FILE = Path(__file__)
 
-playwright_api = pytest.importorskip("playwright.sync_api")
-sync_playwright = playwright_api.sync_playwright
+REQUIRE_E2E = os.environ.get("REQUIRE_E2E") == "1"
+
+
+def _skip_or_fail(reason: str):
+    """Dev machines without a browser skip; the deploy check (REQUIRE_E2E=1) fails."""
+    if REQUIRE_E2E:
+        pytest.fail(f"REQUIRE_E2E=1 but the browser suite cannot run: {reason}", pytrace=False)
+    pytest.skip(reason)
+
+
+try:
+    from playwright.sync_api import expect, sync_playwright
+except ImportError as _exc:
+    if REQUIRE_E2E:
+        pytest.fail(f"REQUIRE_E2E=1 but playwright is not installed: {_exc}", pytrace=False)
+    pytest.skip(f"playwright not installed: {_exc}", allow_module_level=True)
+
+VERDICTS = re.compile(
+    r"^(Problems found|No problems found - 1 check unverified"
+    r"|No problems found - \d+ checks unverified|All checks passed)$")
 
 
 def _free_port() -> int:
@@ -35,10 +58,15 @@ def _free_port() -> int:
 def base_url():
     """Boot the real app on a scratch port, so tests never touch the dev server."""
     port = _free_port()
+    # SEC-03: this one test process drives hundreds of requests from
+    # 127.0.0.1 in a single run - without this, the browser suite would trip
+    # its own rate limits. The limiter itself is covered by tests/test_rate_limits.py.
+    env = {**os.environ, "RATE_LIMIT_ENABLED": "false"}
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "api.main:app",
          "--host", "127.0.0.1", "--port", str(port), "--app-dir", str(SRC)],
         cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=env,
     )
     url = f"http://127.0.0.1:{port}"
     for _ in range(60):
@@ -49,7 +77,7 @@ def base_url():
             time.sleep(0.5)
     else:
         proc.terminate()
-        pytest.skip("app did not start")
+        _skip_or_fail("app did not start")
 
     yield url
     proc.terminate()
@@ -64,7 +92,7 @@ def browser():
             yield b
             b.close()
     except Exception as exc:  # browser binary not installed
-        pytest.skip(f"chromium unavailable: {exc}")
+        _skip_or_fail(f"chromium unavailable: {exc}")
 
 
 @pytest.fixture
@@ -76,6 +104,62 @@ def page(browser, base_url):
     pg.console_errors = errors
     yield pg
     pg.close()
+
+
+@pytest.fixture
+def mobile_page(browser, base_url):
+    """A phone-width page (WEB-04). Same shape as `page`; that fixture is unchanged."""
+    pg = browser.new_page(viewport={"width": 375, "height": 812})
+    errors = []
+    pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
+    pg.goto(base_url, wait_until="networkidle")
+    pg.console_errors = errors
+    yield pg
+    pg.close()
+
+
+class TestRequireE2EGuard:
+    """WEB-03: with REQUIRE_E2E=1 a missing browser is a failure, not a skip."""
+
+    def _run(self, tmp_path, require):
+        env = dict(os.environ)
+        env["PLAYWRIGHT_BROWSERS_PATH"] = str(tmp_path)  # empty: chromium is "missing"
+        env.pop("REQUIRE_E2E", None)
+        if require:
+            env["REQUIRE_E2E"] = "1"
+        return subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(THIS_FILE),
+             "-k", "TestPageLoads and test_index_html_is_served"],
+            cwd=str(ROOT), env=env, capture_output=True, text=True, timeout=180,
+        )
+
+    def test_missing_chromium_fails_under_require_e2e(self, tmp_path):
+        result = self._run(tmp_path, require=True)
+        summary = result.stdout.strip().splitlines()[-1]
+        assert result.returncode != 0, result.stdout
+        assert "skipped" not in summary, summary
+        assert "REQUIRE_E2E=1" in result.stdout
+
+    def test_missing_chromium_still_skips_on_dev_machines(self, tmp_path):
+        result = self._run(tmp_path, require=False)
+        summary = result.stdout.strip().splitlines()[-1]
+        assert result.returncode == 0, result.stdout
+        assert "skipped" in summary, summary
+
+
+class TestNoInPageEvalWaits:
+    """Playwright's string-form wait-for-JS-condition call re-polls its predicate via
+    new Function() inside the page after the first check, which the production CSP's
+    script-src (no 'unsafe-eval') blocks - so it only passes when the condition is
+    already true on the first check and is flaky/failing otherwise. Guard against it
+    coming back: use expect(locator)... or another wait that doesn't need in-page
+    eval instead."""
+
+    _BANNED = "wait_for_" + "function("
+
+    def test_source_has_no_wait_for_function_calls(self):
+        source = THIS_FILE.read_text(encoding="utf-8")
+        assert self._BANNED not in source
 
 
 def _open_builder(page):
@@ -103,11 +187,13 @@ class TestBuilderValidation:
     def test_empty_build_reports_compatible(self, page):
         """The regression that started it all: app.js posted the wrong field name,
         /builder/validate returned 422, the failure was swallowed, and this read
-        "Incompatibilities Detected" for every build including an empty one."""
+        "Incompatibilities Detected" for every build including an empty one.
+        The old "Verified" wording was replaced by the three FIT-02 verdicts; an
+        empty build has nothing unverified, so it reads "All checks passed"."""
         _open_builder(page)
-        page.wait_for_timeout(1200)
-        status = page.locator("#compatibility-status").inner_text()
-        assert "Verified" in status, status
+        status = page.locator("#compatibility-status")
+        expect(status).to_have_text("All checks passed", timeout=15000)
+        expect(status).to_have_class(re.compile(r"(^|\s)ok(\s|$)"))
 
     def test_validate_endpoint_is_not_rejecting_the_frontend_payload(self, page):
         """Asserts the contract in the direction that actually broke: the payload the
@@ -134,8 +220,7 @@ class TestComponentPicker:
         _open_builder(page)
         page.locator("#slots-container button", has_text="Select").first.click()
         page.wait_for_selector("#select-modal.active")
-        page.wait_for_function(
-            "document.querySelectorAll('#select-modal-list .model-row').length > 0",
+        expect(page.locator("#select-modal-list .model-row").first).to_be_visible(
             timeout=15000)
         assert page.locator("#select-modal-list .model-row").count() > 0
 
@@ -145,10 +230,9 @@ class TestComponentPicker:
         page.locator("#slots-container button", has_text="Select").first.click()
         page.wait_for_selector("#select-modal.active")
         page.fill("#select-modal-search", "7800X3D")
-        page.wait_for_function(
-            "[...document.querySelectorAll('#select-modal-list .model-row')]"
-            ".some(c => /7800X3D/i.test(c.innerText))", timeout=15000
-        )
+        matching = page.locator(
+            "#select-modal-list .model-row", has_text=re.compile("7800X3D", re.I))
+        expect(matching.first).to_be_visible(timeout=15000)
         assert page.locator("#select-modal-list .model-row").count() > 0
 
     def test_one_row_per_model_not_per_listing(self, page):
@@ -186,8 +270,7 @@ class TestComponentPicker:
             "button").click()
         page.wait_for_selector("#select-modal.active")
         page.fill("#select-modal-search", "9060 XT 16GB")
-        page.wait_for_function(
-            "document.querySelectorAll('#select-modal-list .model-row').length > 0",
+        expect(page.locator("#select-modal-list .model-row").first).to_be_visible(
             timeout=15000)
         page.evaluate("""() => {
             const head = [...document.querySelectorAll('.model-head')]
@@ -201,8 +284,7 @@ class TestComponentPicker:
             rows[1].querySelector('button').click();
             return price;
         }""")
-        page.wait_for_function(
-            "document.getElementById('total-cost').innerText !== '₹0'", timeout=15000)
+        expect(page.locator("#total-cost")).not_to_have_text("₹0", timeout=15000)
         assert second.replace(",", "") in page.locator(
             "#total-cost").inner_text().replace(",", "")
 
@@ -257,30 +339,54 @@ class TestSavedBuilds:
     """A build used to live only in page memory and vanished on refresh."""
 
     def test_save_then_open_share_link_restores_the_build(self, page, base_url):
+        """Exercises the page's own save and restore code. The save and load
+        endpoints are intercepted, so the test never writes a row to the live
+        database; the routes themselves are covered by API unit tests."""
+        token = "e2e-intercepted-token"
+        posted = []
+        shared = {
+            "share_token": token, "name": "e2e rig", "notes": None, "created_at": None,
+            "items": {
+                "cpu": {"id": 4089, "name": "AMD Ryzen 7 7800X3D (e2e)", "current_price": 1.0,
+                        "in_stock": True},
+                "motherboard": {"id": 4867, "name": "B850 Board (e2e)", "current_price": 1.0,
+                                "in_stock": True},
+            },
+            "unavailable": [], "compatible": True, "warnings": [], "estimated_wattage": 0,
+            "total_min_cost": "0", "store_breakdown": [],
+            "compatibility_changed_since_save": False,
+        }
+
+        def on_builds(route):
+            req = route.request
+            if req.method == "POST":
+                posted.append(req.post_data_json)
+                route.fulfill(json={"share_token": token})
+            elif req.url.split("?")[0].endswith(f"/builds/{token}"):
+                route.fulfill(json=shared)
+            else:
+                route.fulfill(status=404, json={"detail": "not found"})
+
+        page.route("**/api/v1/builder/builds**", on_builds)
         _open_builder(page)
-        token = page.evaluate("""async () => {
-            const get = async id => (await fetch(`/api/v1/products/${id}`)).json();
-            for (const [slot, id] of Object.entries({cpu:4089, motherboard:4867})) {
-                const p = await get(id);
-                state.builderSelections[slot] = p;
-                document.getElementById(`slot-name-${slot}`).innerText = p.name;
+        page.evaluate("""(items) => {
+            for (const [slot, item] of Object.entries(items)) {
+                state.builderSelections[slot] = item;
+                document.getElementById(`slot-name-${slot}`).innerText = item.name;
             }
-            const r = await fetch('/api/v1/builder/builds', {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({selections:{cpu:4089, motherboard:4867}, name:'e2e rig'})
-            });
-            return (await r.json()).share_token;
-        }""")
-        assert token
+        }""", shared["items"])
+        page.fill("#build-name", "e2e rig")
+        page.locator("#save-build-btn").click()
+
+        expect(page.locator("#share-link")).to_have_value(
+            re.compile(rf"\?build={token}$"), timeout=15000)
+        assert posted == [{"selections": {"cpu": 4089, "motherboard": 4867},
+                           "name": "e2e rig"}], posted
 
         page.goto(f"{base_url}/?build={token}", wait_until="networkidle")
-        page.wait_for_function(
-            "document.getElementById('slot-name-cpu')"
-            "&& !/No component/.test(document.getElementById('slot-name-cpu').innerText)",
-            timeout=15000,
-        )
-        assert "7800X3D" in page.locator("#slot-name-cpu").inner_text()
-        assert "B850" in page.locator("#slot-name-motherboard").inner_text()
+        expect(page.locator("#slot-name-cpu")).to_have_text(
+            "AMD Ryzen 7 7800X3D (e2e)", timeout=15000)
+        expect(page.locator("#slot-name-motherboard")).to_have_text("B850 Board (e2e)")
         assert page.locator("#build-name").input_value() == "e2e rig"
 
     def test_empty_build_cannot_be_saved(self, page):
@@ -389,15 +495,11 @@ class TestCatalogSortingAndFilters:
     def test_filter_sidebar_appears_and_filters_the_grid(self, page):
         page.locator(".chip", has_text="Power Supplies").click()
         page.wait_for_selector("#filter-panel:not([hidden])")
-        page.wait_for_function(
-            "document.querySelectorAll('.filter-group').length > 0", timeout=15000)
+        expect(page.locator(".filter-group").first).to_be_visible(timeout=15000)
         before = page.locator("#result-count").inner_text()
 
         page.fill('[data-key="wattage_min"]', "750")
-        page.wait_for_function(
-            f"document.getElementById('result-count').innerText !== {before!r}",
-            timeout=15000,
-        )
+        expect(page.locator("#result-count")).not_to_have_text(before, timeout=15000)
         assert page.locator("#result-count").inner_text() != before
 
     def test_footer_lists_every_active_retailer(self, page):
@@ -405,8 +507,8 @@ class TestCatalogSortingAndFilters:
         returned to. Now a footer, so coverage is answered on every page."""
         expected = page.evaluate(
             "fetch('/api/v1/stores').then(r => r.json()).then(s => s.filter(x => x.active).length)")
-        page.wait_for_function(
-            "document.querySelectorAll('#stores-grid .store-chip').length > 0", timeout=15000)
+        expect(page.locator("#stores-grid .store-chip").first).to_be_visible(
+            timeout=15000)
         assert page.locator("#stores-grid .store-chip").count() == expected
         assert page.locator(".nav-btn", has_text="Stores").count() == 0
 
@@ -482,10 +584,8 @@ class TestCatalogLayout:
         )
 
     def test_grid_is_multi_column_with_no_category_selected(self, page):
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
-            timeout=15000,
-        )
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
+            timeout=15000)
         assert self._columns(page) > 1
 
     def test_grid_stays_multi_column_after_choosing_a_category(self, page):
@@ -498,9 +598,8 @@ class TestCatalogLayout:
         page.wait_for_selector("#filter-panel:not([hidden])")
         page.locator(".chip", has_text="All Categories").click()
         # wait_for_selector defaults to waiting for visibility, and a hidden panel is
-        # never visible - assert on the attribute instead.
-        page.wait_for_function(
-            "document.getElementById('filter-panel').hidden === true", timeout=15000)
+        # never visible - wait for it to actually be hidden instead.
+        expect(page.locator("#filter-panel")).to_be_hidden(timeout=15000)
         assert self._columns(page) > 1
 
 
@@ -512,10 +611,8 @@ class TestCatalogCredibility:
         No stock indicator: /products/models only returns in-stock models, so "In
         stock" on every card would carry no information.
         """
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
-            timeout=15000,
-        )
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
+            timeout=15000)
         cards = page.locator("#products-grid .product-card").count()
         assert page.locator("#products-grid .store-name").count() == cards
         # Each card states the cheapest price is "from" one of several offers, rather
@@ -525,8 +622,7 @@ class TestCatalogCredibility:
     def test_stat_bar_numbers_come_from_the_api(self, page):
         stats = page.evaluate(
             "fetch('/api/v1/products/stats').then(r => r.json())")
-        page.wait_for_function(
-            "document.getElementById('stat-products').innerText !== '—'", timeout=15000)
+        expect(page.locator("#stat-products")).not_to_have_text("—", timeout=15000)
         shown = page.locator("#stat-products").inner_text().replace(",", "")
         assert int(shown) == stats["products"]
         assert stats["stores"] > 0 and stats["price_snapshots"] > 0
@@ -635,10 +731,8 @@ class TestHierarchicalFilters:
 
     def test_accessories_tab_works_without_a_spec_table(self, page):
         page.locator(".chip", has_text="Accessories").click()
-        page.wait_for_function(
-            "document.getElementById('filter-panel').hidden === true", timeout=15000)
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
+        expect(page.locator("#filter-panel")).to_be_hidden(timeout=15000)
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
             timeout=15000)
         # No spec table means no filters, and the grid must take the full width.
         assert page.locator(".filter-group").count() == 0
@@ -650,22 +744,18 @@ class TestHierarchicalFilters:
         page.locator(".chip", has_text="Motherboards").click()
         page.wait_for_selector('[data-key="socket"]')
         page.select_option('[data-key="socket"]', "AM5")
-        page.wait_for_function(
-            "document.querySelectorAll('.active-chip').length === 1", timeout=15000)
+        expect(page.locator(".active-chip")).to_have_count(1, timeout=15000)
         page.select_option('[data-key="form_factor"]', "ITX")
-        page.wait_for_function(
-            "document.querySelectorAll('.active-chip').length === 2", timeout=15000)
+        expect(page.locator(".active-chip")).to_have_count(2, timeout=15000)
 
         page.locator(".active-chip", has_text="Socket").click()
-        page.wait_for_function(
-            "document.querySelectorAll('.active-chip').length === 1", timeout=15000)
+        expect(page.locator(".active-chip")).to_have_count(1, timeout=15000)
         assert "Form Factor" in page.locator(".active-chip").first.inner_text()
 
 
 class TestCatalogPaging:
     def test_pager_reports_pages_over_models_not_listings(self, page):
-        page.wait_for_function(
-            "document.querySelectorAll('#products-grid .product-card').length > 0",
+        expect(page.locator("#products-grid .product-card").first).to_be_visible(
             timeout=15000)
         assert "Page 1 of" in page.locator("#pager").inner_text()
 
@@ -696,3 +786,241 @@ class TestCatalogPaging:
             return {listings: listings.total, models: models.total};
         }""")
         assert both["models"] < both["listings"], both
+
+
+# ---------------------------------------------------------------------------
+# FIT-01/02 in a real page: a missing spec reads "unverified", never "passed".
+# Ids are found read-only through the page's own API. Nothing is saved.
+# ---------------------------------------------------------------------------
+_FIND_PAIR_JS = """async (want) => {
+    const post = async (url, body) => (await fetch(url, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)})).json();
+    const firstOffer = m => ({id: m.offers[0].id, name: m.offers[0].name});
+    const gpus = (await post('/api/v1/builder/candidates',
+        {slot: 'gpu', compatible_only: false})).items.slice(0, 5).map(firstOffer);
+    const cases = (await post('/api/v1/builder/candidates',
+        {slot: 'case', compatible_only: false})).items.slice(0, 40).map(firstOffer);
+    let calls = 0;
+    for (const g of gpus) {
+        for (const c of cases.slice(0, 8)) {   // at most 8 cases per GPU, 40 calls total
+            if (calls >= 40) return {found: false, calls};
+            calls++;
+            const s = await post('/api/v1/builder/validate',
+                {selected_product_ids: [g.id, c.id]});
+            const msgs = s.warnings.map(w => w.message);
+            // A GPU with no published length can never give either outcome - next GPU.
+            if (msgs.some(m => m.includes(g.name) && m.includes('no published length'))) break;
+            if (want === 'unverified') {
+                const hit = s.unverified_count === 1 && s.verdict !== 'Problems found'
+                    && msgs.some(m => m.includes('GPU clearance') && m.includes(c.name)
+                                      && !m.includes(g.name));
+                if (hit) return {found: true, gpu: g, case_: c, calls};
+            } else if (s.verdict === 'All checks passed') {
+                return {found: true, gpu: g, case_: c, calls};
+            }
+        }
+    }
+    return {found: false, calls};
+}"""
+
+_SELECT_JS = """([gpu, cs]) => {
+    state.builderSelections.gpu = gpu;
+    state.builderSelections.case = cs;
+    document.getElementById('slot-name-gpu').innerText = gpu.name;
+    document.getElementById('slot-name-case').innerText = cs.name;
+    return validateBuild();
+}"""
+
+
+class TestHonestVerdict:
+    def test_gpu_with_case_missing_clearance_is_unverified(self, page):
+        _open_builder(page)
+        pair = page.evaluate(_FIND_PAIR_JS, "unverified")
+        assert pair["found"], (
+            f"no GPU+case pair with exactly one unverified GPU-clearance check "
+            f"in {pair['calls']} validate calls")
+        print(f"unverified pair: gpu={pair['gpu']['id']} case={pair['case_']['id']}")
+        page.evaluate(_SELECT_JS, [pair["gpu"], pair["case_"]])
+
+        status = page.locator("#compatibility-status")
+        expect(status).to_have_text("No problems found - 1 check unverified", timeout=15000)
+        expect(status).to_have_class(re.compile(r"(^|\s)unverified(\s|$)"))
+        item = page.locator("#warnings-list .warning-item.unverified")
+        expect(item).to_have_count(1)
+        expect(item).to_contain_text(pair["case_"]["name"])
+        expect(item).to_contain_text("GPU clearance")
+        expect(item).to_be_visible()
+        assert page.console_errors == [], page.console_errors
+
+    def test_fully_known_gpu_and_case_reads_all_checks_passed(self, page):
+        _open_builder(page)
+        pair = page.evaluate(_FIND_PAIR_JS, "passed")
+        assert pair["found"], f"no fully-known GPU+case pair in {pair['calls']} calls"
+        print(f"passing pair: gpu={pair['gpu']['id']} case={pair['case_']['id']}")
+        page.evaluate(_SELECT_JS, [pair["gpu"], pair["case_"]])
+        status = page.locator("#compatibility-status")
+        expect(status).to_have_text("All checks passed", timeout=15000)
+        expect(page.locator("#warnings-list .warning-item.unverified")).to_have_count(0)
+
+
+_EVIL = "Evil <img src=x onerror=\"window.__xss=1\"> Case 'O\"Brien' &quot; &amp;"
+
+
+class TestUntrustedNamesAreEscaped:
+    """Product names come from retailer titles, and warning messages now carry them."""
+
+    def test_warning_messages_are_escaped(self, page):
+        body = {
+            "compatible": True,
+            "warnings": [
+                {"level": "unverified",
+                 "message": f"Unverified: {_EVIL} has no published GPU clearance, "
+                            "so GPU/case fit could not be checked."},
+                {"level": "estimate",
+                 "message": f"Wattage estimate: {_EVIL} has no listed TDP, "
+                            "so a typical 250 W was used."},
+            ],
+            "estimated_wattage": 420, "total_min_cost": "0", "store_breakdown": [],
+            "unverified_count": 1, "verdict": "No problems found - 1 check unverified",
+            "wattage_notes": ["x"],
+        }
+        page.route("**/api/v1/builder/validate",
+                   lambda route: route.fulfill(json=body))
+        _open_builder(page)
+        page.evaluate("() => validateBuild()")
+        items = page.locator("#warnings-list .warning-item")
+        expect(items).to_have_count(2)
+        expect(items.first).to_contain_text(_EVIL)
+        expect(page.locator("#total-wattage")).to_have_text("420 W (estimate)")
+        assert page.locator("#warnings-list img").count() == 0
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_card_and_picker_handlers_pass_the_name_through_intact(self, page):
+        """Names were placed inside inline onclick JS strings; a quote in a title
+        broke the handler (or ran as script)."""
+        page.evaluate("""(name) => {
+            window.__calls = [];
+            window.openCompareModal = (n, id) => window.__calls.push(['compare', n, id]);
+            renderProducts([{name, p_category: 'Cabinet', offer_count: 1,
+                cheapest: {id: 999999, price: 1000, store: 'Test'}}]);
+        }""", _EVIL)
+        page.locator("#products-grid .card-actions button").first.click()
+        assert page.evaluate("() => window.__calls") == [["compare", _EVIL, 999999]]
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_compare_modal_escapes_store_names_and_only_links_http_urls(self, page):
+        body = {
+            "query": "q", "lowest_price": 1000, "highest_price": 2000, "total_offers": 3,
+            "matched_by": "canonical_id",
+            "offers": [
+                {"store_name": _EVIL, "price": 1000, "in_stock": True,
+                 "url": "javascript:window.__xss=2"},
+                {"store_name": "Good Store", "price": 1500, "in_stock": True,
+                 "url": 'https://shop.example/p?a=1&b="><img src=x onerror="window.__xss=4">'},
+                {"store_name": "No Link Store", "price": 2000, "in_stock": False,
+                 "url": "data:text/html,<script>window.__xss=5</script>"},
+            ],
+        }
+        page.route("**/api/v1/compare**", lambda route: route.fulfill(json=body))
+        page.evaluate("() => openCompareModal('q', 1)")
+        rows = page.locator("#compare-modal-content tbody tr")
+        expect(rows).to_have_count(3)
+        expect(rows.nth(0).locator("td").first).to_have_text(_EVIL)
+        assert page.locator("#compare-modal-content img").count() == 0
+        links = page.locator("#compare-modal-content a")
+        expect(links).to_have_count(1)  # only the https offer gets a Buy link
+        href = links.first.get_attribute("href")
+        assert href == 'https://shop.example/p?a=1&b="><img src=x onerror="window.__xss=4">'
+        assert links.first.get_attribute("rel") == "noopener noreferrer"
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_compare_modal_escapes_the_error_message(self, page):
+        # Chrome's JSON parse error quotes the start of the body back.
+        page.route("**/api/v1/compare**", lambda route: route.fulfill(
+            status=200, content_type="application/json",
+            body='<img src=x onerror="window.__xss=3">'))
+        page.evaluate("() => openCompareModal('q', 1)")
+        content = page.locator("#compare-modal-content")
+        expect(content).to_contain_text("Failed to load comparison data")
+        assert page.locator("#compare-modal-content img").count() == 0
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_picker_choice_keeps_an_awkward_name_intact(self, page):
+        item = {"name": _EVIL, "best_price": 1000, "offer_count": 1, "condition": None,
+                "offers": [{"id": 999998, "name": _EVIL, "price": 1000, "store": "Test",
+                            "condition": None}]}
+        page.route("**/api/v1/builder/candidates",
+                   lambda route: route.fulfill(json={"items": [item], "total": 1,
+                                                     "offer_count": 1, "filtered_out": 0}))
+        page.route("**/api/v1/builder/validate",
+                   lambda route: route.fulfill(json={
+                       "compatible": True, "warnings": [], "estimated_wattage": 0,
+                       "total_min_cost": "0", "store_breakdown": [], "unverified_count": 0,
+                       "verdict": "All checks passed", "wattage_notes": []}))
+        _open_builder(page)
+        page.locator("#slots-container .slot-card").first.get_by_role(
+            "button", name="Select").click()
+        row = page.locator("#select-modal-list .model-row").first
+        expect(row).to_be_visible(timeout=15000)
+        row.locator(".model-head").click()
+        row.locator(".offer-pick").first.click()
+        expect(page.locator("#slot-name-cpu")).to_have_text(_EVIL)
+        assert page.evaluate("() => window.__xss") is None
+
+
+# ---------------------------------------------------------------------------
+# WEB-04: the core flow at phone width (375x812).
+# ---------------------------------------------------------------------------
+def _no_horizontal_overflow(pg):
+    width = pg.evaluate("() => document.documentElement.scrollWidth")
+    assert width <= 376, f"page is {width}px wide at a 375px viewport"
+
+
+class TestMobile375:
+    def test_search_pick_verdict_compare_at_375px(self, mobile_page):
+        pg = mobile_page
+
+        # 1. Search the catalog.
+        pg.fill("#search-input", "RTX")
+        pg.press("#search-input", "Enter")
+        cards = pg.locator("#products-grid .product-card")
+        expect(cards.first).to_be_visible(timeout=15000)
+        expect(cards.first).to_contain_text(re.compile("RTX", re.I))
+        _no_horizontal_overflow(pg)
+
+        # 2. Open compare from a catalog card.
+        cards.first.locator(".card-actions button").first.click()
+        expect(pg.locator("#compare-modal")).to_have_class(re.compile(r"(^|\s)active(\s|$)"))
+        expect(pg.locator("#compare-modal .modal")).to_be_visible()
+        expect(pg.locator("#compare-modal-content h2")).to_be_visible(timeout=15000)
+        _no_horizontal_overflow(pg)
+        pg.locator("#compare-modal .modal-close").click()
+        expect(pg.locator("#compare-modal")).not_to_have_class(
+            re.compile(r"(^|\s)active(\s|$)"))
+
+        # 3. Open the builder and the picker.
+        pg.get_by_role("button", name="PC Builder").click()
+        slot = pg.locator("#slots-container .slot-card").first
+        expect(slot).to_be_visible()
+        slot.get_by_role("button", name="Select").click()
+        expect(pg.locator("#select-modal")).to_have_class(re.compile(r"(^|\s)active(\s|$)"))
+        row = pg.locator("#select-modal-list .model-row").first
+        expect(row).to_be_visible(timeout=15000)
+
+        # 4. Add a part.
+        row.locator(".model-head").click()
+        pick = row.locator(".offer-pick").first
+        expect(pick).to_be_visible()
+        pick.click()
+        expect(pg.locator("#select-modal")).not_to_have_class(
+            re.compile(r"(^|\s)active(\s|$)"))
+        expect(pg.locator("#slot-name-cpu")).not_to_have_text("No component selected")
+
+        # 5. Read the verdict.
+        status = pg.locator("#compatibility-status")
+        expect(status).to_have_text(VERDICTS, timeout=15000)
+        status.scroll_into_view_if_needed()
+        expect(status).to_be_visible()
+        _no_horizontal_overflow(pg)
+        assert pg.console_errors == [], pg.console_errors

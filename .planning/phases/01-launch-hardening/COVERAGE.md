@@ -1,0 +1,1 @@
+No external API integration: Phase 1 hardens the project's own FastAPI app (CORS, headers, rate limits via the slowapi library, error pages) and adds DB-only checks; the AI-01 benchmark calls the already-integrated LLM providers through the existing GroqExtractionService.extract_batch path and adds no new provider or capability surface.

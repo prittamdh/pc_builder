@@ -42,7 +42,8 @@ from db.models.cooler_title_extraction import CoolerTitleExtraction
 from db.models.storage_title_extraction import StorageTitleExtraction
 from domain.builder import CompatibilityWarning
 from services.compatibility_rules import (
-    RULES, form_factor_index, WATTAGE_HEADROOM, DEFAULT_CPU_TDP, DEFAULT_GPU_TDP,
+    RULES, FIELD_LABELS, SLOT_LABELS, cooler_kind, form_factor_index, rule_applies,
+    WATTAGE_HEADROOM, DEFAULT_CPU_TDP, DEFAULT_GPU_TDP,
 )
 
 
@@ -172,9 +173,19 @@ class CompatibilityEngine:
                     "height_mm": "height_mm",  # specs only - titles don't carry it
                     "cooler_type": "cooler_type",
                 })
+                # The extractor writes the literal "Unknown" when a title doesn't say,
+                # which _merge would prefer over a real cooler_specs type. Take the
+                # first source that actually knows (AIO or Air), else None.
+                spec = specs.get(p.canonical_id)
+                v.cooler_type = next(
+                    (t for t in (getattr(e, "cooler_type", None) if e else None,
+                                 getattr(spec, "cooler_type", None) if spec else None)
+                     if cooler_kind(t) is not None),
+                    None,
+                )
                 # radiator_size_mm is a fan size on air coolers, so only an AIO's counts
                 # as a radiator length.
-                v.aio_radiator_mm = v.radiator_size_mm if (v.cooler_type or "").upper().startswith("AIO") else None
+                v.aio_radiator_mm = v.radiator_size_mm if cooler_kind(v.cooler_type) == "aio" else None
                 views.append(v)
             return views
 
@@ -205,7 +216,15 @@ class CompatibilityEngine:
             if key:
                 by_category.setdefault(key, []).append(p)
 
-        return {cat: self._resolve_slot(cat, prods) for cat, prods in by_category.items()}
+        selections = {}
+        for cat, prods in by_category.items():
+            views = self._resolve_slot(cat, prods)
+            # One view per product, in order - stamp the name so messages can say
+            # which part is missing a spec.
+            for product, view in zip(prods, views):
+                view.product_name = product.name
+            selections[cat] = views
+        return selections
 
     @staticmethod
     def _slot_key(p_category: str | None) -> str | None:
@@ -217,6 +236,36 @@ class CompatibilityEngine:
     @staticmethod
     def _get(value, field: str):
         return getattr(value, field, None)
+
+    @staticmethod
+    def _unknown(rule, value) -> str | None:
+        """Why a rule input can't be used: "missing" (no value), "unrecognised"
+        (a form factor we can't place on the size scale), or None when usable."""
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return "missing"
+        if rule.op == "form_factor_fits" and form_factor_index(value) is None:
+            return "unrecognised"
+        return None
+
+    @staticmethod
+    def _unverified(rule, item_a, item_b, unknown_a, unknown_b) -> CompatibilityWarning:
+        def part(item, slot, field, why):
+            name = getattr(item, "product_name", None) or f"the selected {SLOT_LABELS.get(slot, slot)}"
+            label = FIELD_LABELS.get(field, field)
+            if why == "unrecognised":
+                return f"{name} has an unrecognised {label} ({getattr(item, field, '')})"
+            return f"{name} has no published {label}"
+
+        parts = []
+        if unknown_a:
+            parts.append(part(item_a, rule.slot_a, rule.field_a, unknown_a))
+        if unknown_b:
+            parts.append(part(item_b, rule.slot_b, rule.field_b, unknown_b))
+        pair = f"{SLOT_LABELS.get(rule.slot_a, rule.slot_a)}/{SLOT_LABELS.get(rule.slot_b, rule.slot_b)}"
+        return CompatibilityWarning(
+            level="unverified",
+            message=f"Unverified: {' and '.join(parts)}, so {pair} fit could not be checked.",
+        )
 
     def _eval_rule(self, rule, val_a, val_b) -> CompatibilityWarning | None:
         if val_a is None or val_b is None:
@@ -253,7 +302,16 @@ class CompatibilityEngine:
                 continue  # rule not yet checkable - one or both slots still empty
             for item_a in group_a:
                 for item_b in group_b:
-                    warning = self._eval_rule(rule, self._get(item_a, rule.field_a), self._get(item_b, rule.field_b))
+                    if not rule_applies(rule, item_a, item_b):
+                        continue  # e.g. tower height on an AIO - not missing, just N/A
+                    val_a, val_b = self._get(item_a, rule.field_a), self._get(item_b, rule.field_b)
+                    unknown_a = self._unknown(rule, val_a)
+                    unknown_b = self._unknown(rule, val_b)
+                    if unknown_a or unknown_b:
+                        # Never a silent pass, never a guessed value (FIT-01).
+                        warnings.append(self._unverified(rule, item_a, item_b, unknown_a, unknown_b))
+                        continue
+                    warning = self._eval_rule(rule, val_a, val_b)
                     if warning:
                         warnings.append(warning)
                         if warning.level == "error":
@@ -281,6 +339,30 @@ class CompatibilityEngine:
                     level="warning",
                     message=f"Power Supply Capacity Warning: {provided}W PSU is close to or below recommended headroom for an estimated {estimated_wattage}W build draw.",
                 ))
+
+        # A PSU whose wattage we don't know can't be checked against anything, so
+        # say so (once a CPU or GPU gives it something to power) rather than let
+        # the build read "All checks passed".
+        if selections.get("cpu") or selections.get("gpu"):
+            for view in selections.get("psu", []):
+                if not self._get(view, "wattage"):
+                    name = self._get(view, "product_name") or "the selected PSU"
+                    warnings.append(CompatibilityWarning(
+                        level="unverified",
+                        message=f"Unverified: {name} has no published wattage, so the PSU capacity could not be checked.",
+                    ))
+
+        # FIT-03: name every part whose wattage above is a typical value rather than
+        # its own listed TDP. Appended last so the list order stays deterministic:
+        # RULES order, then PSU capacity, then these notes.
+        for slot, default in (("cpu", DEFAULT_CPU_TDP), ("gpu", DEFAULT_GPU_TDP)):
+            for view in selections.get(slot, []):
+                if not self._get(view, "tdp"):  # same test the sum above uses
+                    name = self._get(view, "product_name") or f"the selected {SLOT_LABELS[slot]}"
+                    warnings.append(CompatibilityWarning(
+                        level="estimate",
+                        message=f"Wattage estimate: {name} has no listed TDP, so a typical {default} W was used.",
+                    ))
 
         return compatible, warnings, estimated_wattage
 

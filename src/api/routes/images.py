@@ -15,11 +15,13 @@ import time
 from urllib.parse import urlparse
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
+from api.rate_limit import limiter
+from configs import settings
 from db.models.store import Store
 
 router = APIRouter(prefix="/images", tags=["Images"])
@@ -83,25 +85,43 @@ def _placeholder() -> Response:
 
 
 @router.get("")
-def product_image(u: str = Query(..., max_length=2000), db: Session = Depends(get_db)):
+@limiter.limit(lambda: settings.RATE_LIMIT_IMAGES)
+def product_image(
+    request: Request,
+    u: str = Query(..., max_length=2000),
+    db: Session = Depends(get_db),
+):
     hosts = store_hosts(db)
     if not is_allowed(u, hosts):
         raise HTTPException(status_code=400, detail="Not a store image URL")
     try:
         with httpx.Client(timeout=8.0, follow_redirects=False, headers=HEADERS) as client:
-            r = client.get(u)
+            url = u
             # Redirects are followed by hand so every hop is checked BEFORE it is
             # requested - a store link must not bounce the server anywhere else.
-            for _ in range(3):
-                if not r.is_redirect:
-                    break
-                nxt = str(r.next_request.url) if r.next_request else ""
-                if not is_allowed(nxt, hosts):
-                    return _placeholder()
-                r = client.get(nxt)
+            # Up to 3 redirect hops, plus the final fetch (4 requests total).
+            for _ in range(4):
+                with client.stream("GET", url) as r:
+                    if r.is_redirect:
+                        nxt = str(r.next_request.url) if r.next_request else ""
+                        if not is_allowed(nxt, hosts):
+                            return _placeholder()
+                        url = nxt
+                        continue
+                    ctype = r.headers.get("content-type", "").split(";")[0].strip().lower()
+                    if r.status_code != 200 or not ctype.startswith("image/"):
+                        return _placeholder()
+                    # SEC-04: stream and abort as soon as the cap is crossed,
+                    # instead of buffering an oversized body into memory first.
+                    body = bytearray()
+                    for chunk in r.iter_bytes():
+                        body.extend(chunk)
+                        if len(body) > MAX_BYTES:
+                            return _placeholder()
+                    return Response(
+                        bytes(body), media_type=ctype,
+                        headers={"Cache-Control": "public, max-age=86400"},
+                    )
     except httpx.HTTPError:
         return _placeholder()
-    ctype = r.headers.get("content-type", "").split(";")[0].strip().lower()
-    if r.status_code != 200 or not ctype.startswith("image/") or len(r.content) > MAX_BYTES:
-        return _placeholder()
-    return Response(r.content, media_type=ctype, headers={"Cache-Control": "public, max-age=86400"})
+    return _placeholder()  # too many redirect hops
