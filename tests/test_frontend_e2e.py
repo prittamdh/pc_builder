@@ -131,6 +131,7 @@ class TestRequireE2EGuard:
             [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(THIS_FILE),
              "-k", "TestPageLoads and test_index_html_is_served"],
             cwd=str(ROOT), env=env, capture_output=True, text=True, timeout=180,
+            encoding="utf-8", errors="replace",
         )
 
     def test_missing_chromium_fails_under_require_e2e(self, tmp_path):
