@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from api.deps import get_db
 from api.main import app
-from api.rate_limit import limiter
+from api.rate_limit import limiter, rate_limit_key
 from configs import settings
 
 HOSTS = frozenset({"pcstudio.in"})
@@ -175,4 +175,40 @@ def test_trusted_but_missing_header_falls_back_to_socket_address(client, monkeyp
     r1 = _get_image(client)
     assert r1.status_code == 200
     r2 = _get_image(client)
+    assert r2.status_code == 429
+
+
+class _FakeRequest:
+    """A minimal stand-in for starlette.requests.Request - just enough for
+    rate_limit_key(), which only reads .headers and passes the request
+    through to get_remote_address (via .client.host)."""
+
+    def __init__(self, headers, host="1.2.3.4"):
+        self.headers = headers
+        self.client = type("C", (), {"host": host})()
+
+
+def test_rate_limit_key_strips_whitespace_around_the_header(monkeypatch):
+    monkeypatch.setattr(settings, "TRUST_CF_CONNECTING_IP", True)
+    key = rate_limit_key(_FakeRequest({"CF-Connecting-IP": "  5.5.5.5  "}))
+    assert key == "5.5.5.5"
+
+
+def test_rate_limit_key_falls_back_when_header_is_blank(monkeypatch):
+    monkeypatch.setattr(settings, "TRUST_CF_CONNECTING_IP", True)
+    key = rate_limit_key(_FakeRequest({"CF-Connecting-IP": "   "}, host="1.2.3.4"))
+    assert key == "1.2.3.4"
+
+
+def test_trusted_but_blank_header_falls_back_to_socket_address(client, monkeypatch):
+    """Fix round 1: a present-but-blank/whitespace-only CF-Connecting-IP must
+    not become the literal key "" (which every such client would then share) -
+    it must fall back to the real socket address, same as a missing header."""
+    monkeypatch.setattr(settings, "TRUST_CF_CONNECTING_IP", True)
+    monkeypatch.setattr(settings, "RATE_LIMIT_IMAGES", "1/minute")
+    r1 = client.get("/api/v1/images", params={"u": "https://pcstudio.in/x.jpg"},
+                     headers={"CF-Connecting-IP": "   "})
+    assert r1.status_code == 200
+    r2 = client.get("/api/v1/images", params={"u": "https://pcstudio.in/x.jpg"},
+                     headers={"CF-Connecting-IP": "   "})
     assert r2.status_code == 429

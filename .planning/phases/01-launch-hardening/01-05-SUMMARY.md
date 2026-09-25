@@ -16,11 +16,18 @@ status: done
   `enabled=settings.RATE_LIMIT_ENABLED`) and `rate_limit_key(request)`, which
   returns `CF-Connecting-IP` only when `settings.TRUST_CF_CONNECTING_IP` is
   true and the header is present, otherwise `get_remote_address(request)`.
-  Every dynamic value is read live off the shared `configs.settings` module
-  (never captured once at import time), so tests can `monkeypatch.setattr`
-  `settings.RATE_LIMIT_*`/`TRUST_CF_CONNECTING_IP` or `limiter.enabled`
-  directly and see it take effect on the very next request, with no module
-  reload. `src/api/main.py` sets `app.state.limiter`, adds `SlowAPIMiddleware`,
+  `RATE_LIMIT_IMAGES`/`RATE_LIMIT_BUILDER`/`RATE_LIMIT_SAVE_BUILD`/
+  `RATE_LIMIT_DEFAULT`/`TRUST_CF_CONNECTING_IP` are all read live off the
+  shared `configs.settings` module (never captured once at import time), so
+  tests can `monkeypatch.setattr(settings, ...)` directly and see it take
+  effect on the very next request, with no module reload. `RATE_LIMIT_ENABLED`
+  is the one exception (fix round 1, architect-confirmed): slowapi's
+  `Limiter.__init__` takes `enabled` as a plain bool, not a callable, so it is
+  read from `settings.RATE_LIMIT_ENABLED` exactly once, at import time, when
+  `limiter` is constructed - correct for the real deployment (set once per
+  process start) but meaning a test must monkeypatch `limiter.enabled`
+  directly, not `settings.RATE_LIMIT_ENABLED`, to flip it at runtime.
+  `src/api/main.py` sets `app.state.limiter`, adds `SlowAPIMiddleware`,
   and registers a **synchronous** `RateLimitExceeded` handler that returns
   `JSONResponse({"detail": "Too many requests. Please slow down."}, status_code=429)`
   passed through `apply_security_headers`. The handler must be sync, not
@@ -81,10 +88,13 @@ status: done
   slowapi documents and supports callables in `default_limits`
   (`List[StrOrCallableStr]`, re-evaluated on every request - confirmed by
   reading the installed `slowapi.wrappers.LimitGroup` this session) and this
-  is what lets `RATE_LIMIT_ENABLED`/`RATE_LIMIT_DEFAULT` stay test-controllable
-  via a plain `monkeypatch.setattr(settings, ...)` with no module reload -
-  simpler and more robust than reloading `configs.settings` -> `api.rate_limit`
-  -> `api.main` in a particular order for every test.
+  is what lets `RATE_LIMIT_DEFAULT` stay test-controllable via a plain
+  `monkeypatch.setattr(settings, ...)` with no module reload - simpler and
+  more robust than reloading `configs.settings` -> `api.rate_limit` ->
+  `api.main` in a particular order for every test. `RATE_LIMIT_ENABLED` is
+  different: slowapi's `enabled` constructor parameter is a plain bool, not a
+  callable, so it is still read once at import time; tests flip it via
+  `monkeypatch.setattr(limiter, "enabled", ...)` instead (fix round 1).
 - `RateLimitExceeded`'s handler is a plain function, not `async def` - see the
   explanation above; this is a slowapi-specific pitfall not covered in
   01-RESEARCH.md, found by reading `slowapi.middleware`/`slowapi.extension`

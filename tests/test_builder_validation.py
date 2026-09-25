@@ -68,10 +68,17 @@ def stub_db():
 
 
 def test_too_many_selections_is_400_and_names_the_limit(stub_db):
-    selections = {f"slot{i}": i for i in range(21)}
+    # Fix round 1: slot0..slot20 are all "unknown slots" too, so a bare
+    # "20" in resp.json()["detail"] substring check also passes against
+    # "Unknown slots: [..., 'slot20']" from the *pre-existing* unknown-slot
+    # check - it doesn't prove the >20 check fires at all. Assert the exact
+    # message instead, so this test actually catches a missing/broken check.
+    # pid must be non-zero: save_build filters out falsy pids before counting,
+    # so slot0: 0 would silently vanish and leave exactly 20, not 21.
+    selections = {f"slot{i}": i + 1 for i in range(21)}
     resp = client.post("/api/v1/builder/builds", json={"selections": selections})
     assert resp.status_code == 400
-    assert "20" in resp.json()["detail"]
+    assert resp.json()["detail"] == "Too many selections (max 20)."
     assert stub_db.added == []
     assert stub_db.committed is False
 
@@ -81,6 +88,42 @@ def test_oversized_body_is_413(stub_db):
     body = {"selections": {"cpu": 1}, "notes": "x" * 20_000}
     assert len(json.dumps(body)) > 10_000
     resp = client.post("/api/v1/builder/builds", json=body)
+    assert resp.status_code == 413
+    assert stub_db.added == []
+    assert stub_db.committed is False
+
+
+def test_oversized_body_is_413_with_wrong_content_length_header(stub_db):
+    """Fix round 1: prove the cap counts real bytes, not a client-supplied
+    Content-Length. A request lying that its body is only 5 bytes (it's
+    actually >10 KB) must still be rejected."""
+    raw_body = json.dumps({"selections": {"cpu": 1}, "notes": "x" * 20_000}).encode()
+    assert len(raw_body) > 10_000
+    resp = client.post(
+        "/api/v1/builder/builds",
+        content=raw_body,
+        headers={"content-type": "application/json", "content-length": "5"},
+    )
+    assert resp.status_code == 413
+    assert stub_db.added == []
+    assert stub_db.committed is False
+
+
+def test_oversized_body_is_413_with_no_content_length_header(stub_db):
+    """Same, but with the header absent entirely (a generator body has no
+    pre-computed length, so httpx sends it with no Content-Length header)."""
+    raw_body = json.dumps({"selections": {"cpu": 1}, "notes": "x" * 20_000}).encode()
+    assert len(raw_body) > 10_000
+
+    def _stream():
+        yield raw_body
+
+    resp = client.post(
+        "/api/v1/builder/builds",
+        content=_stream(),
+        headers={"content-type": "application/json"},
+    )
+    assert resp.request.headers.get("content-length") is None
     assert resp.status_code == 413
     assert stub_db.added == []
     assert stub_db.committed is False
