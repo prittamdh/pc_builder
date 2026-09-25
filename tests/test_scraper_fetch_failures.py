@@ -56,6 +56,23 @@ ONE_PRODUCT_BODY = """
 </body></html>
 """
 
+# A genuine product page that merely *loads a script from a Cloudflare-hosted CDN* -
+# the word "cloudflare" appears, but none of the actual challenge markers do. Must not
+# be mistaken for a challenge.
+ONE_PRODUCT_BODY_WITH_CLOUDFLARE_CDN_SCRIPT = """
+<html><head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head><body>
+<ul class="products">
+  <li class="product">
+    <span class="title"><a href="/product/rtx-5070/">Zotac RTX 5070</a></span>
+    <span class="price"><ins><span class="woocommerce-Price-amount">54999</span></ins></span>
+    <img src="https://www.pcstudio.in/img/rtx5070.jpg">
+  </li>
+</ul>
+</body></html>
+"""
+
 
 def make_store(name: str = "pcstudio") -> Store:
     return Store(
@@ -159,3 +176,83 @@ class TestLaterPageFailure:
         out = capsys.readouterr().out
         assert "page 3" in out
         assert "403" in out
+
+
+class TestChallengeServedAsSuccess:
+    """Cloudflare doesn't always 403 its own challenge page - a managed challenge can be
+    served with a plain 200, which `raise_for_status()` never flags. The body still
+    parses to zero product cards, so without inspecting it directly this looks exactly
+    like a legitimate empty listing.
+    """
+
+    def test_200_challenge_body_on_page_1_raises_and_names_the_store(self):
+        client = ScriptedClient([(200, CHALLENGE_BODY)])
+        scraper = GenericScraper(client, make_store())
+
+        with pytest.raises(ScrapeFetchError) as excinfo:
+            scraper.scrape_category_all_pages("product-category/processor/", max_pages=3)
+
+        err = excinfo.value
+        assert err.page == 1
+        assert err.status == 200
+        assert "PCStudio" in str(err)
+        assert len(client.calls) == 1
+
+    def test_200_challenge_body_on_page_3_keeps_pages_1_and_2(self, capsys):
+        client = ScriptedClient([
+            (200, ONE_PRODUCT_BODY),
+            (200, ONE_PRODUCT_BODY.replace("rtx-5070", "rtx-5080").replace("54999", "134999")),
+            (200, CHALLENGE_BODY),
+        ])
+        scraper = GenericScraper(client, make_store())
+
+        results = scraper.scrape_category_all_pages("product-category/processor/", max_pages=5)
+
+        assert len(results) == 2
+        assert len(client.calls) == 3
+
+        out = capsys.readouterr().out
+        assert "page 3" in out
+        assert "200" in out
+
+    def test_normal_empty_200_listing_still_returns_empty_list(self):
+        """A real "0 in stock" page must not be mistaken for a challenge just because
+        it's also empty."""
+        client = ScriptedClient([(200, EMPTY_LISTING_BODY)])
+        scraper = GenericScraper(client, make_store())
+
+        results = scraper.scrape_category_all_pages("product-category/processor/", max_pages=3)
+
+        assert results == []
+        assert len(client.calls) == 1
+
+    def test_product_page_mentioning_cloudflare_cdn_is_not_a_challenge(self):
+        """A normal page that merely loads a script from a Cloudflare-hosted CDN must
+        not trip the challenge check - only Cloudflare's own challenge markup should."""
+        client = ScriptedClient([(200, ONE_PRODUCT_BODY_WITH_CLOUDFLARE_CDN_SCRIPT)])
+        scraper = GenericScraper(client, make_store())
+
+        results = scraper.scrape_category_all_pages("product-category/processor/", max_pages=1)
+
+        assert len(results) == 1
+        assert results[0].name == "Zotac RTX 5070"
+
+    def test_passive_cloudflare_bot_beacon_on_a_real_page_is_not_a_challenge(self):
+        """Regression: a real, successful mdcomputers page loads Cloudflare's passive
+        bot-detection beacon (`/cdn-cgi/challenge-platform/scripts/jsd/main.js`) on
+        ordinary, non-blocked requests - a first version of the challenge check included
+        the substring "challenge-platform" and false-positived on this, failing every
+        live scraper test against a store that was never blocked at all."""
+        body = ONE_PRODUCT_BODY_WITH_CLOUDFLARE_CDN_SCRIPT.replace(
+            "</body></html>",
+            "<script>var a=document.createElement('script');"
+            "a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';"
+            "document.getElementsByTagName('head')[0].appendChild(a);</script>"
+            "</body></html>",
+        )
+        client = ScriptedClient([(200, body)])
+        scraper = GenericScraper(client, make_store())
+
+        results = scraper.scrape_category_all_pages("product-category/processor/", max_pages=1)
+
+        assert len(results) == 1

@@ -36,6 +36,31 @@ def _status_from_exc(exc: Exception) -> int | None:
     return getattr(response, "status_code", None)
 
 
+# Literal substrings taken from a real PCStudio Cloudflare challenge page captured
+# 2026-09-25 (status 403, but Cloudflare can and does serve the identical challenge
+# markup on a 2xx too - `raise_for_status()` never fires on that, and the page parses to
+# zero product cards, indistinguishable from a genuine empty listing unless the body
+# itself is inspected). Matching is deliberately narrow, on the *interstitial page*
+# specifically (its tab title, block-page copy, and the `_cf_chl_opt`/`cType:` object its
+# challenge script sets) - not the word "cloudflare" or its generic script path. A first
+# version included "challenge-platform" and false-positived on a real, successful
+# mdcomputers page: Cloudflare injects a passive bot-detection beacon
+# (`/cdn-cgi/challenge-platform/scripts/jsd/main.js`) on ordinary pages served through it,
+# with no interstitial at all - that path alone says nothing about whether the request
+# was blocked.
+_CHALLENGE_MARKERS = (
+    "Just a moment",
+    "_cf_chl_opt",
+    "cType:",
+    "Enable JavaScript and cookies to continue",
+)
+
+
+def _is_challenge_body(text: str) -> bool:
+    """True only for Cloudflare's own challenge-page markup - see `_CHALLENGE_MARKERS`."""
+    return any(marker in text for marker in _CHALLENGE_MARKERS)
+
+
 class GenericScraper(BaseScraper):
 
     def __init__(self, client, store: Store):
@@ -43,6 +68,23 @@ class GenericScraper(BaseScraper):
 
         self.store = store
         self.parser = GenericParser(store)
+
+    def _fetch(self, url: str, page: int, headers: dict | None = None):
+        """GET one listing page, raising `ScrapeFetchError` if the body is a Cloudflare
+        challenge page - even on a 2xx status, which `raise_for_status()` never catches.
+
+        A challenge page parses to zero product cards, which is otherwise
+        indistinguishable from a genuine "0 in stock" empty listing.
+        """
+        response = self.client.get(url, headers=headers) if headers else self.client.get(url)
+        if _is_challenge_body(response.text):
+            raise ScrapeFetchError(
+                self.store.display_name,
+                page,
+                getattr(response, "status_code", None),
+                RuntimeError("challenge body detected on a non-error response"),
+            )
+        return response
 
     def scrape_search(self, query: str, page: int = 1):
         page_endpoint = self.store.search_config.get("page_endpoint")
@@ -57,7 +99,7 @@ class GenericScraper(BaseScraper):
                 query=quote_plus(query)
             )
 
-        response = self.client.get(url)
+        response = self._fetch(url, page)
 
         return self.parser.parse_search(response.text)
 
@@ -69,8 +111,10 @@ class GenericScraper(BaseScraper):
             try:
                 results = self.scrape_search(query, page=page)
             except Exception as e:
-                status = _status_from_exc(e)
+                status = e.status if isinstance(e, ScrapeFetchError) else _status_from_exc(e)
                 if page == 1:
+                    if isinstance(e, ScrapeFetchError):
+                        raise
                     raise ScrapeFetchError(self.store.display_name, page, status, e) from e
                 print(
                     f"[GenericScraper] {self.store.display_name}: page {page} fetch failed "
@@ -125,7 +169,7 @@ class GenericScraper(BaseScraper):
                     url = f"{self.store.base_url.rstrip('/')}/{clean_ep}/products.json?limit=250"
                     if page > 1:
                         url += f"&page={page}"
-            response = self.client.get(url)
+            response = self._fetch(url, page)
             return self.parser.parse_search(response.text)
 
         if platform == "fleetcart":
@@ -133,7 +177,7 @@ class GenericScraper(BaseScraper):
             clean_ep = endpoint.strip("/").split("/")[-1]
             url = f"{self.store.base_url.rstrip('/')}/products?category={clean_ep}&page={page}"
             headers = {"Accept": "application/json, text/plain, */*", "X-Requested-With": "XMLHttpRequest"}
-            response = self.client.get(url, headers=headers)
+            response = self._fetch(url, page, headers=headers)
             return self.parser.parse_search(response.text)
 
         if self.store.name == "computechstore":
@@ -144,7 +188,7 @@ class GenericScraper(BaseScraper):
                 sep = "&" if "?" in base else "?"
                 url = f"{base}{sep}page={page}&sort=newest"
             headers = {"HX-Request": "true"}
-            response = self.client.get(url, headers=headers)
+            response = self._fetch(url, page, headers=headers)
             return self.parser.parse_search(response.text)
 
         if self.store.name == "modxcomputers":
@@ -153,7 +197,7 @@ class GenericScraper(BaseScraper):
                 url = f"{base}&page={page}" if page > 1 else base
             else:
                 url = f"{base}?in_stock=true&page={page}" if page > 1 else f"{base}?in_stock=true"
-            response = self.client.get(url)
+            response = self._fetch(url, page)
             return self.parser.parse_search(response.text)
 
         if not endpoint.startswith("http"):
@@ -177,7 +221,7 @@ class GenericScraper(BaseScraper):
                 # OpenCart query pagination format: ?page={page}
                 url = f"{base}?page={page}" if "?" not in base else f"{base}&page={page}"
 
-        response = self.client.get(url)
+        response = self._fetch(url, page)
         return self.parser.parse_search(response.text)
 
     def scrape_category_all_pages(self, endpoint: str, max_pages: int = 15):
@@ -188,11 +232,15 @@ class GenericScraper(BaseScraper):
             try:
                 results = self.scrape_category(endpoint, page=page)
             except Exception as e:
-                status = _status_from_exc(e)
+                status = e.status if isinstance(e, ScrapeFetchError) else _status_from_exc(e)
                 if page == 1:
                     # A blocked/failed first page is a failed fetch, not a legitimate
                     # "0 in stock" - it must not silently return [] and let the caller
-                    # believe the target scraped cleanly.
+                    # believe the target scraped cleanly. `e` may already be a
+                    # ScrapeFetchError (raised by `_fetch` on a challenge body) - re-raise
+                    # it as-is rather than wrapping it a second time and losing its status.
+                    if isinstance(e, ScrapeFetchError):
+                        raise
                     raise ScrapeFetchError(self.store.display_name, page, status, e) from e
                 # A later page failing (rate limit, block kicking in mid-run) still
                 # stops pagination, but must say so - not disappear into a clean finish.
