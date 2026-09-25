@@ -81,7 +81,7 @@ Plans:
 - Before go-live (web-dev): replace the slowapi route-lookup shim in `src/api/rate_limit.py` with `@limiter.limit` on the 9 undecorated `/api/v1` routes, plus a test asserting every `/api/v1` route has a limit; until then fastapi/starlette/limits are pinned.
 - Phase 3 polish: clear stale warnings/wattage when `/validate` fails; friendly text for a 429 in the picker; style `.footer-links`.
 - Phase 3 (SEC-08): `.env` mode 600, owned by the service user.
-- Phase 4: a fixed rule dropping any 80 PLUS tier the title doesn't state ("80" + tier word), catching Cybenetics leakage from any provider; normalise CEB/EEB form factors; clearer wording for unknown-type coolers.
+- Phase 4: a fixed rule dropping any 80 PLUS tier the title doesn't state, catching Cybenetics leakage from any provider (the 2026-09-25 audit found 59, all from ministral-14b, and they were cleared). **Owner decision 2026-09-25:** a bare tier word ("Gold certified") counts as grounded; only Cybenetics-only titles and titles with no tier wording lose the tier; normalise CEB/EEB form factors; clearer wording for unknown-type coolers.
 
 ### Phase 2: Scrape agents
 
