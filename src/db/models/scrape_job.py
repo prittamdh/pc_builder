@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     CheckConstraint,
@@ -12,7 +13,15 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+try:
+    from sqlalchemy.orm import Mapped, mapped_column
+except ImportError:
+    # SQLAlchemy 1.4 (the Airflow image) has neither; the older models use the same
+    # fallback. Without it the DAG fails to import and scraping silently stops.
+    class Mapped:
+        def __class_getitem__(cls, item):
+            return Any
+    from sqlalchemy import Column as mapped_column
 from sqlalchemy.sql import func
 
 from db.base import Base
