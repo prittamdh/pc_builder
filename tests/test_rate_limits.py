@@ -219,11 +219,14 @@ def test_trusted_but_blank_header_falls_back_to_socket_address(client, monkeypat
 # --- counter across different path-parameter values. ------------------------
 
 class _StubProductSession:
-    """A get_db stand-in that never touches the live DB: db.get() always
+    """A get_db stand-in that never touches the live DB: every lookup
     reports 'no row', so GET /api/v1/products/{id} takes the 404 branch for
     any id - the only thing under test is whether the request is counted."""
 
     def get(self, model, pk):
+        return None
+
+    def scalar(self, stmt):
         return None
 
 

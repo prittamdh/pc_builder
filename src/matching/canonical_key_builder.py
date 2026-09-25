@@ -177,7 +177,11 @@ def resolve_motherboard_form_factor(designation: str | None, title: str) -> str 
     return form_factor_from_designation(designation) or form_factor_from_title(title)
 
 
-_EFFICIENCY_TIERS = ("titanium", "platinum", "gold", "silver", "bronze", "standard")
+# Order matters: the first tier found wins. "white" sits after every metal tier because
+# the word is far more often the colour - "80 Plus Platinum White" is a Platinum unit.
+# It was missing entirely until 2026-09-25, so a genuine 80 PLUS White unit (Ant Esports
+# VS400L-VS700L) normalised to "" and keyed like an untiered one.
+_EFFICIENCY_TIERS = ("titanium", "platinum", "gold", "silver", "bronze", "white", "standard")
 
 
 def normalize_efficiency_trim(efficiency_rating: str | None) -> str:

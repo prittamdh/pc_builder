@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.filters import has_usable_price
+from api.filters import from_active_store, has_usable_price
 from api.spec_filters import (
     ENUM,
     RANGE,
@@ -107,7 +107,7 @@ def list_products(
             detail=f"sort must be one of {', '.join(SORT_OPTIONS)}",
         )
 
-    conditions = []
+    conditions = [from_active_store()]
 
     if q:
         conditions.extend(_search_conditions(q))
@@ -218,7 +218,7 @@ def list_product_models(
             detail="sort must be price_asc, price_desc or name_asc",
         )
 
-    conditions = [has_usable_price()]
+    conditions = [has_usable_price(), from_active_store()]
     if q:
         conditions.extend(_search_conditions(q))
     if p_category:
@@ -338,7 +338,7 @@ def get_catalog_stats(db: Session = Depends(get_db)):
     """
     products = db.scalar(
         select(func.count(Product.id)).where(
-            Product.is_legacy.is_(False), has_usable_price()
+            Product.is_legacy.is_(False), has_usable_price(), from_active_store()
         )
     ) or 0
     stores = db.scalar(select(func.count(Store.id)).where(Store.active.is_(True))) or 0
@@ -390,6 +390,7 @@ def list_spec_facets(
         Product.is_legacy.is_(False),
         Product.in_stock.is_(True),
         has_usable_price(),
+        from_active_store(),
         Product.canonical_id.is_not(None),
     ]
     if q:
@@ -456,6 +457,20 @@ def list_spec_facets(
     return {"p_category": p_category, "filters": filters, "applied": applied}
 
 
+def _visible_product_or_404(db: Session, product_id: int) -> Product:
+    """The listing, or 404 when it doesn't exist or its store is inactive.
+
+    An inactive store's page would show its last, stale prices as current.
+    """
+    product = db.scalar(select(Product).where(Product.id == product_id, from_active_store()))
+    if product is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with ID {product_id} not found",
+        )
+    return product
+
+
 @router.get("/{product_id}/price-series")
 def get_price_series(
     product_id: int,
@@ -473,11 +488,7 @@ def get_price_series(
     it is routinely inflated to manufacture a discount, so the observed floor is the
     only trustworthy baseline.
     """
-    product = db.get(Product, product_id)
-    if product is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-        )
+    product = _visible_product_or_404(db, product_id)
 
     since = func.now() - func.cast(f"{days} days", INTERVAL)
     day = func.date_trunc("day", PriceHistory.scraped_at)
@@ -535,12 +546,7 @@ def get_price_series(
 @router.get("/{product_id}", response_model=ProductOut)
 def get_product(product_id: int, db: Session = Depends(get_db)):
     """Retrieve detailed product details by database primary key."""
-    product = db.get(Product, product_id)
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with ID {product_id} not found",
-        )
+    product = _visible_product_or_404(db, product_id)
     p_out = ProductOut.model_validate(product)
     p_out.target_ids = [t.id for t in product.targets] if hasattr(product, "targets") else []
     p_out.keywords = [t.target_value for t in product.targets] if hasattr(product, "targets") else []
@@ -550,12 +556,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 @router.get("/{product_id}/history", response_model=list[PriceHistoryOut])
 def get_product_price_history(product_id: int, db: Session = Depends(get_db)):
     """Retrieve price history snapshots for a product."""
-    product = db.get(Product, product_id)
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with ID {product_id} not found",
-        )
+    product = _visible_product_or_404(db, product_id)
 
     stmt = (
         select(PriceHistory)

@@ -161,8 +161,33 @@ class TestPSUEfficiencyTrimInKey:
 
     def test_all_six_tiers_recognised(self):
         from matching.canonical_key_builder import normalize_efficiency_trim
-        for tier in ("Titanium", "Platinum", "Gold", "Silver", "Bronze", "Standard"):
+        for tier in ("Titanium", "Platinum", "Gold", "Silver", "Bronze", "White", "Standard"):
             assert normalize_efficiency_trim(f"80 PLUS {tier}") == tier.lower()
+
+    def test_white_tier_is_a_trim(self):
+        """
+        80 PLUS White is a real tier (Ant Esports VS400L-VS700L, GAMDIAS Aura GP450 Pro).
+        It used to normalise to "", so a White unit keyed like an untiered one and
+        reconciliation could fill it with a sibling's Gold or Bronze.
+        """
+        from matching.canonical_key_builder import (
+            build_psu_key_dict, make_canonical_key_string, normalize_efficiency_trim,
+        )
+        for spelling in ("80+ White", "80 PLUS WHITE", "80plus white", "White"):
+            assert normalize_efficiency_trim(spelling) == "white"
+        white = build_psu_key_dict("Ant Esports", "VS500L", 500, "80+ White")
+        assert make_canonical_key_string("psu", white) == "psu:ant_esports:white:vs500l:500w"
+        assert make_canonical_key_string("psu", white) != make_canonical_key_string(
+            "psu", build_psu_key_dict("Ant Esports", "VS500L", 500, None))
+
+    def test_metal_tier_wins_over_white(self):
+        """
+        "White" is far more often the colour. When a value names a metal tier as well
+        ("80 Plus Platinum White"), the metal tier is the rating and White the colour.
+        """
+        from matching.canonical_key_builder import normalize_efficiency_trim
+        assert normalize_efficiency_trim("80 Plus Platinum White") == "platinum"
+        assert normalize_efficiency_trim("White Gold") == "gold"
 
     def test_wattage_still_separates(self):
         """The trim is additional evidence, not a replacement for wattage."""
