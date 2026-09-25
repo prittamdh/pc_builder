@@ -876,17 +876,19 @@ async function openCompareModal(productName, productId) {
                 <tbody>
                     ${(data.offers || []).map(o => `
                         <tr>
-                            <td>${o.store_name}</td>
+                            <td>${escapeHtml(o.store_name)}</td>
                             <td style="color: var(--accent-cyan); font-weight: 700;">₹${Number(o.price).toLocaleString('en-IN')}</td>
                             <td>${o.in_stock ? 'In Stock' : 'Out of Stock'}</td>
-                            <td><a href="${o.url}" target="_blank" class="btn-primary" style="padding: 0.3rem 0.8rem; text-decoration: none; font-size: 0.85rem;">Buy</a></td>
+                            <td>${safeHttpUrl(o.url)
+                                ? `<a href="${escapeHtml(o.url)}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="padding: 0.3rem 0.8rem; text-decoration: none; font-size: 0.85rem;">Buy</a>`
+                                : ''}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
         `;
     } catch (err) {
-        content.innerHTML = `<div style="color: var(--danger);">Failed to load comparison data: ${err.message}</div>`;
+        content.innerHTML = `<div style="color: var(--danger);">Failed to load comparison data: ${escapeHtml(err.message)}</div>`;
     }
 }
 
@@ -976,6 +978,17 @@ async function openHistoryModal(productId) {
             </p>`;
     } catch (err) {
         content.innerHTML = `<div style="color: var(--danger);">Failed to load price history: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+// Store links come from scraped data: only http(s) may become a clickable href, so
+// a javascript: or data: URL can never run in the page.
+function safeHttpUrl(url) {
+    try {
+        const u = new URL(String(url || '').trim());  // no base: relative URLs are rejected
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch (e) {
+        return false;
     }
 }
 

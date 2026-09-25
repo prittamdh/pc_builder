@@ -42,7 +42,7 @@ from db.models.cooler_title_extraction import CoolerTitleExtraction
 from db.models.storage_title_extraction import StorageTitleExtraction
 from domain.builder import CompatibilityWarning
 from services.compatibility_rules import (
-    RULES, FIELD_LABELS, SLOT_LABELS, form_factor_index, rule_applies,
+    RULES, FIELD_LABELS, SLOT_LABELS, cooler_kind, form_factor_index, rule_applies,
     WATTAGE_HEADROOM, DEFAULT_CPU_TDP, DEFAULT_GPU_TDP,
 )
 
@@ -173,9 +173,19 @@ class CompatibilityEngine:
                     "height_mm": "height_mm",  # specs only - titles don't carry it
                     "cooler_type": "cooler_type",
                 })
+                # The extractor writes the literal "Unknown" when a title doesn't say,
+                # which _merge would prefer over a real cooler_specs type. Take the
+                # first source that actually knows (AIO or Air), else None.
+                spec = specs.get(p.canonical_id)
+                v.cooler_type = next(
+                    (t for t in (getattr(e, "cooler_type", None) if e else None,
+                                 getattr(spec, "cooler_type", None) if spec else None)
+                     if cooler_kind(t) is not None),
+                    None,
+                )
                 # radiator_size_mm is a fan size on air coolers, so only an AIO's counts
                 # as a radiator length.
-                v.aio_radiator_mm = v.radiator_size_mm if (v.cooler_type or "").upper().startswith("AIO") else None
+                v.aio_radiator_mm = v.radiator_size_mm if cooler_kind(v.cooler_type) == "aio" else None
                 views.append(v)
             return views
 
@@ -329,6 +339,18 @@ class CompatibilityEngine:
                     level="warning",
                     message=f"Power Supply Capacity Warning: {provided}W PSU is close to or below recommended headroom for an estimated {estimated_wattage}W build draw.",
                 ))
+
+        # A PSU whose wattage we don't know can't be checked against anything, so
+        # say so (once a CPU or GPU gives it something to power) rather than let
+        # the build read "All checks passed".
+        if selections.get("cpu") or selections.get("gpu"):
+            for view in selections.get("psu", []):
+                if not self._get(view, "wattage"):
+                    name = self._get(view, "product_name") or "the selected PSU"
+                    warnings.append(CompatibilityWarning(
+                        level="unverified",
+                        message=f"Unverified: {name} has no published wattage, so the PSU capacity could not be checked.",
+                    ))
 
         # FIT-03: name every part whose wattage above is a typical value rather than
         # its own listed TDP. Appended last so the list order stays deterministic:

@@ -350,3 +350,139 @@ class TestWattageEstimate:
                                "psu": [_view("psu", wattage=450)]})
         levels = [w.level for w in s.warnings]
         assert levels == ["warning", "estimate", "estimate"], s.warnings
+
+
+# ---------------------------------------------------------------------------
+# Fix round 1
+# ---------------------------------------------------------------------------
+from services.compatibility_rules import cooler_kind, form_factor_index  # noqa: E402
+
+
+class TestUnknownCoolerType:
+    """The extractor stores the literal "Unknown"; it must not read as a known type."""
+
+    @pytest.mark.parametrize("raw,kind", [
+        ("AIO Liquid", "aio"), ("aio 240", "aio"), ("Air", "air"), ("AIR tower", "air"),
+        ("Unknown", None), ("", None), ("  ", None), (None, None), ("Liquid", None),
+    ])
+    def test_cooler_kind(self, raw, kind):
+        assert cooler_kind(raw) == kind
+
+    def test_rule_applies_treats_unknown_and_blank_as_unknown(self):
+        height = next(r for r in RULES if r.field_a == "height_mm")
+        radiator = next(r for r in RULES if r.field_a == "aio_radiator_mm")
+        case = SimpleNamespace()
+        for t in ("Unknown", "", "unknown "):
+            cooler = SimpleNamespace(cooler_type=t)
+            assert rule_applies(height, cooler, case), t
+            assert rule_applies(radiator, cooler, case), t
+
+    def test_unknown_type_reports_height_and_radiator_unverified(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "cooler": [_view("cooler", "Mystery Cooler", cooler_type="Unknown", height_mm=None,
+                             aio_radiator_mm=None)],
+            "case": [_view("case")],
+        })
+        msgs = [w.message for w in _levels(summary, "unverified")]
+        assert len(msgs) == 2, summary.warnings
+        assert any(FIELD_LABELS["height_mm"] in m for m in msgs)
+        assert any(FIELD_LABELS["aio_radiator_mm"] in m for m in msgs)
+        assert summary.verdict == "No problems found - 2 checks unverified"
+
+
+class _FakeSession:
+    """Answers _resolve_slot's two queries from in-memory rows, keyed by model class."""
+
+    def __init__(self, rows_by_model):
+        self.rows_by_model = rows_by_model
+
+    def scalars(self, stmt):
+        model = stmt.column_descriptions[0]["entity"]
+        return list(self.rows_by_model.get(model, []))
+
+
+class TestCoolerResolve:
+    def _resolve(self, ext_type, spec_type, size=240):
+        from db.models.category_specs import CoolerSpecs
+        from db.models.cooler_title_extraction import CoolerTitleExtraction
+        product = SimpleNamespace(id=1, canonical_id="c-1", name="Some Cooler")
+        spec = SimpleNamespace(canonical_id="c-1", cooler_type=spec_type, radiator_size_mm=size,
+                               supported_sockets=None, tdp_rating=None, height_mm=None)
+        ext = SimpleNamespace(product_id=1, cooler_type=ext_type, size_mm=None)
+        engine = CompatibilityEngine(session=_FakeSession({CoolerSpecs: [spec],
+                                                           CoolerTitleExtraction: [ext]}))
+        return engine._resolve_slot("cooler", [product])[0]
+
+    @pytest.mark.parametrize("placeholder", ["Unknown", "", "  "])
+    def test_specs_type_wins_over_an_unknown_extraction(self, placeholder):
+        view = self._resolve(placeholder, "AIO Liquid")
+        assert view.cooler_type == "AIO Liquid"
+        assert view.aio_radiator_mm == 240
+
+    def test_unknown_everywhere_resolves_to_none(self):
+        view = self._resolve("Unknown", None)
+        assert view.cooler_type is None
+        assert view.aio_radiator_mm is None
+
+    def test_known_extraction_still_wins(self):
+        assert self._resolve("Air", "AIO Liquid").cooler_type == "Air"
+
+
+class TestFormFactorIndex:
+    # Every distinct value in motherboard_specs / motherboard_title_extractions /
+    # cabinet_specs / cabinet_title_extractions (read-only query, 2026-09-25):
+    # MATX, ATX, EATX, ITX, CEB, EEB, NULL - plus the spellings titles use.
+    @pytest.mark.parametrize("value,expected", [
+        ("ITX", 0), ("MATX", 1), ("ATX", 2), ("EATX", 3),
+        ("CEB", None), ("EEB", None), (None, None), ("", None),
+        ("E-ATX", 3), ("E ATX", 3), ("Extended ATX", 3), ("eatx", 3),
+        ("Micro-ATX", 1), ("Micro ATX", 1), ("microATX", 1), ("mATX", 1), ("M-ATX", 1),
+        ("Mini-ITX", 0), ("Mini ITX", 0), ("mini-itx", 0),
+        ("ATX Mid Tower", 2), ("Mid Tower", None), ("XL-ATX", None),
+        # A case listing several sizes fits the largest of them.
+        ("ATX/Micro-ATX/Mini-ITX", 2), ("E-ATX / ATX", 3),
+    ])
+    def test_values(self, value, expected):
+        assert form_factor_index(value) == expected
+
+    def test_eatx_board_in_atx_case_is_a_problem(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", form_factor="EATX")],
+            "case": [_view("case", form_factor="ATX")],
+        })
+        assert [w.level for w in summary.warnings] == ["error"]
+        assert summary.verdict == "Problems found"
+
+    def test_micro_atx_board_fits_an_atx_case(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", form_factor="Micro-ATX")],
+            "case": [_view("case", form_factor="ATX")],
+        })
+        assert summary.warnings == [] and summary.verdict == "All checks passed"
+
+
+class TestPsuWattageUnknown:
+    @pytest.mark.parametrize("wattage", [None, 0])
+    @pytest.mark.parametrize("other", ["cpu", "gpu"])
+    def test_psu_without_wattage_is_unverified(self, monkeypatch, wattage, other):
+        summary = _run(monkeypatch, {
+            other: [_view(other)],
+            "psu": [_view("psu", "Mystery PSU", wattage=wattage)],
+        })
+        items = _levels(summary, "unverified")
+        assert len(items) == 1, summary.warnings
+        assert "Mystery PSU" in items[0].message and "wattage" in items[0].message
+        assert summary.verdict != "All checks passed"
+
+    def test_psu_alone_is_not_checked(self, monkeypatch):
+        summary = _run(monkeypatch, {"psu": [_view("psu", wattage=None)]})
+        assert summary.warnings == []
+
+    def test_psu_with_wattage_gives_no_item(self, monkeypatch):
+        summary = _run(monkeypatch, {"cpu": [_view("cpu")], "psu": [_view("psu", wattage=850)]})
+        assert summary.warnings == []
+
+    def test_unverified_psu_comes_before_estimates(self, monkeypatch):
+        summary = _run(monkeypatch, {"cpu": [_view("cpu", tdp=None)],
+                                     "psu": [_view("psu", wattage=None)]})
+        assert [w.level for w in summary.warnings] == ["unverified", "estimate"]

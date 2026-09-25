@@ -334,27 +334,54 @@ class TestSavedBuilds:
     """A build used to live only in page memory and vanished on refresh."""
 
     def test_save_then_open_share_link_restores_the_build(self, page, base_url):
+        """Exercises the page's own save and restore code. The save and load
+        endpoints are intercepted, so the test never writes a row to the live
+        database; the routes themselves are covered by API unit tests."""
+        token = "e2e-intercepted-token"
+        posted = []
+        shared = {
+            "share_token": token, "name": "e2e rig", "notes": None, "created_at": None,
+            "items": {
+                "cpu": {"id": 4089, "name": "AMD Ryzen 7 7800X3D (e2e)", "current_price": 1.0,
+                        "in_stock": True},
+                "motherboard": {"id": 4867, "name": "B850 Board (e2e)", "current_price": 1.0,
+                                "in_stock": True},
+            },
+            "unavailable": [], "compatible": True, "warnings": [], "estimated_wattage": 0,
+            "total_min_cost": "0", "store_breakdown": [],
+            "compatibility_changed_since_save": False,
+        }
+
+        def on_builds(route):
+            req = route.request
+            if req.method == "POST":
+                posted.append(req.post_data_json)
+                route.fulfill(json={"share_token": token})
+            elif req.url.split("?")[0].endswith(f"/builds/{token}"):
+                route.fulfill(json=shared)
+            else:
+                route.fulfill(status=404, json={"detail": "not found"})
+
+        page.route("**/api/v1/builder/builds**", on_builds)
         _open_builder(page)
-        token = page.evaluate("""async () => {
-            const get = async id => (await fetch(`/api/v1/products/${id}`)).json();
-            for (const [slot, id] of Object.entries({cpu:4089, motherboard:4867})) {
-                const p = await get(id);
-                state.builderSelections[slot] = p;
-                document.getElementById(`slot-name-${slot}`).innerText = p.name;
+        page.evaluate("""(items) => {
+            for (const [slot, item] of Object.entries(items)) {
+                state.builderSelections[slot] = item;
+                document.getElementById(`slot-name-${slot}`).innerText = item.name;
             }
-            const r = await fetch('/api/v1/builder/builds', {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({selections:{cpu:4089, motherboard:4867}, name:'e2e rig'})
-            });
-            return (await r.json()).share_token;
-        }""")
-        assert token
+        }""", shared["items"])
+        page.fill("#build-name", "e2e rig")
+        page.locator("#save-build-btn").click()
+
+        expect(page.locator("#share-link")).to_have_value(
+            re.compile(rf"\?build={token}$"), timeout=15000)
+        assert posted == [{"selections": {"cpu": 4089, "motherboard": 4867},
+                           "name": "e2e rig"}], posted
 
         page.goto(f"{base_url}/?build={token}", wait_until="networkidle")
-        expect(page.locator("#slot-name-cpu")).not_to_contain_text(
-            "No component", timeout=15000)
-        assert "7800X3D" in page.locator("#slot-name-cpu").inner_text()
-        assert "B850" in page.locator("#slot-name-motherboard").inner_text()
+        expect(page.locator("#slot-name-cpu")).to_have_text(
+            "AMD Ryzen 7 7800X3D (e2e)", timeout=15000)
+        expect(page.locator("#slot-name-motherboard")).to_have_text("B850 Board (e2e)")
         assert page.locator("#build-name").input_value() == "e2e rig"
 
     def test_empty_build_cannot_be_saved(self, page):
@@ -875,6 +902,43 @@ class TestUntrustedNamesAreEscaped:
         }""", _EVIL)
         page.locator("#products-grid .card-actions button").first.click()
         assert page.evaluate("() => window.__calls") == [["compare", _EVIL, 999999]]
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_compare_modal_escapes_store_names_and_only_links_http_urls(self, page):
+        body = {
+            "query": "q", "lowest_price": 1000, "highest_price": 2000, "total_offers": 3,
+            "matched_by": "canonical_id",
+            "offers": [
+                {"store_name": _EVIL, "price": 1000, "in_stock": True,
+                 "url": "javascript:window.__xss=2"},
+                {"store_name": "Good Store", "price": 1500, "in_stock": True,
+                 "url": 'https://shop.example/p?a=1&b="><img src=x onerror="window.__xss=4">'},
+                {"store_name": "No Link Store", "price": 2000, "in_stock": False,
+                 "url": "data:text/html,<script>window.__xss=5</script>"},
+            ],
+        }
+        page.route("**/api/v1/compare**", lambda route: route.fulfill(json=body))
+        page.evaluate("() => openCompareModal('q', 1)")
+        rows = page.locator("#compare-modal-content tbody tr")
+        expect(rows).to_have_count(3)
+        expect(rows.nth(0).locator("td").first).to_have_text(_EVIL)
+        assert page.locator("#compare-modal-content img").count() == 0
+        links = page.locator("#compare-modal-content a")
+        expect(links).to_have_count(1)  # only the https offer gets a Buy link
+        href = links.first.get_attribute("href")
+        assert href == 'https://shop.example/p?a=1&b="><img src=x onerror="window.__xss=4">'
+        assert links.first.get_attribute("rel") == "noopener noreferrer"
+        assert page.evaluate("() => window.__xss") is None
+
+    def test_compare_modal_escapes_the_error_message(self, page):
+        # Chrome's JSON parse error quotes the start of the body back.
+        page.route("**/api/v1/compare**", lambda route: route.fulfill(
+            status=200, content_type="application/json",
+            body='<img src=x onerror="window.__xss=3">'))
+        page.evaluate("() => openCompareModal('q', 1)")
+        content = page.locator("#compare-modal-content")
+        expect(content).to_contain_text("Failed to load comparison data")
+        assert page.locator("#compare-modal-content img").count() == 0
         assert page.evaluate("() => window.__xss") is None
 
     def test_picker_choice_keeps_an_awkward_name_intact(self, page):

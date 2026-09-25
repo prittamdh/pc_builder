@@ -521,6 +521,7 @@ main {
     padding: 0.6rem;
     border-radius: 8px;
     margin-bottom: 0.5rem;
+    overflow-wrap: anywhere;
 
 }
 
@@ -548,10 +549,6 @@ main {
     background: rgba(148, 163, 184, 0.08);
     color: var(--text-secondary);
     border-left: 3px solid var(--text-secondary);
-}
-
-.warning-item {
-    overflow-wrap: anywhere;
 }
 
 .total-cost {
