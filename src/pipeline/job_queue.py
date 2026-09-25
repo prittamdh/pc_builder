@@ -56,7 +56,7 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def _host_belongs_to_store(host: str, domain: str) -> bool:
+def host_belongs_to_store(host: str, domain: str) -> bool:
     return host == domain or host.endswith("." + domain)
 
 
@@ -70,15 +70,39 @@ def enqueue(
     page: int | None = None,
     target_id: int | None = None,
     product_id: int | None = None,
+    parent_job_id: int | None = None,
     now: datetime | None = None,
 ) -> int | None:
-    """Queue one page. Returns the new job id, or None if that page is already queued
-    or being fetched for this store.
+    """Queue one page and commit. Returns the new job id, or None if that page is
+    already queued or being fetched for this store.
 
     Raises ValueError for an unknown job type, a header outside ALLOWED_HEADERS, or a
     URL that isn't https on the store's own domain - the queue never asks an agent to
     fetch anything else.
     """
+    job_id = insert_job(
+        session, store_id=store_id, job_type=job_type, url=url, headers=headers, page=page,
+        target_id=target_id, product_id=product_id, parent_job_id=parent_job_id, now=now,
+    )
+    session.commit()
+    return job_id
+
+
+def insert_job(
+    session,
+    *,
+    store_id: int,
+    job_type: str,
+    url: str,
+    headers: dict | None = None,
+    page: int | None = None,
+    target_id: int | None = None,
+    product_id: int | None = None,
+    parent_job_id: int | None = None,
+    now: datetime | None = None,
+) -> int | None:
+    """enqueue() without the commit, for callers already inside a transaction (the
+    result processor queues the next page in the same transaction as the saves)."""
     if job_type not in JOB_TYPES:
         raise ValueError(f"unknown job type {job_type!r}")
     headers = dict(headers or {})
@@ -90,15 +114,15 @@ def enqueue(
         raise ValueError(f"store {store_id} has no domain to check URLs against")
     parts = urlsplit(url)
     host = (parts.hostname or "").lower()
-    if parts.scheme != "https" or not _host_belongs_to_store(host, store.domain.lower()):
+    if parts.scheme != "https" or not host_belongs_to_store(host, store.domain.lower()):
         raise ValueError(f"{url!r} is not an https URL on {store.domain}")
 
     stmt = (
         pg_insert(ScrapeJob)
         .values(
             store_id=store_id, job_type=job_type, url=url, headers=headers, page=page,
-            target_id=target_id, product_id=product_id, status="queued",
-            available_at=now or utcnow(),
+            target_id=target_id, product_id=product_id, parent_job_id=parent_job_id,
+            status="queued", available_at=now or utcnow(),
         )
         .on_conflict_do_nothing(
             index_elements=["store_id", "url"],
@@ -106,9 +130,7 @@ def enqueue(
         )
         .returning(ScrapeJob.id)
     )
-    job_id = session.execute(stmt).scalar_one_or_none()
-    session.commit()
-    return job_id
+    return session.execute(stmt).scalar_one_or_none()
 
 
 def lease(session, agent_id: int, max_jobs: int, now: datetime | None = None) -> list[LeasedJob]:

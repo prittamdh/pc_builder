@@ -12,10 +12,21 @@ class SearchService:
         self.session = session
         self.product_repository = ProductRepository(session)
 
-    def save(self, result: SearchResult, target_id: int | None = None, hard_category: str | None = None):
+    def save(
+        self,
+        result: SearchResult,
+        target_id: int | None = None,
+        hard_category: str | None = None,
+        agent_id: int | None = None,
+        job_id: int | None = None,
+    ):
+        """Upsert the listing and add a price row. Doesn't commit. Returns False when
+        nothing was saved (a new listing that is out of stock), else True.
+
+        agent_id/job_id record which agent job fetched the page (AGENT-09)."""
         existing_product = self.product_repository.get_by_sid_pid(result.sid, result.pid)
         if not existing_product and not result.in_stock:
-            return
+            return False
 
         from matching.category_classifier import CategoryClassifier
         from matching.condition_policy import detect_condition
@@ -69,9 +80,12 @@ class SearchService:
             price=Decimal(result.price),
             mrp=Decimal(result.mrp) if result.mrp is not None else None,
             in_stock=result.in_stock if result.in_stock is not None else True,
+            agent_id=agent_id,
+            job_id=job_id,
         )
 
         self.session.add(price_history)
+        return True
 
     def save_many(self, results: list[SearchResult], target_id: int | None = None, hard_category: str | None = None):
         deduped = {}

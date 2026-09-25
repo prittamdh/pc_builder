@@ -121,15 +121,29 @@ malformed request, **401**, **413**, **429** as above.
 
 ### What the server checks before saving (plan 02-02)
 
-The server trusts an upload less than its own fetches. Any failed check stores the job as
-`rejected` or `blocked` with the reason:
+The server trusts an upload less than its own fetches. `src/pipeline/scrape_results.py`
+runs these checks in this order, and stores the outcome and reason on the job:
 
-- body at most 5 MB
-- the host of `final_url` belongs to the job's store
-- the content type matches what that store's platform serves (JSON or HTML)
-- no challenge, login or captcha page (reusing the markers in `generic_scraper._is_challenge_body`)
-- a category page 1 that parses to 0 products is `failed`, not "empty"
-- every price passes `has_usable_price` and the physical bounds
+| Upload | Outcome |
+|--------|---------|
+| `error` set, or no `http_status` | `requeued` (or `failed` on the 3rd attempt) |
+| body over 5 MB | `rejected` |
+| `final_url` not on the store's domain | `rejected` |
+| a Cloudflare challenge page (markers in `generic_scraper._is_challenge_body`), or redirected to a login page | `blocked` |
+| HTTP 429 or 5xx | `requeued` |
+| HTTP 401 or 403 | `blocked` |
+| HTTP 404/410 on a listing | page 1: `failed`; a later page: `done`, the listing ends there |
+| HTTP 404/410 on a product page | `done`, the product is marked out of stock |
+| any other non-2xx | `failed` |
+| content type isn't what the store's platform serves (JSON or HTML) | `rejected` |
+| the parser raises | `rejected` |
+| listing page 1 parses to 0 products | `failed`, never a quiet "empty" |
+
+A price of 0 or above ₹20,00,000 is a parse error, not a price: that item is dropped
+and counted (`dropped_prices`), and the rest of the page is saved.
+
+Shopify listings are asked for 100 products a page, so even EliteHubs' biggest pages
+stay near 2.5 MB (at 250 a page they reached 6 MB).
 
 ## `POST /api/agent/heartbeat`
 

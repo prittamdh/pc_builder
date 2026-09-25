@@ -51,6 +51,11 @@ class ScrapeJob(Base):
     product_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True,
     )
+    # The previous page of the same listing run. Pagination follows this chain to know
+    # which product ids earlier pages already brought (plan 02-02).
+    parent_job_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("scrape_jobs.id", ondelete="SET NULL"), nullable=True,
+    )
 
     status: Mapped[str] = mapped_column(String(12), server_default="queued", nullable=False)
     attempts: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"), nullable=False)
