@@ -4,7 +4,8 @@ The pipeline is unhealthy when any of these holds:
 - no agent has checked in for AGENT_SILENCE (every extension off, or every token revoked)
 - no price has been saved for PRICE_SILENCE (agents run but nothing lands)
 - a scheduled worker task's latest run failed, or it hasn't started for more than two
-  of its intervals (or never ran)
+  of its intervals. Only tasks that have run at least once are checked, so a setup
+  where Airflow still does the work (local development) isn't reported as broken.
 """
 from datetime import datetime, timedelta
 
@@ -14,13 +15,13 @@ from db.models.pipeline_run import PipelineRun
 from db.models.price_history import PriceHistory
 from db.models.scrape_agent import ScrapeAgent
 from pipeline.job_queue import status_counts, utcnow
+from pipeline.schedule import TASK_INTERVALS
 
 AGENT_SILENCE = timedelta(hours=24)
 PRICE_SILENCE = timedelta(hours=24)
 
-# task name -> how often the worker runs it. Filled in by the worker (plan 02-03);
-# empty until then, so no task can be reported overdue before it exists.
-SCHEDULED_TASKS: dict[str, timedelta] = {}
+# task name -> how often the worker runs it (plan 02-03).
+SCHEDULED_TASKS: dict[str, timedelta] = TASK_INTERVALS
 
 
 def pipeline_problems(session, now: datetime | None = None) -> list[str]:
@@ -42,8 +43,7 @@ def pipeline_problems(session, now: datetime | None = None) -> list[str]:
             select(PipelineRun).where(PipelineRun.task == task).order_by(PipelineRun.started_at.desc()).limit(1)
         ).scalar_one_or_none()
         if latest is None:
-            problems.append(f"task {task} has never run")
-            continue
+            continue  # never run here: this setup doesn't use the worker for it
         if latest.status == "failed":
             problems.append(f"task {task} failed at {latest.started_at}: {(latest.error or '')[:200]}")
         if now - latest.started_at > 2 * interval:
