@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 # otherwise fail first with an unhelpful TypeError on a None DATABASE_URL).
 settings.require_database_url()
 
-from api.routes import builder, compare, images, products, stores
+from api.routes import agent, builder, compare, images, products, stores
 
 _docs_enabled = settings.ENV != "production"
 
@@ -106,6 +106,9 @@ app.include_router(products.router, prefix="/api/v1")
 app.include_router(builder.router, prefix="/api/v1")
 app.include_router(compare.router, prefix="/api/v1")
 app.include_router(images.router, prefix="/api/v1")
+# Scrape agents (plan 02-04): token-only, per-token limits, not in the public schema.
+app.include_router(agent.router)
+app.include_router(agent.health_router)
 
 # Mount Static UI Files
 static_dir = Path(__file__).resolve().parent.parent / "static"

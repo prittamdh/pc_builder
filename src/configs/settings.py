@@ -163,10 +163,18 @@ TRUST_CF_CONNECTING_IP = _bool_env("TRUST_CF_CONNECTING_IP", False)
 # single process - limiter counters are in memory, so extra workers multiply
 # the effective limit.
 RATE_LIMIT_ENABLED = _bool_env("RATE_LIMIT_ENABLED", True)
+
+# Plan 02-05: when true, the scheduled scrape task queues jobs for the browser-extension
+# agents instead of fetching store pages from this machine. Off by default, so prices
+# keep flowing the old way until the extensions are installed and proven.
+SCRAPE_VIA_AGENTS = _bool_env("SCRAPE_VIA_AGENTS", False)
 RATE_LIMIT_DEFAULT = _validated_rate_limit("RATE_LIMIT_DEFAULT", "300/minute")
 RATE_LIMIT_IMAGES = _validated_rate_limit("RATE_LIMIT_IMAGES", "120/minute")
 RATE_LIMIT_BUILDER = _validated_rate_limit("RATE_LIMIT_BUILDER", "60/minute")
 RATE_LIMIT_SAVE_BUILD = _validated_rate_limit("RATE_LIMIT_SAVE_BUILD", "10/minute")
+# Per agent token and per endpoint (plan 02-04). An agent leases about once a minute and
+# uploads a few dozen pages a minute at most, so this only stops a runaway or leaked one.
+RATE_LIMIT_AGENT = _validated_rate_limit("RATE_LIMIT_AGENT", "120/minute")
 
 # Owner has not chosen a contact address yet (WEB-05). Empty is the clearly
 # marked placeholder - never invent one. The About page shows a
