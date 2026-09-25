@@ -14,10 +14,25 @@ from services.scrape_target_service import ScrapeTargetService
 from services.search_service import SearchService
 from services.store_service import StoreService
 from common.enums.target_type import TargetType
+from configs import settings
+from pipeline.job_queue import reap
+from pipeline.scrape_planning import enqueue_due_targets
+
+
+def queue_due_targets_for_agents():
+    """Agent mode (SCRAPE_VIA_AGENTS): return expired leases to the queue, then queue
+    page 1 of every due target. The extensions fetch; the API saves each upload."""
+    with SessionLocal() as session:
+        reaped = reap(session)
+        queued = enqueue_due_targets(session)
+    print(f"[Scheduled Scraper] agent mode: queued {queued} targets; "
+          f"requeued {reaped['requeued']} expired leases, failed {reaped['failed']}")
 
 
 def execute_due_scrape_targets(limit: int = 10, max_pages: int = 2):
     """Polls and executes due scrape targets across active stores."""
+    if settings.SCRAPE_VIA_AGENTS:
+        return queue_due_targets_for_agents()
     with SessionLocal() as session:
         target_service = ScrapeTargetService(session)
         store_service = StoreService(session)
