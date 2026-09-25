@@ -212,3 +212,82 @@ def test_trusted_but_blank_header_falls_back_to_socket_address(client, monkeypat
     r2 = client.get("/api/v1/images", params={"u": "https://pcstudio.in/x.jpg"},
                      headers={"CF-Connecting-IP": "   "})
     assert r2.status_code == 429
+
+
+# --- F1: the limiter must key by endpoint (route pattern), not exact URL, ---
+# --- so parameterised paths (/products/{id}, /builds/{token}) share one ----
+# --- counter across different path-parameter values. ------------------------
+
+class _StubProductSession:
+    """A get_db stand-in that never touches the live DB: db.get() always
+    reports 'no row', so GET /api/v1/products/{id} takes the 404 branch for
+    any id - the only thing under test is whether the request is counted."""
+
+    def get(self, model, pk):
+        return None
+
+
+class _StubBuildSession:
+    """A get_db stand-in for GET /api/v1/builder/builds/{token}: db.scalar()
+    always reports 'no row', so any token takes the 404 branch."""
+
+    def scalar(self, *a, **k):
+        return None
+
+
+@pytest.fixture
+def stub_product_db():
+    app.dependency_overrides[get_db] = lambda: _StubProductSession()
+    yield
+    app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture
+def stub_build_db():
+    app.dependency_overrides[get_db] = lambda: _StubBuildSession()
+    yield
+    app.dependency_overrides.pop(get_db, None)
+
+
+def test_products_by_id_limit_is_shared_across_different_ids(monkeypatch, stub_product_db):
+    """Reviewer-proven bug: slowapi's default key_style is per-exact-URL, so
+    /api/v1/products/1, /products/2, /products/3 each get their own counter
+    and a parameterised route is effectively unlimited. With key_style set to
+    "endpoint" they share one counter keyed by route pattern."""
+    monkeypatch.setattr(settings, "RATE_LIMIT_DEFAULT", "2/minute")
+    with TestClient(app) as c:
+        codes = [c.get(f"/api/v1/products/{i}").status_code for i in range(1, 4)]
+    assert codes == [404, 404, 429]
+
+
+def test_builds_by_token_limit_is_shared_across_different_tokens(monkeypatch, stub_build_db):
+    monkeypatch.setattr(settings, "RATE_LIMIT_BUILDER", "2/minute")
+    tokens = ["aaaa-unknown", "bbbb-unknown", "cccc-unknown"]
+    with TestClient(app) as c:
+        codes = [c.get(f"/api/v1/builder/builds/{t}").status_code for t in tokens]
+    assert codes == [404, 404, 429]
+
+
+def test_validate_route_limit_applies(monkeypatch):
+    """/api/v1/builder/validate: an empty selection list short-circuits before
+    any DB query (see BuilderService.validate_and_calculate_build), so this
+    only exercises the limiter."""
+    monkeypatch.setattr(settings, "RATE_LIMIT_BUILDER", "2/minute")
+    with TestClient(app) as c:
+        codes = [
+            c.post("/api/v1/builder/validate", json={"selected_product_ids": []}).status_code
+            for _ in range(3)
+        ]
+    assert codes == [200, 200, 429]
+
+
+def test_candidates_route_limit_applies(monkeypatch):
+    """/api/v1/builder/candidates: an unknown slot returns early without
+    touching the DB, so this only exercises the limiter."""
+    monkeypatch.setattr(settings, "RATE_LIMIT_BUILDER", "2/minute")
+    with TestClient(app) as c:
+        codes = [
+            c.post("/api/v1/builder/candidates", json={"slot": "not-a-real-slot"}).status_code
+            for _ in range(3)
+        ]
+    assert codes == [200, 200, 429]

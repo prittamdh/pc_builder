@@ -4,9 +4,60 @@ Global project settings.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from limits import parse_many
 
 # Load environment variables from .env
 load_dotenv()
+
+
+# ---------------------------------------------------------------------
+# Blank-value handling (F2)
+# ---------------------------------------------------------------------
+# python-dotenv loads a blank `SOME_KEY=` line from a .env file as an empty
+# string in the environment, not "unset" - so `os.getenv(name, default)`
+# never sees the default; it returns "". A shipped .env.example with every
+# value blank (the template a new deploy copies) would then feed "" into
+# every setting below. For every setting except DATABASE_URL, blank means
+# "use the default", applied consistently via this helper rather than ad hoc
+# per line.
+
+def _env_or_default(key: str, default: str) -> str:
+    """`os.getenv(key, default)`, treating a present-but-blank/whitespace-only
+    value the same as an absent one."""
+    raw = os.getenv(key)
+    if raw is None or not raw.strip():
+        return default
+    return raw
+
+
+def _bool_env(key: str, default: bool) -> bool:
+    """A strict true/false env var: blank/unset means `default`; anything
+    else that isn't exactly "true" or "false" (case/whitespace-insensitive)
+    fails closed with a RuntimeError naming the variable, rather than the
+    ambiguous `.lower() == "true"` pattern, under which a typo like "1" or
+    "yes" silently means False."""
+    raw = os.getenv(key)
+    if raw is None or not raw.strip():
+        return default
+    normalized = raw.strip().lower()
+    if normalized not in ("true", "false"):
+        raise RuntimeError(
+            f"{key} must be 'true' or 'false' (case/whitespace-insensitive); got {raw!r}."
+        )
+    return normalized == "true"
+
+
+def _validated_rate_limit(key: str, default: str) -> str:
+    """A rate-limit string (e.g. "300/minute"), blank-defaulted like
+    `_env_or_default`, then validated eagerly at import with slowapi's own
+    parser (`limits.parse_many`) - a bad value fails closed at startup,
+    naming the variable, instead of 500ing every request that hits it."""
+    value = _env_or_default(key, default)
+    try:
+        parse_many(value)
+    except ValueError as exc:
+        raise RuntimeError(f"{key} is not a valid rate limit string: {value!r} ({exc})") from exc
+    return value
 
 # ---------------------------------------------------------------------
 # Project Paths
@@ -25,7 +76,7 @@ LOG_DIR = PROJECT_ROOT / "logs"
 # HTTP Configuration
 # ---------------------------------------------------------------------
 
-REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 20))
+REQUEST_TIMEOUT = int(_env_or_default("REQUEST_TIMEOUT", "20"))
 DEFAULT_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -41,14 +92,14 @@ DEFAULT_HEADERS = {
 # Retry Configuration
 # ---------------------------------------------------------------------
 
-MAX_RETRIES = int(os.getenv("MAX_RETRIES", 3))
-RETRY_BACKOFF = int(os.getenv("BACKOFF_FACTOR", 2))
+MAX_RETRIES = int(_env_or_default("MAX_RETRIES", "3"))
+RETRY_BACKOFF = int(_env_or_default("BACKOFF_FACTOR", "2"))
 
 # ---------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = _env_or_default("LOG_LEVEL", "INFO")
 LOG_FILE = LOG_DIR / "pc_builder.log"
 
 # ---------------------------------------------------------------------
@@ -65,7 +116,7 @@ NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 # Matching Pipeline Configuration
 # ---------------------------------------------------------------------
 
-FUZZY_MATCH_THRESHOLD = float(os.getenv("FUZZY_MATCH_THRESHOLD", 0.90))
+FUZZY_MATCH_THRESHOLD = float(_env_or_default("FUZZY_MATCH_THRESHOLD", "0.90"))
 
 # ---------------------------------------------------------------------
 # Database Configuration
@@ -90,7 +141,7 @@ def require_database_url() -> str:
 # ---------------------------------------------------------------------
 
 _ALLOWED_ENVS = ("development", "production")
-_env_raw = os.getenv("ENV", "development")
+_env_raw = _env_or_default("ENV", "development")
 ENV = _env_raw.strip().lower()
 if ENV not in _ALLOWED_ENVS:
     raise RuntimeError(
@@ -106,16 +157,16 @@ CORS_ALLOWED_ORIGINS = [
 # header. Phase 3 turns this on after OPS-02 firewalls the origin to
 # Cloudflare ranges; until then the header is attacker-controlled, so the key
 # function uses the socket address instead.
-TRUST_CF_CONNECTING_IP = os.getenv("TRUST_CF_CONNECTING_IP", "false").lower() == "true"
+TRUST_CF_CONNECTING_IP = _bool_env("TRUST_CF_CONNECTING_IP", False)
 
 # Rate limits (used by plan 01-05's slowapi limiter). The API must run as a
 # single process - limiter counters are in memory, so extra workers multiply
 # the effective limit.
-RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
-RATE_LIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "300/minute")
-RATE_LIMIT_IMAGES = os.getenv("RATE_LIMIT_IMAGES", "120/minute")
-RATE_LIMIT_BUILDER = os.getenv("RATE_LIMIT_BUILDER", "60/minute")
-RATE_LIMIT_SAVE_BUILD = os.getenv("RATE_LIMIT_SAVE_BUILD", "10/minute")
+RATE_LIMIT_ENABLED = _bool_env("RATE_LIMIT_ENABLED", True)
+RATE_LIMIT_DEFAULT = _validated_rate_limit("RATE_LIMIT_DEFAULT", "300/minute")
+RATE_LIMIT_IMAGES = _validated_rate_limit("RATE_LIMIT_IMAGES", "120/minute")
+RATE_LIMIT_BUILDER = _validated_rate_limit("RATE_LIMIT_BUILDER", "60/minute")
+RATE_LIMIT_SAVE_BUILD = _validated_rate_limit("RATE_LIMIT_SAVE_BUILD", "10/minute")
 
 # Owner has not chosen a contact address yet (WEB-05). Empty is the clearly
 # marked placeholder - never invent one. The About page shows a

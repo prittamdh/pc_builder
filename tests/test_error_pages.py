@@ -98,3 +98,30 @@ def test_error_pages_carry_security_headers():
     resp = client.get("/no-such-page")
     assert resp.headers.get("x-content-type-options") == "nosniff"
     assert "content-security-policy" in resp.headers
+
+
+# --- F3: the 500 handler builds its response outside the header middleware
+# --- (see api/main.py's branded_500), so it must be checked directly. ------
+
+def test_500_html_carries_security_headers():
+    _install_crash_routes()
+    try:
+        resp = client.get("/__test_crash_page")
+        assert resp.status_code == 500
+        assert resp.headers.get("x-content-type-options") == "nosniff"
+        csp = resp.headers.get("content-security-policy", "")
+        assert "frame-ancestors 'none'" in csp
+    finally:
+        _remove_crash_routes()
+
+
+def test_500_json_carries_security_headers():
+    _install_crash_routes()
+    try:
+        resp = client.get("/api/v1/__test_crash_api")
+        assert resp.status_code == 500
+        assert resp.headers.get("x-content-type-options") == "nosniff"
+        csp = resp.headers.get("content-security-policy", "")
+        assert "frame-ancestors 'none'" in csp
+    finally:
+        _remove_crash_routes()

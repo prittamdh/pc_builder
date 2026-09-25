@@ -75,6 +75,13 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 01-05-PLAN.md (web-dev, wave 4): `slowapi` rate limits (after an owner package check), streaming image-proxy cap, save-build caps (SEC-03, 04, 07)
 
+**Carry-forwards from Phase 1 (recorded 2026-09-25 from the final review):**
+- 02-03: move the 01-04 check functions out of `dags/scheduled_scraper_dag.py` into `src/pipeline/checks.py` (the worker must not import from `dags/`); the worker needs its own equivalent of `pipeline_failed_guard` (run every stage, record each, exit non-zero if any failed). Recheck the backlog check can't go permanently red on unparseable rows (the extractor selects with no ORDER BY).
+- 03-02: set `TRUST_CF_CONNECTING_IP=true` once ingress is Cloudflare-only, tested from two IPs (behind Caddy every visitor otherwise shares one counter); `deploy.sh` sets `REQUIRE_E2E=1`; body-size limit at Caddy/Cloudflare; HSTS plus the production curl check; sitemap and canonical use the configured domain (replaces the Host-header value).
+- Phase 3 polish: clear stale warnings/wattage when `/validate` fails; friendly text for a 429 in the picker; style `.footer-links`.
+- Phase 3 (SEC-08): `.env` mode 600, owned by the service user.
+- Phase 4: a fixed rule dropping any 80 PLUS tier the title doesn't state ("80" + tier word), catching Cybenetics leakage from any provider; normalise CEB/EEB form factors; clearer wording for unknown-type coolers.
+
 ### Phase 2: Scrape agents
 
 **Goal**: Prices stay fresh with no dependency on any one home PC. Chrome extensions on the owner's machines fetch pages; the server hands out work, validates, parses and saves.
