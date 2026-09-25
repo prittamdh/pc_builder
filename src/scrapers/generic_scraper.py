@@ -5,6 +5,37 @@ from scrapers.base_scraper import BaseScraper
 from scrapers.generic_parser import GenericParser
 
 
+class ScrapeFetchError(RuntimeError):
+    """The first page of a listing fetch failed outright (HTTP error, bot block, etc.).
+
+    Deliberately distinct from "no results": a 403/5xx/connection failure on page 1 is
+    not a legitimate empty listing, and must propagate so the caller can mark the target
+    failed and skip advancing `last_scraped_at`. PCStudio's Cloudflare block (2026-09-25)
+    was swallowed into an empty `[]` by a bare `except Exception: break`, so every cycle
+    "succeeded" while saving nothing for 5+ weeks - `last_scraped_at` kept moving while
+    `price_history` stopped dead.
+    """
+
+    def __init__(self, store_name: str, page: int, status: int | None, cause: Exception):
+        self.store_name = store_name
+        self.page = page
+        self.status = status
+        self.cause = cause
+        status_part = f"HTTP {status}" if status is not None else (str(cause) or type(cause).__name__)
+        super().__init__(f"{store_name}: page {page} fetch failed ({status_part})")
+
+
+def _status_from_exc(exc: Exception) -> int | None:
+    """Best-effort HTTP status off an exception, without assuming a specific HTTP lib.
+
+    Both curl_cffi's and requests' HTTPError attach the real Response as `.response`;
+    reading it defensively means a plain connection error (no `.response` at all) still
+    produces a sensible `None` instead of raising a second, unrelated exception.
+    """
+    response = getattr(exc, "response", None)
+    return getattr(response, "status_code", None)
+
+
 class GenericScraper(BaseScraper):
 
     def __init__(self, client, store: Store):
@@ -37,7 +68,14 @@ class GenericScraper(BaseScraper):
         for page in range(1, max_pages + 1):
             try:
                 results = self.scrape_search(query, page=page)
-            except Exception:
+            except Exception as e:
+                status = _status_from_exc(e)
+                if page == 1:
+                    raise ScrapeFetchError(self.store.display_name, page, status, e) from e
+                print(
+                    f"[GenericScraper] {self.store.display_name}: page {page} fetch failed "
+                    f"({status if status is not None else e}); keeping pages 1-{page - 1}"
+                )
                 break
 
             if not results:
@@ -149,7 +187,19 @@ class GenericScraper(BaseScraper):
         for page in range(1, max_pages + 1):
             try:
                 results = self.scrape_category(endpoint, page=page)
-            except Exception:
+            except Exception as e:
+                status = _status_from_exc(e)
+                if page == 1:
+                    # A blocked/failed first page is a failed fetch, not a legitimate
+                    # "0 in stock" - it must not silently return [] and let the caller
+                    # believe the target scraped cleanly.
+                    raise ScrapeFetchError(self.store.display_name, page, status, e) from e
+                # A later page failing (rate limit, block kicking in mid-run) still
+                # stops pagination, but must say so - not disappear into a clean finish.
+                print(
+                    f"[GenericScraper] {self.store.display_name}: page {page} fetch failed "
+                    f"({status if status is not None else e}); keeping pages 1-{page - 1}"
+                )
                 break
 
             if not results:
