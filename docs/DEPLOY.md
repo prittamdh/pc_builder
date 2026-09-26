@@ -102,7 +102,7 @@ Until the domain exists, test from the VM: `curl -s localhost/health`.
 | Copy | Where | Kept |
 |---|---|---|
 | Nightly `pg_dump -Fc`, 03:00 IST | `/data/backups` on the VM | newest 7 |
-| Same file, uploaded | OCI Object Storage, private bucket `pcbuilder-backups`, `daily/` (namespace `bmsq37913bq3`) | 30 days |
+| Same file, uploaded | OCI Object Storage, private bucket `pcbuilder-backups`, `daily/` (namespace `bmsq379l3bq3`, with a lowercase L; the script asks OCI for it) | 30 days |
 | Weekly pull to the owner's PC | `~/pcbuilder-backups` (`scripts/pull_backup.sh`) | newest 8 |
 
 - The systemd timer `pcbuilder-backup.timer` runs `scripts/backup_db.sh` (installed by
@@ -127,7 +127,7 @@ cat pc_builder-XXXX.dump | dc exec -T postgres pg_restore -U pc_builder -d pc_bu
 dc start api worker
 ```
 
-From OCI: `/opt/oci-cli/bin/oci os object get --auth instance_principal --namespace bmsq37913bq3 --bucket-name pcbuilder-backups --name daily/<file> --file /tmp/<file>`.
+From OCI: `/opt/oci-cli/bin/oci os object get --auth instance_principal --namespace bmsq379l3bq3 --bucket-name pcbuilder-backups --name daily/<file> --file /tmp/<file>`.
 
 ## Rebuild from scratch (the drill, OPS-09)
 

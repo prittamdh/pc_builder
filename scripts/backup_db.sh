@@ -14,11 +14,13 @@ set -euo pipefail
 
 APP=/srv/pcbuilder/app
 BACKUPS=/data/backups
-NAMESPACE="${OCI_NAMESPACE:-bmsq37913bq3}"
 BUCKET="${OCI_BUCKET:-pcbuilder-backups}"
 KEEP_LOCAL=7
 KEEP_REMOTE_DAYS=30
 OCI=/opt/oci-cli/bin/oci
+# Asked from OCI, never typed in: a hand-copied namespace (digit 1 vs letter l) once made
+# every upload fail with "BucketNotFound".
+NAMESPACE="$("$OCI" os ns get --auth instance_principal --query data --raw-output)"
 
 cd "$APP"
 dc() { docker compose -f docker-compose.prod.yml --env-file ../.env "$@"; }
