@@ -12,14 +12,16 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ValidationError
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
 from api.rate_limit import limiter, rate_limit_key
 from configs import settings
+from db.models.price_history import PriceHistory
 from db.models.scrape_agent import ScrapeAgent
 from pipeline import agent_tokens, job_queue, scrape_results
-from pipeline.health import pipeline_report
+from pipeline.health import PRICE_SILENCE, pipeline_report
 
 router = APIRouter(prefix="/api/agent", include_in_schema=False)
 health_router = APIRouter(include_in_schema=False)
@@ -129,6 +131,15 @@ async def heartbeat(request: Request, agent: ScrapeAgent = Depends(current_agent
 
     await run_in_threadpool(touch)
     return {"ok": True}
+
+
+@health_router.get("/health/freshness")
+def freshness_health(db: Session = Depends(get_db)):
+    """503 when the newest saved price is over 24 h old, or there is none (OPS-04)."""
+    latest = db.execute(select(func.max(PriceHistory.scraped_at))).scalar_one()
+    stale = latest is None or job_queue.utcnow() - latest > PRICE_SILENCE
+    body = {"status": "fail" if stale else "ok", "latest_price_at": latest.isoformat(timespec="seconds") if latest else None}
+    return JSONResponse(body, status_code=503 if stale else 200)
 
 
 @health_router.get("/health/pipeline")

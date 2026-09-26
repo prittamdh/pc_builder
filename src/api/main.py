@@ -1,14 +1,16 @@
 import html
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from api.deps import get_db
 from api.rate_limit import limiter
 from common.logger import get_logger
 from configs import settings
@@ -164,8 +166,14 @@ def serve_about():
 
 
 @app.get("/health", tags=["Health"])
-def health_check():
-    """Health check endpoint."""
+def health_check(db=Depends(get_db)):
+    """Up, and the database answers (OPS-04). 503 otherwise, with no details: the
+    uptime monitor only needs to know it failed; the log has the reason."""
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("/health: database check failed")
+        return JSONResponse({"status": "fail", "app": "PC Builder API"}, status_code=503)
     return {"status": "ok", "app": "PC Builder API"}
 
 

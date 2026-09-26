@@ -1,0 +1,21 @@
+# Caddy in front of the API (plan 03-02). SITE_ADDRESS comes from docker-compose.prod.yml:
+# ":80" (plain HTTP, for testing through an SSH tunnel) until the domain exists.
+# When the domain is live behind Cloudflare, docs/DEPLOY.md adds the Cloudflare Origin CA
+# certificate and HSTS here.
+{
+	admin off
+}
+
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# Agent uploads are the biggest requests: a page of at most 5 MB inside JSON
+	# (the API itself refuses more than 8 MB). Nothing legitimate is larger.
+	request_body {
+		max_size 10MB
+	}
+
+	header -Server
+
+	reverse_proxy api:8000
+}
