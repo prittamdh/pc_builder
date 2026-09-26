@@ -97,6 +97,38 @@ Created on the VM, never copied through chat or git. Keys (see `.env.example` fo
 
 Until the domain exists, test from the VM: `curl -s localhost/health`.
 
+## Backups (OPS-03)
+
+| Copy | Where | Kept |
+|---|---|---|
+| Nightly `pg_dump -Fc`, 03:00 IST | `/data/backups` on the VM | newest 7 |
+| Same file, uploaded | OCI Object Storage, private bucket `pcbuilder-backups`, `daily/` (namespace `bmsq37913bq3`) | 30 days |
+| Weekly pull to the owner's PC | `~/pcbuilder-backups` (`scripts/pull_backup.sh`) | newest 8 |
+
+- The systemd timer `pcbuilder-backup.timer` runs `scripts/backup_db.sh` (installed by
+  `scripts/server_setup.sh`). Check it: `systemctl list-timers pcbuilder-backup.timer`,
+  `journalctl -u pcbuilder-backup --since today`.
+- Upload auth is the VM's **instance principal**: dynamic group `pcbuilder-prod` (matches
+  only this VM's OCID) and policy `pcbuilder-backups` (manage objects / read buckets, only
+  where `target.bucket.name='pcbuilder-backups'`). No API key is stored anywhere. A rebuilt
+  VM has a new OCID: update the dynamic group's matching rule.
+- Each run is a `db_backup` row in `pipeline_runs`. A failed run, or none for 2 days,
+  makes `/health/pipeline` return 503, so the uptime monitor emails the owner.
+- A dump under half the previous one's size is kept as `.suspect`, not uploaded, and the
+  run fails: a sudden drop means something is wrong with the data, not the backup.
+- Why not Cloudflare R2 for the off-Oracle copy: R2 needs a card on a Cloudflare account;
+  the home PC already exists and is outside Oracle. Switch to R2 if the PC is retired.
+
+Restore (into the running stack, replacing the database):
+
+```
+dc stop api worker
+cat pc_builder-XXXX.dump | dc exec -T postgres pg_restore -U pc_builder -d pc_builder --clean --if-exists --no-owner
+dc start api worker
+```
+
+From OCI: `/opt/oci-cli/bin/oci os object get --auth instance_principal --namespace bmsq37913bq3 --bucket-name pcbuilder-backups --name daily/<file> --file /tmp/<file>`.
+
 ## Rebuild from scratch (the drill, OPS-09)
 
 1. **VM**: Oracle console, Compute, Create instance. Shape VM.Standard.A1.Flex, 2 OCPU,
@@ -130,5 +162,4 @@ Record how long each step took in the drill notes.
 - Domain, Cloudflare proxy, Origin CA certificate, HSTS (then `SITE_ADDRESS` in `.env`).
 - OCI security list and host firewall: open 80/443 to Cloudflare's ranges only (OPS-02).
   Today the host firewall (Oracle's iptables rules) allows only SSH.
-- Nightly `pg_dump` to OCI Object Storage and weekly to R2 (03-03).
 - Sentry (needs the `sentry-sdk` package approved).

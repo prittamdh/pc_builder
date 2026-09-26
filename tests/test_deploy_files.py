@@ -69,3 +69,29 @@ def test_deploy_runs_the_full_suite_with_e2e_required_then_migrates():
     assert deploy.index("up -d --wait postgres") < migrate < deploy.index("up -d --remove-orphans")
     assert "git archive" in deploy
     assert "chmod 600 /srv/pcbuilder/.env" in deploy
+
+
+def test_backup_script_is_loud_and_keyless():
+    backup = (ROOT / "scripts" / "backup_db.sh").read_text(encoding="utf-8")
+    assert "set -euo pipefail" in backup
+    assert "pg_dump -U pc_builder -d pc_builder -Fc" in backup
+    assert "--auth instance_principal" in backup           # no API key on the server
+    assert "SIZE * 2 < PREV_SIZE" in backup                # refuses a suspiciously small dump
+    assert "'db_backup'" in backup                         # recorded for /health/pipeline
+    assert "record failed" in backup
+
+
+def test_server_setup_installs_the_nightly_backup_timer():
+    setup = (ROOT / "scripts" / "server_setup.sh").read_text(encoding="utf-8")
+    assert "OnCalendar=*-*-* 21:30:00 UTC" in setup
+    assert "Persistent=true" in setup
+    assert "systemctl enable --now pcbuilder-backup.timer" in setup
+    assert "PasswordAuthentication no" in setup
+
+
+def test_shell_scripts_have_unix_line_endings():
+    """They run on Linux; a CRLF checkout once broke server_setup.sh ('pipefail:
+    invalid option name'). .gitattributes pins *.sh to LF."""
+    for path in (ROOT / "scripts").glob("*.sh"):
+        assert b"\r\n" not in path.read_bytes(), path.name
+    assert "*.sh text eol=lf" in (ROOT / ".gitattributes").read_text(encoding="utf-8")

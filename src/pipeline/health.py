@@ -20,8 +20,9 @@ from pipeline.schedule import TASK_INTERVALS
 AGENT_SILENCE = timedelta(hours=24)
 PRICE_SILENCE = timedelta(hours=24)
 
-# task name -> how often the worker runs it (plan 02-03).
-SCHEDULED_TASKS: dict[str, timedelta] = TASK_INTERVALS
+# task name -> how often it runs: the worker's tasks (plan 02-03), plus the nightly
+# database backup, which a systemd timer on the VM runs (scripts/backup_db.sh, 03-03).
+SCHEDULED_TASKS: dict[str, timedelta] = {**TASK_INTERVALS, "db_backup": timedelta(days=1)}
 
 
 def pipeline_problems(session, now: datetime | None = None) -> list[str]:

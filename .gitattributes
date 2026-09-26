@@ -1,0 +1,4 @@
+# Shell scripts run on Linux (the Oracle VM): always LF, even in a Windows checkout.
+*.sh text eol=lf
+Caddyfile text eol=lf
+Dockerfile text eol=lf

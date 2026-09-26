@@ -277,3 +277,16 @@ def test_health_is_503_when_a_scheduled_task_failed_or_is_overdue(api, monkeypat
     problems = client.get("/health/pipeline").json()["problems"]
     assert any("enqueue" in p and "failed" in p for p in problems)
     assert any("reap" in p and "overdue" in p for p in problems)
+
+
+def test_health_watches_the_nightly_backup_once_it_has_run(api):
+    """03-03: the backup job records itself in pipeline_runs; a failed or late backup
+    turns /health/pipeline red, the same way a failed worker task does."""
+    client, s, store, target, agent, token = api
+    _fresh_price(s, store, job_queue.utcnow())
+    client.post("/api/agent/heartbeat", json={}, headers=auth(token))
+    assert health.SCHEDULED_TASKS["db_backup"] == timedelta(days=1)
+    s.add(PipelineRun(task="db_backup", started_at=job_queue.utcnow() - timedelta(days=3), status="ok"))
+    s.commit()
+    problems = client.get("/health/pipeline").json()["problems"]
+    assert any("db_backup" in p and "overdue" in p for p in problems)
