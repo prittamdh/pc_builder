@@ -110,3 +110,11 @@ def test_caddy_redirects_www_and_sends_hsts():
     caddyfile = (ROOT / "Caddyfile").read_text(encoding="utf-8")
     assert 'Strict-Transport-Security "max-age=31536000"' in caddyfile
     assert "redir @www https://{re.www.1}{uri} permanent" in caddyfile
+
+
+def test_deploy_restarts_caddy_when_the_caddyfile_changes():
+    # The Caddyfile is a bind mount, fixed when the container starts; a deploy moves the
+    # old release to app.prev, so a Caddy left running keeps serving the old file.
+    deploy = (ROOT / "scripts" / "deploy.sh").read_text(encoding="utf-8")
+    assert "cmp -s ../app.prev/Caddyfile Caddyfile" in deploy
+    assert deploy.index("up -d --remove-orphans") < deploy.index("restart caddy")

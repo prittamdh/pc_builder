@@ -84,8 +84,8 @@ Created on the VM, never copied through chat or git. Keys (see `.env.example` fo
 - LLM keys (`MISTRAL_API_KEY`, `GOOGLE_API_KEY`, ...): the owner pastes them in by hand
   (`nano /srv/pcbuilder/.env`), then `dc up -d` to apply. Without them the worker's
   extraction steps fail and `/health/pipeline` says so.
-- Later: `SITE_ADDRESS` (the domain), `CONTACT_EMAIL`, `TRUST_CF_CONNECTING_IP=true`
-  once only Cloudflare can reach the VM.
+- `SITE_ADDRESS="rigcheck.in www.rigcheck.in"` and `TRUST_CF_CONNECTING_IP=true` (see
+  below). Still to add: `CONTACT_EMAIL`.
 
 ## Domain, Cloudflare and the firewall (OPS-02)
 
@@ -119,7 +119,8 @@ Created on the VM, never copied through chat or git. Keys (see `.env.example` fo
 | `/health/freshness` | no price saved in 24 h |
 | `/health/pipeline` | no agent checked in for 24 h, no price for 24 h, or a worker task failed or is late |
 
-Until the domain exists, test from the VM: `curl -s localhost/health`.
+Public: `https://rigcheck.in/health` etc. On the VM, bypassing Cloudflare:
+`curl -sk --resolve rigcheck.in:443:127.0.0.1 https://rigcheck.in/health`.
 
 ## Backups (OPS-03)
 
@@ -180,6 +181,13 @@ From OCI: `/opt/oci-cli/bin/oci os object get --auth instance_principal --namesp
 7. Point Cloudflare DNS at the new IP.
 
 Record how long each step took in the drill notes.
+
+## First data move (2026-09-26)
+
+Production started from a `pg_dump -Fc` of the home database, restored with the
+`pg_restore` command above (6 s): 12,936 products, 427,645 price rows, both scrape
+agents and their tokens. Since then only the browser extensions feed production; the
+home Airflow still scrapes into the home database, which production never reads.
 
 ## Not done yet (Phase 3)
 

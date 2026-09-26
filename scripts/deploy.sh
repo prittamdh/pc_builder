@@ -48,6 +48,9 @@ echo "==> build, migrate, restart"
   \$dc up -d --wait postgres   # migrations must not race Postgres starting up
   \$dc run --rm --no-deps api alembic upgrade head
   \$dc up -d --remove-orphans
+  # The Caddyfile is bind-mounted when Caddy starts, and the old release was just moved
+  # to app.prev: restart Caddy (a second of downtime) only when the file changed.
+  cmp -s ../app.prev/Caddyfile Caddyfile || \$dc restart caddy
   \$dc ps"
 
 echo "==> smoke test"
