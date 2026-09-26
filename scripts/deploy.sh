@@ -51,9 +51,18 @@ echo "==> build, migrate, restart"
   \$dc ps"
 
 echo "==> smoke test"
+# Through Caddy on the VM itself: plain HTTP in ":80" mode, else HTTPS for the first
+# site name (--resolve pins it to this VM; -k because a first deploy may still be
+# waiting for its certificate - Cloudflare's Full (strict) mode checks it for real).
+SITE="$("${SSH[@]}" "grep -E '^SITE_ADDRESS=' /srv/pcbuilder/.env | cut -d= -f2- | tr -d '\"' | awk '{print \$1}'")"
+if [[ -z "$SITE" || "$SITE" == :* ]]; then
+  CHECK="curl -fsS -o /dev/null -w '%{http_code}' http://localhost/health"
+else
+  CHECK="curl -fsSk -o /dev/null -w '%{http_code}' --resolve $SITE:443:127.0.0.1 https://$SITE/health"
+fi
 for i in $(seq 1 30); do
-  if "${SSH[@]}" "curl -fsS -o /dev/null -w '%{http_code}' http://localhost/health" 2>/dev/null | grep -q 200; then
-    echo "==> /health is 200 through Caddy: $COMMIT is live"
+  if "${SSH[@]}" "$CHECK" 2>/dev/null | grep -q 200; then
+    echo "==> /health is 200 through Caddy (${SITE:-:80}): $COMMIT is live"
     exit 0
   fi
   sleep 3
