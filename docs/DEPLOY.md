@@ -87,6 +87,30 @@ Created on the VM, never copied through chat or git. Keys (see `.env.example` fo
 - Later: `SITE_ADDRESS` (the domain), `CONTACT_EMAIL`, `TRUST_CF_CONNECTING_IP=true`
   once only Cloudflare can reach the VM.
 
+## Domain, Cloudflare and the firewall (OPS-02)
+
+- Domain `rigcheck.in`, bought at Spaceship (1 year, auto-renew on). Nameservers point
+  to Cloudflare (free plan), which proxies `rigcheck.in` and `www.rigcheck.in` (orange
+  cloud) to 144.24.104.36.
+- HTTPS end to end: Cloudflare to the visitor, and Caddy's own Let's Encrypt certificate
+  to Cloudflare (SSL mode **Full (strict)**). Caddy renews it itself; the HTTP-01
+  challenge reaches it through Cloudflare on port 80, so Cloudflare's **"Always Use
+  HTTPS" must stay off** (Caddy redirects HTTP to HTTPS itself). No certificate or key
+  was ever copied by hand.
+- `SITE_ADDRESS="rigcheck.in www.rigcheck.in"` in `.env`; `www` redirects to the bare
+  domain; HSTS is on (no `includeSubDomains` yet).
+- Only Cloudflare reaches ports 80/443, in two layers:
+  1. OCI security list of `pcbuilder-public`: 22 from anywhere (key-only SSH), 80 and
+     443 from each of Cloudflare's IPv4 ranges (description "Cloudflare").
+  2. On the VM, `pcbuilder-firewall.service` runs `scripts/firewall_cloudflare.sh`
+     whenever Docker starts: chain `PCB-CF` in `DOCKER-USER` (Docker-published ports
+     skip the INPUT chain, so INPUT rules would not protect them).
+  Cloudflare's ranges change rarely; when they do, rerun the script on the VM and
+  update the security list (the Cloud Shell steps are in git history, commit
+  "firewall"). Check: `curl -m 8 http://144.24.104.36/` from anywhere must time out.
+- `TRUST_CF_CONNECTING_IP=true` in `.env` now that only Cloudflare can connect, so rate
+  limits count real visitors, not Cloudflare's edge.
+
 ## Health checks (for the uptime monitor)
 
 | URL | 503 when |
@@ -159,7 +183,4 @@ Record how long each step took in the drill notes.
 
 ## Not done yet (Phase 3)
 
-- Domain, Cloudflare proxy, Origin CA certificate, HSTS (then `SITE_ADDRESS` in `.env`).
-- OCI security list and host firewall: open 80/443 to Cloudflare's ranges only (OPS-02).
-  Today the host firewall (Oracle's iptables rules) allows only SSH.
 - Sentry (needs the `sentry-sdk` package approved).

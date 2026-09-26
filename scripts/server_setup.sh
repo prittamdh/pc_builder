@@ -80,6 +80,27 @@ UNIT
 systemctl daemon-reload
 systemctl enable --now pcbuilder-backup.timer
 
+# Web ports open to Cloudflare only (OPS-02). Re-applied whenever Docker (re)starts,
+# since Docker rebuilds its own chains then. The script ships with the app code.
+install -m 755 "$(dirname "$0")/firewall_cloudflare.sh" /usr/local/sbin/pcbuilder-firewall 2>/dev/null   || install -m 755 /srv/pcbuilder/app/scripts/firewall_cloudflare.sh /usr/local/sbin/pcbuilder-firewall
+cat > /etc/systemd/system/pcbuilder-firewall.service <<'UNIT'
+[Unit]
+Description=Allow only Cloudflare to reach the web ports (scripts/firewall_cloudflare.sh)
+After=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pcbuilder-firewall
+
+[Install]
+WantedBy=docker.service
+UNIT
+systemctl daemon-reload
+systemctl enable pcbuilder-firewall.service
+systemctl restart pcbuilder-firewall.service
+
 docker --version
 docker compose version
 /opt/oci-cli/bin/oci --version

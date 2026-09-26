@@ -95,3 +95,18 @@ def test_shell_scripts_have_unix_line_endings():
     for path in (ROOT / "scripts").glob("*.sh"):
         assert b"\r\n" not in path.read_bytes(), path.name
     assert "*.sh text eol=lf" in (ROOT / ".gitattributes").read_text(encoding="utf-8")
+
+
+def test_only_cloudflare_reaches_the_web_ports_on_the_vm():
+    fw = (ROOT / "scripts" / "firewall_cloudflare.sh").read_text(encoding="utf-8")
+    assert "https://www.cloudflare.com/ips-v4" in fw
+    assert "DOCKER-USER" in fw          # Docker-published ports skip INPUT
+    assert "iptables -A PCB-CF -j DROP" in fw
+    setup = (ROOT / "scripts" / "server_setup.sh").read_text(encoding="utf-8")
+    assert "PartOf=docker.service" in setup     # re-applied when Docker restarts
+
+
+def test_caddy_redirects_www_and_sends_hsts():
+    caddyfile = (ROOT / "Caddyfile").read_text(encoding="utf-8")
+    assert 'Strict-Transport-Security "max-age=31536000"' in caddyfile
+    assert "redir @www https://{re.www.1}{uri} permanent" in caddyfile
