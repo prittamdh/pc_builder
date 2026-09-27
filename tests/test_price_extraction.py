@@ -180,3 +180,21 @@ def test_full_title_handles_unicode_ellipsis(parser):
     el = _title_el('<a><span title="Asus Prime H510M-E LGA1200 mATX Motherboard">'
                    'Asus Prime H510M-E LGA1200 mATX…</span></a>')
     assert parser._full_title(el) == "Asus Prime H510M-E LGA1200 mATX Motherboard"
+
+
+@pytest.mark.parametrize(
+    "title, price, mrp",
+    [
+        # Live cards, 2026-09-27. A 3-digit price was not matched at all, so the
+        # struck-through MRP became the price: the ECO400 showed Rs 2,999, not Rs 879.
+        ("Ant Value ECO400 400 Watt SMPS", "879", "2999"),
+        ("Consistent CT-PS-0602 450 Watts PSU (Silver)", "545", "1299"),
+        ("EVM SMPS 500W ENGUARD", "699", "999"),
+        ("Coconut CF01 Cooler Fan, Clip Type", "175", "599"),
+    ],
+)
+def test_prices_under_1000_are_read(parser, title, price, mrp):
+    results = parser._parse_computech_html(_card(title, price, mrp=mrp))
+    assert len(results) == 1
+    assert results[0].price == int(price)
+    assert results[0].mrp == int(mrp)

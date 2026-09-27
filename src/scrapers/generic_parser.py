@@ -241,11 +241,15 @@ class GenericParser:
             # price identical to a number in its own title.
             # Same failure as the PSU-efficiency carousel bug: an unanchored regex
             # over too much text returns a confident wrong answer.
-            numbers = re.findall(r"₹\s*(\d{1,3}(?:,\d{3})+|\d{4,6})", card_text)
+            # With the sign required, short amounts are safe to read. Requiring 4+ digits
+            # (and dropping anything under 500) skipped every price under Rs 1,000, so
+            # the struck-through MRP became the price: Ant Value ECO400 at Rs 2,999
+            # instead of Rs 879 (found 2026-09-27).
+            numbers = re.findall(r"₹\s*(\d{1,3}(?:,\d{3})+|\d{2,7})", card_text)
             clean_nums = []
             for n in numbers:
                 val = self._clean_price(n)
-                if val > 500:
+                if val >= 10:
                     clean_nums.append(val)
 
             # No rupee-marked amount means the price wasn't found. Skipping keeps the
