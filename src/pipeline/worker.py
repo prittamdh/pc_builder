@@ -32,6 +32,7 @@ from db.models.pipeline_run import PipelineRun
 from db.session import SessionLocal
 from pipeline import job_queue
 from pipeline.checks import check_price_freshness
+from pipeline.identity_audit import check_identity_sizes
 from pipeline.scrape_planning import enqueue_due_targets
 from pipeline.schedule import TASK_INTERVALS
 from pipeline.tasks import (
@@ -84,6 +85,7 @@ UNITS = [
         Step("catalog_policy", execute_catalog_policy),
     ]),
     Unit("price_freshness", _every("price_freshness"), [Step("price_freshness", check_price_freshness)]),
+    Unit("identity_audit", _every("identity_audit"), [Step("identity_audit", check_identity_sizes)]),
 ]
 
 

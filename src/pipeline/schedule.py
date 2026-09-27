@@ -9,4 +9,6 @@ TASK_INTERVALS: dict[str, timedelta] = {
     "physical_specs": timedelta(minutes=15),
     "catalog_policy": timedelta(minutes=15),
     "price_freshness": timedelta(hours=1),
+    # A model mixing sizes (8GB with 16GB) means a wrong merge; see identity_audit.py.
+    "identity_audit": timedelta(days=1),
 }
