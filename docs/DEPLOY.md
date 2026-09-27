@@ -23,6 +23,15 @@ mistake. When creating anything, pick shapes and sizes marked "Always Free-eligi
 the create-instance form now defaults to the paid E5.Flex shape, and the block-volume
 form to 1024 GB.
 
+## Free-resource audit (OPS-10)
+
+Monthly, and after creating anything in the Oracle console: open **Cloud Shell** (the
+`>_` icon at the top of the console), upload `scripts/oci_free_audit.py` (Cloud Shell's
+gear menu, Upload), then run `python3 oci_free_audit.py`. It runs as the signed-in
+owner, so the VM needs no extra permissions. "ALL FREE" means clean; otherwise it lists
+each problem: a paid shape, A1 over 2 OCPU / 12 GB, block storage over 200 GB, Object
+Storage over 20 GB, any spend this month, or a resource type outside the expected list.
+
 ## Log in
 
 ```
