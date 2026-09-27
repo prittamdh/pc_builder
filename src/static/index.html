@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PC Builder 2 - Hardware Price Comparison & Assembly Engine</title>
-    <meta name="description" content="Compare PC component prices across 10 Indian retailers and check build compatibility before you buy.">
-    <meta property="og:title" content="PC Builder 2 - Hardware Price Comparison & Assembly Engine">
-    <meta property="og:description" content="Compare PC component prices across 10 Indian retailers and check build compatibility before you buy.">
+    <title>rigcheck - PC parts price comparison and PC Builder for India</title>
+    <meta name="description" content="Compare PC part prices across Indian stores, see price history, and check that your build fits together before you buy.">
+    <meta property="og:title" content="rigcheck - PC parts price comparison and PC Builder for India">
+    <meta property="og:description" content="Compare PC part prices across Indian stores, see price history, and check that your build fits together before you buy.">
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <meta property="og:url" content="{{PUBLIC_URL}}/">
     <link rel="canonical" href="{{PUBLIC_URL}}/">
-    <link rel="stylesheet" href="/static/style.css?v=10">
+    <link rel="stylesheet" href="/static/style.css?v=11">
 </head>
 <body>
+    <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
 
-    <!-- Header Navigation -->
     <header>
-        <div class="logo">
-            <span>⚡</span> PC Builder 2
-        </div>
+        <a class="logo" href="/" aria-label="rigcheck home">
+            <span class="brand-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></span>rigcheck
+        </a>
         <ul class="nav-links">
-            <li><button class="nav-btn active" data-tab="catalog">Catalog & Search</button></li>
+            <li><button class="nav-btn active" data-tab="catalog">Browse</button></li>
             <li><button class="nav-btn" data-tab="builder">PC Builder</button></li>
-            </ul>
+        </ul>
     </header>
 
     <!-- Main Application Container -->
@@ -32,25 +32,40 @@
         <!-- Tab 1: Catalog Search -->
         <section id="catalog-tab" class="tab-content active">
             <div class="hero">
-                <h1>Compare PC component prices across India</h1>
+                <h1>Every PC part. <em>Every store.</em> <span class="line">One price check.</span></h1>
                 <!-- Counts come from the API for the same reason the Stores tab does.
                      Every number here is measured, not written - a stat bar with
                      invented figures is exactly what makes a site read as fake. -->
-                <p>Live pricing from <span id="store-count">…</span> Indian retailers, with
-                   compatibility checking and price history on every part.</p>
-            </div>
+                <p>Live prices from <span id="store-count">…</span> Indian stores, with
+                   price history and compatibility checks built in.</p>
 
-            <div class="stat-bar" id="stat-bar">
-                <div><strong id="stat-products">—</strong><span>components tracked</span></div>
-                <div><strong id="stat-stores">—</strong><span>retailers</span></div>
-                <div><strong id="stat-snapshots">—</strong><span>price snapshots</span></div>
-                <div><strong id="stat-updated">—</strong><span>last updated</span></div>
             </div>
 
             <div class="search-container">
                 <div class="search-input-group">
-                    <input type="text" id="search-input" placeholder="Search processors, graphics cards, motherboards, RAM...">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                    <input type="text" id="search-input" aria-label="Search parts" placeholder="Try “RTX 5070” or “Ryzen 7 9800X3D”">
                     <button class="btn-primary" id="search-btn">Search</button>
+                </div>
+
+                <div class="category-chips">
+                    <button class="chip active" data-category="">All Categories</button>
+                    <button class="chip" data-category="CPU">CPUs</button>
+                    <button class="chip" data-category="GPU">GPUs</button>
+                    <button class="chip" data-category="Motherboard">Motherboards</button>
+                    <button class="chip" data-category="RAM">RAM</button>
+                    <button class="chip" data-category="Storage">Storage</button>
+                    <button class="chip" data-category="Power Supply">Power Supplies</button>
+                    <button class="chip" data-category="CPU Cooler">CPU Coolers</button>
+                    <button class="chip" data-category="Cabinet">Cabinets</button>
+                    <button class="chip" data-category="Monitor">Monitors</button>
+                    <button class="chip" data-category="Accessories">Accessories</button>
+                </div>
+                <div class="stat-bar" id="stat-bar">
+                    <div><strong id="stat-products">—</strong><span>components tracked</span></div>
+                    <div><strong id="stat-stores">—</strong><span>retailers</span></div>
+                    <div><strong id="stat-snapshots">—</strong><span>price snapshots</span></div>
+                    <div><strong id="stat-updated">—</strong><span>last updated</span></div>
                 </div>
                 <div class="catalog-controls">
                     <label for="sort-select">Sort</label>
@@ -71,20 +86,6 @@
                     </span>
 
                     <span id="result-count"></span>
-                </div>
-
-                <div class="category-chips">
-                    <button class="chip active" data-category="">All Categories</button>
-                    <button class="chip" data-category="CPU">CPUs</button>
-                    <button class="chip" data-category="GPU">GPUs</button>
-                    <button class="chip" data-category="Motherboard">Motherboards</button>
-                    <button class="chip" data-category="RAM">RAM</button>
-                    <button class="chip" data-category="Storage">Storage</button>
-                    <button class="chip" data-category="Power Supply">Power Supplies</button>
-                    <button class="chip" data-category="CPU Cooler">CPU Coolers</button>
-                    <button class="chip" data-category="Cabinet">Cabinets</button>
-                    <button class="chip" data-category="Monitor">Monitors</button>
-                    <button class="chip" data-category="Accessories">Accessories</button>
                 </div>
             </div>
 
@@ -123,8 +124,8 @@
         <!-- Tab 2: PC Builder -->
         <section id="builder-tab" class="tab-content">
             <div class="hero">
-                <h1>Interactive PC Builder</h1>
-                <p>Assemble your dream rig with live hardware compatibility checking and multi-store price optimization.</p>
+                <h1>Build your PC. <span class="line"><em>We'll check it fits.</em></span></h1>
+                <p>Pick your parts and we check they work together, with the best price from every store.</p>
             </div>
 
             <div class="builder-layout">
@@ -140,31 +141,20 @@
                     
                     <div class="warning-list" id="warnings-list"></div>
 
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary);">
-                        <span>Est. System Draw:</span>
-                        <strong id="total-wattage" style="color: var(--text-primary);">0 W</strong>
+                    <div class="summary-row">
+                        <span>Estimated power draw</span>
+                        <strong id="total-wattage">0 W</strong>
                     </div>
-
-                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                        <span style="color: var(--text-secondary); font-size: 0.9rem;">Total for selected offers:</span>
+                    <div class="summary-total">
+                        <span>Total for selected offers</span>
                         <div class="total-cost" id="total-cost">₹0</div>
                     </div>
-
-                    <div style="border-top: 1px solid var(--border-color); margin-top: 1rem; padding-top: 1rem;">
-                        <input type="text" id="build-name" placeholder="Name this build (optional)"
-                               style="width: 100%; padding: 0.5rem 0.75rem; margin-bottom: 0.6rem; border-radius: 8px;
-                                      border: 1px solid rgba(148,163,184,0.3); background: rgba(15,23,42,0.6);
-                                      color: #f1f5f9; font-size: 0.85rem;">
-                        <button class="btn-primary" id="save-build-btn" onclick="saveBuild()"
-                                style="width: 100%; padding: 0.6rem;">Save &amp; Get Share Link</button>
+                    <div class="summary-save">
+                        <input type="text" id="build-name" class="text-field" placeholder="Name this build (optional)">
+                        <button class="btn-primary" id="save-build-btn" onclick="saveBuild()">Save &amp; Get Share Link</button>
                         <div id="share-link-box" style="display: none; margin-top: 0.75rem;">
-                            <input type="text" id="share-link" readonly onclick="this.select()"
-                                   style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px;
-                                          border: 1px solid var(--accent-cyan); background: rgba(15,23,42,0.8);
-                                          color: var(--accent-cyan); font-size: 0.78rem;">
-                            <div style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.4rem;">
-                                Re-priced from live store data each time it's opened.
-                            </div>
+                            <input type="text" id="share-link" class="text-field" readonly onclick="this.select()">
+                            <div class="share-note">Re-priced from live store data each time it's opened.</div>
                         </div>
                     </div>
                 </div>
@@ -180,7 +170,7 @@
          earns a tab back when it carries per-store reliability data. -->
     <footer class="site-footer">
         <div class="footer-inner">
-            <h2>Retailers tracked</h2>
+            <h2>Stores we compare</h2>
             <div class="store-list" id="stores-grid"></div>
             <p class="footer-note">
                 Prices are scraped directly from each retailer and re-checked continuously.
@@ -201,14 +191,10 @@
                 <h3 id="select-modal-title">Select Component</h3>
                 <button class="modal-close" onclick="closeModal('select-modal')">&times;</button>
             </div>
-            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem;">
-                <input type="text" id="select-modal-search" placeholder="Search within this category..."
-                       oninput="onSlotSearchInput()"
-                       style="flex: 1; min-width: 220px; padding: 0.55rem 0.9rem; border-radius: 8px;
-                              border: 1px solid rgba(148,163,184,0.3); background: rgba(15,23,42,0.6);
-                              color: #f1f5f9; font-size: 0.9rem;">
-                <label style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);
-                              font-size: 0.85rem; cursor: pointer; white-space: nowrap;">
+            <div class="modal-toolbar">
+                <input type="text" id="select-modal-search" class="text-field" placeholder="Search within this category..."
+                       oninput="onSlotSearchInput()">
+                <label class="check-label">
                     <input type="checkbox" id="select-modal-compatible-only" checked onchange="loadSlotCandidates()">
                     Compatible only
                 </label>
@@ -221,7 +207,7 @@
     <div class="modal-backdrop" id="compare-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3>Multi-Store Price Comparison</h3>
+                <h3>Compare prices</h3>
                 <button class="modal-close" onclick="closeModal('compare-modal')">&times;</button>
             </div>
             <div id="compare-modal-content"></div>
@@ -231,7 +217,7 @@
     <div class="modal-backdrop" id="history-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3>Price History Snapshots</h3>
+                <h3>Price history</h3>
                 <button class="modal-close" onclick="closeModal('history-modal')">&times;</button>
             </div>
             <div id="history-modal-content"></div>
@@ -239,6 +225,6 @@
     </div>
 
     <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
-    <script src="/static/app.js?v=20"></script>
+    <script src="/static/app.js?v=21"></script>
 </body>
 </html>

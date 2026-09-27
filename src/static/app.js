@@ -1,5 +1,5 @@
 /**
- * PC Builder 2 - Modern Single Page Application Client
+ * rigcheck - single-page client for the catalog and the PC Builder.
  */
 
 const API_BASE = '/api/v1';
@@ -41,8 +41,43 @@ const state = {
     activeSlotName: null
 };
 
+// Line icons (24px grid, stroke = currentColor), one per category and builder slot.
+// Inline SVG rather than an icon font: the CSP only allows fonts from Google Fonts.
+const ICON_PATHS = {
+    all: '<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>',
+    cpu: '<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+    gpu: '<rect x="2" y="6" width="20" height="11" rx="2"/><circle cx="9" cy="11.5" r="2.5"/><circle cx="16" cy="11.5" r="2.5"/><path d="M5 17v3"/>',
+    motherboard: '<rect x="4" y="3" width="16" height="18" rx="2"/><rect x="8" y="7" width="5" height="5" rx="1"/><path d="M16 7v10M8 16h5"/>',
+    ram: '<rect x="3" y="7" width="18" height="9" rx="1.5"/><path d="M7 10v3M11 10v3M15 10v3M6 16v3M18 16v3"/>',
+    storage: '<rect x="3" y="8" width="18" height="8" rx="2"/><path d="M6 12h6M16.5 12h.5"/>',
+    psu: '<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',
+    cooler: '<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 2-6 4-6s2 3-2 6M14 12c4 0 6 2 6 4s-3 2-6-2M12 14c0 4-2 6-4 6s-2-3 2-6M10 12c-4 0-6-2-6-4s3-2 6 2"/>',
+    case: '<rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="15" r="2.5"/><path d="M9 6h6"/>',
+    monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+    accessories: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>',
+};
+
+const CATEGORY_ICON = {
+    '': 'all', 'CPU': 'cpu', 'GPU': 'gpu', 'Motherboard': 'motherboard', 'RAM': 'ram',
+    'Storage': 'storage', 'Power Supply': 'psu', 'CPU Cooler': 'cooler', 'Cabinet': 'case',
+    'Monitor': 'monitor', 'Accessories': 'accessories',
+};
+
+function icon(name, size = 18) {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor"`
+        + ` stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">`
+        + `${ICON_PATHS[name] || ICON_PATHS.all}</svg>`;
+}
+
+function decorateChips() {
+    document.querySelectorAll('.chip[data-category]').forEach(chip => {
+        chip.insertAdjacentHTML('afterbegin', icon(CATEGORY_ICON[chip.dataset.category] || 'all', 16));
+    });
+}
+
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    decorateChips();
     initNavigation();
     initCatalog();
     initBuilder();
@@ -416,7 +451,9 @@ async function fetchProducts() {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    grid.innerHTML = '<div style="color: var(--text-secondary); text-align: center; grid-column: 1/-1;">Loading products...</div>';
+    // Placeholder cards shaped like the real ones, so the page doesn't jump on load.
+    grid.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i><i></i></div>'
+        .repeat(8);
 
     // One card per MODEL, not per listing. Searching "9060 XT 16GB" used to return 56
     // near-identical cards for ~25 actual cards; collapsing them is the whole job of a
@@ -490,12 +527,12 @@ function renderProducts(models) {
         return `
         <div class="product-card">
             <div>
+                <div class="product-tile">${m.image_url
+                    ? `<img class="product-img" src="/api/v1/images?u=${encodeURIComponent(m.image_url)}" alt="${escapeHtml(m.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.classList.add('img-missing');this.removeAttribute('src');">`
+                    : '<div class="product-img img-missing"></div>'}</div>
                 <div class="card-top">
                     <span class="product-badge">${escapeHtml(m.p_category || 'Component')}</span>${conditionBadge(m.condition)}
                 </div>
-                ${m.image_url
-                    ? `<img class="product-img" src="/api/v1/images?u=${encodeURIComponent(m.image_url)}" alt="${escapeHtml(m.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.classList.add('img-missing');this.removeAttribute('src');">`
-                    : '<div class="product-img img-missing"></div>'}
                 <h3 class="product-title">${escapeHtml(m.name)}</h3>
             </div>
             <div>
@@ -595,16 +632,17 @@ function restoreFromUrl() {
 
 // PC Builder Manager
 function initBuilder() {
+    // Each slot gets its own icon and tint so the list scans at a glance.
     const slots = [
-        { key: 'cpu', name: 'Processor (CPU)' },
-        { key: 'motherboard', name: 'Motherboard' },
-        { key: 'gpu', name: 'Graphics Card (GPU)' },
-        { key: 'ram', name: 'Memory (RAM)' },
-        { key: 'storage', name: 'Storage (SSD/HDD)' },
-        { key: 'psu', name: 'Power Supply (PSU)' },
-        { key: 'case', name: 'Cabinet / Case' },
-        { key: 'cooler', name: 'CPU Cooler' },
-        { key: 'monitor', name: 'Monitor' }
+        { key: 'cpu', name: 'Processor (CPU)', tint: '#eff6ff', ink: '#2563eb' },
+        { key: 'motherboard', name: 'Motherboard', tint: '#ecfeff', ink: '#0891b2' },
+        { key: 'gpu', name: 'Graphics Card (GPU)', tint: '#f5f3ff', ink: '#7c3aed' },
+        { key: 'ram', name: 'Memory (RAM)', tint: '#fdf2f8', ink: '#db2777' },
+        { key: 'storage', name: 'Storage (SSD/HDD)', tint: '#f0fdf4', ink: '#16a34a' },
+        { key: 'psu', name: 'Power Supply (PSU)', tint: '#fff7ed', ink: '#ea580c' },
+        { key: 'case', name: 'Cabinet / Case', tint: '#f1f5f9', ink: '#475569' },
+        { key: 'cooler', name: 'CPU Cooler', tint: '#ecfeff', ink: '#0e7490' },
+        { key: 'monitor', name: 'Monitor', tint: '#eef2ff', ink: '#4f46e5' }
     ];
 
     const container = document.getElementById('slots-container');
@@ -613,7 +651,7 @@ function initBuilder() {
     container.innerHTML = slots.map(s => `
         <div class="slot-card" id="slot-${s.key}">
             <div class="slot-info">
-                <div class="slot-icon">⚙</div>
+                <div class="slot-icon" style="background: ${s.tint}; color: ${s.ink};">${icon(s.key, 22)}</div>
                 <div>
                     <div class="slot-title">${s.name}</div>
                     <div class="slot-selected-item" id="slot-name-${s.key}">No component selected</div>
@@ -853,7 +891,7 @@ async function openCompareModal(productName, productId) {
         const data = await res.json();
 
         content.innerHTML = `
-            <h2>${escapeHtml(data.query)}</h2>
+            <h2 style="font-size: 1.05rem; font-weight: 700; line-height: 1.4;">${escapeHtml(data.query)}</h2>
             <div style="margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <div>Lowest: <strong style="color: var(--accent-cyan);">₹${Number(data.lowest_price || 0).toLocaleString('en-IN')}</strong></div>
                 <div>Highest: <strong>₹${Number(data.highest_price || 0).toLocaleString('en-IN')}</strong></div>
@@ -920,19 +958,19 @@ function priceChartSvg(points) {
 
     const ticks = [min, (min + max) / 2, max].map(v => `
         <line x1="${padL}" y1="${y(v)}" x2="${W - padR}" y2="${y(v)}"
-              stroke="rgba(148,163,184,0.15)" stroke-width="1"/>
+              stroke="#eef2f7" stroke-width="1"/>
         <text x="${padL - 8}" y="${y(v) + 4}" text-anchor="end"
-              fill="#94a3b8" font-size="10">${rupees(Math.round(v))}</text>`).join('');
+              fill="#64748b" font-size="10">${rupees(Math.round(v))}</text>`).join('');
 
     const label = (i, anchor) => `<text x="${x(i)}" y="${H - 8}" text-anchor="${anchor}"
-        fill="#94a3b8" font-size="10">${points[i].date.slice(5)}</text>`;
+        fill="#64748b" font-size="10">${points[i].date.slice(5)}</text>`;
 
     return `
         <svg viewBox="0 0 ${W} ${H}" class="price-chart" role="img"
              aria-label="Daily price over ${points.length} days">
             ${ticks}
-            <path d="${band}" fill="rgba(34,211,238,0.12)"/>
-            <path d="${lowLine}" fill="none" stroke="var(--accent-cyan)" stroke-width="2"
+            <path d="${band}" fill="rgba(37,99,235,0.12)"/>
+            <path d="${lowLine}" fill="none" stroke="#2563eb" stroke-width="2.5"
                   stroke-linejoin="round"/>
             ${label(0, 'start')}${label(points.length - 1, 'end')}
         </svg>`;

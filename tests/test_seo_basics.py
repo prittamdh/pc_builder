@@ -9,10 +9,11 @@ from api.main import app
 client = TestClient(app)
 
 
-def test_home_has_single_title_containing_pc_builder():
+def test_home_has_single_title_with_the_brand():
     html = client.get("/").text
     titles = re.findall(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
     assert len(titles) == 1
+    assert "rigcheck" in titles[0]
     assert "PC Builder" in titles[0]
 
 
