@@ -212,10 +212,10 @@ def list_product_models(
     of listings in Python would give pages of wildly differing size and miss cheaper
     offers that fell beyond the page boundary.
     """
-    if sort not in ("price_asc", "price_desc", "name_asc"):
+    if sort not in SORT_OPTIONS:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="sort must be price_asc, price_desc or name_asc",
+            detail=f"sort must be one of {', '.join(SORT_OPTIONS)}",
         )
 
     conditions = [has_usable_price(), from_active_store()]
@@ -269,6 +269,8 @@ def list_product_models(
     ) or 0
 
     order = {
+        # A model is as recent as its most recently updated listing.
+        "recent": func.max(Product.updated_at).desc(),
         "price_asc": nullslast(func.min(Product.current_price).asc()),
         "price_desc": nullslast(func.min(Product.current_price).desc()),
         "name_asc": func.min(Product.name).asc(),

@@ -117,9 +117,17 @@ static_dir = Path(__file__).resolve().parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
+def public_base(request: Request) -> str:
+    """The site's address for links search engines keep: PUBLIC_URL when set, because
+    the Host header is whatever the client sent; the request's own host otherwise."""
+    return settings.PUBLIC_URL or str(request.base_url).rstrip("/")
+
+
 @app.get("/", include_in_schema=False)
-def serve_index():
-    return FileResponse(static_dir / "index.html")
+def serve_index(request: Request):
+    body = (static_dir / "index.html").read_text(encoding="utf-8")
+    body = body.replace("{{PUBLIC_URL}}", html.escape(public_base(request)))
+    return Response(content=body, media_type="text/html")
 
 
 # WEB-01: a bad URL for a page shows the branded 404 page; a bad /api/* path
@@ -177,14 +185,10 @@ def health_check(db=Depends(get_db)):
     return {"status": "ok", "app": "PC Builder API"}
 
 
-# SEO-01: robots.txt and a minimal sitemap. The canonical link on index.html
-# is relative because no production domain exists yet; Phase 3 (plan 03-02)
-# switches it and this sitemap's <loc> base to the real domain and turns on
-# uvicorn's proxy headers so request.base_url reports https/the real host
-# behind the proxy.
+# SEO-01: robots.txt and a minimal sitemap, with absolute links from public_base().
 @app.get("/robots.txt", include_in_schema=False)
 def robots_txt(request: Request):
-    sitemap_url = str(request.base_url).rstrip("/") + "/sitemap.xml"
+    sitemap_url = public_base(request) + "/sitemap.xml"
     body = (
         "User-agent: *\n"
         "Allow: /\n"
@@ -196,7 +200,7 @@ def robots_txt(request: Request):
 
 @app.get("/sitemap.xml", include_in_schema=False)
 def sitemap_xml(request: Request):
-    base = str(request.base_url).rstrip("/")
+    base = public_base(request)
     urls = "".join(f"<url><loc>{base}/{path}</loc></url>" for path in ("", "about", "privacy"))
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>'

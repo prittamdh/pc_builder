@@ -180,3 +180,7 @@ RATE_LIMIT_AGENT = _validated_rate_limit("RATE_LIMIT_AGENT", "120/minute")
 # marked placeholder - never invent one. The About page shows a
 # "contact address coming soon" note while this is empty.
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "")
+
+# The site's public address, e.g. https://rigcheck.in, for canonical links, the sitemap
+# and robots.txt. Empty (local dev) means "whatever host the request came in on".
+PUBLIC_URL = os.getenv("PUBLIC_URL", "").rstrip("/")
