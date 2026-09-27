@@ -1,6 +1,7 @@
 import pytest
 
-from pipeline.identity_audit import psu_watts_from_title, size_conflicts, storage_gb_from_title
+from matching.size_from_title import psu_watts_from_title, storage_gb_from_title
+from pipeline.identity_audit import size_conflicts
 
 
 @pytest.mark.parametrize("title, gb", [

@@ -8,30 +8,13 @@ this keeps it from coming back unnoticed.
 """
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 
 from sqlalchemy import select
 
 from db.session import SessionLocal
 from matching.gpu_identity import memory_gb_from_title
-
-_STORAGE = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?)\s?(TB|GB)\b", re.I)
-_WATTS = re.compile(r"(?<![\d.])(\d{3,4})\s?(?:W|Watts?)\b", re.I)
-
-
-def storage_gb_from_title(title: str) -> int | None:
-    m = _STORAGE.search(title or "")
-    if not m:
-        return None
-    value = float(m.group(1)) * (1000 if m.group(2).upper() == "TB" else 1)
-    return int(round(value))
-
-
-def psu_watts_from_title(title: str) -> int | None:
-    m = _WATTS.search(title or "")
-    return int(m.group(1)) if m else None
-
+from matching.size_from_title import psu_watts_from_title, storage_gb_from_title
 
 SIZE_OF = {
     "GPU": memory_gb_from_title,

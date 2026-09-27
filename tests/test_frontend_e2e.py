@@ -271,8 +271,10 @@ class TestComponentPicker:
             "button").click()
         page.wait_for_selector("#select-modal.active")
         page.fill("#select-modal-search", "9060 XT 16GB")
-        expect(page.locator("#select-modal-list .model-row").first).to_be_visible(
-            timeout=15000)
+        # Wait for the search's own results: the unfiltered list is already on screen,
+        # so waiting for "any row" raced the debounced search and clicked the old list.
+        expect(page.locator("#select-modal-list .model-row", has_text="9060").first
+               ).to_be_visible(timeout=15000)
         page.evaluate("""() => {
             const head = [...document.querySelectorAll('.model-head')]
                 .find(h => /stores/.test(h.innerText));

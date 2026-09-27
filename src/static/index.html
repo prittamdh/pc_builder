@@ -11,7 +11,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <meta property="og:url" content="{{PUBLIC_URL}}/">
     <link rel="canonical" href="{{PUBLIC_URL}}/">
-    <link rel="stylesheet" href="/static/style.css?v=11">
+    <link rel="stylesheet" href="/static/style.css?v=12">
 </head>
 <body>
     <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -199,6 +199,28 @@
                     Compatible only
                 </label>
             </div>
+            <div class="picker-filters">
+                <div class="picker-row" hidden>
+                    <span class="picker-label">Brand</span>
+                    <div class="picker-chips" id="picker-brands"></div>
+                </div>
+                <div class="picker-row" hidden>
+                    <span class="picker-label" id="picker-size-label">Size</span>
+                    <div class="picker-chips" id="picker-sizes"></div>
+                </div>
+                <div class="picker-row picker-price">
+                    <span class="picker-label">Price</span>
+                    <input type="number" id="picker-min" class="text-field" placeholder="min" min="0" inputmode="numeric" oninput="onPickerPriceInput()">
+                    <span>&ndash;</span>
+                    <input type="number" id="picker-max" class="text-field" placeholder="max" min="0" inputmode="numeric" oninput="onPickerPriceInput()">
+                    <select id="picker-sort" class="text-field" onchange="onPickerSort()" aria-label="Sort">
+                        <option value="price">Cheapest first</option>
+                        <option value="price_desc">Price: high to low</option>
+                        <option value="stores">Most stores</option>
+                        <option value="value">Best value</option>
+                    </select>
+                </div>
+            </div>
             <div id="select-modal-count" style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.6rem;"></div>
             <div id="select-modal-list"></div>
         </div>
@@ -225,6 +247,6 @@
     </div>
 
     <!-- Bump ?v= whenever app.js changes, so browsers don't run a cached copy. -->
-    <script src="/static/app.js?v=21"></script>
+    <script src="/static/app.js?v=22"></script>
 </body>
 </html>

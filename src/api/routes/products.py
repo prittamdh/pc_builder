@@ -1,12 +1,11 @@
-import re
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import String, func, nullslast, or_, select
+from sqlalchemy import String, func, nullslast, select
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.filters import from_active_store, has_usable_price
+from api.filters import from_active_store, has_usable_price, search_conditions as _search_conditions
 from api.spec_filters import (
     ENUM,
     RANGE,
@@ -43,27 +42,6 @@ def _order_by(sort: str):
         "name_asc": (Product.name.asc(),),
     }[sort]
     return (*clauses, Product.id.asc())
-
-
-def _search_conditions(q: str) -> list:
-    """Match every token in `q`, against either the title as written or the title
-    with punctuation and spacing stripped out.
-
-    Store titles spell model numbers inconsistently - "RTX 4070", "RTX4070",
-    "RTX-4070" all occur - so a single ILIKE on the raw query silently misses
-    whichever spelling the shopper didn't happen to type. Matching per token also
-    makes word order irrelevant: "4070 asus" finds "ASUS ... RTX 4070".
-    """
-    squashed_name = func.regexp_replace(func.lower(Product.name), r"[^a-z0-9]", "", "g")
-
-    conditions = []
-    for token in q.split():
-        variants = [Product.name.ilike(f"%{token}%")]
-        squashed_token = re.sub(r"[^a-z0-9]", "", token.lower())
-        if squashed_token:
-            variants.append(squashed_name.like(f"%{squashed_token}%"))
-        conditions.append(or_(*variants))
-    return conditions
 
 
 @router.get("", response_model=ProductListResponse)

@@ -804,6 +804,92 @@ main {
 
 .check-label input { accent-color: var(--accent); }
 
+/* Picker chips: brand, size, price, sort. One scrolling row each, so a category
+   with 40 brands costs one line, not a wall. */
+.picker-filters { margin-bottom: 0.7rem; }
+
+.picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.picker-row[hidden] { display: none; }
+
+.picker-label {
+    flex: 0 0 64px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+}
+
+.picker-chips {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0;
+    min-width: 0;
+}
+
+.picker-chips::-webkit-scrollbar { display: none; }
+
+.picker-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+}
+
+.picker-chip span { font-size: 0.7rem; color: var(--faint); font-weight: 600; }
+.picker-chip:hover { border-color: #c7d2fe; }
+.picker-chip.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+.picker-chip.active span { color: #cbd5e1; }
+
+.picker-price .text-field { width: 96px; margin: 0; padding: 0.45rem 0.8rem; background: #fff; }
+.picker-price select.text-field { width: auto; margin-left: auto; cursor: pointer; }
+
+.model-thumb {
+    flex: 0 0 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--tile);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+
+.model-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 4px; mix-blend-mode: multiply; }
+
+.model-premium {
+    display: block;
+    font-style: normal;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--faint);
+    margin-top: 0.15rem;
+}
+
+.model-premium.best { color: var(--success); font-weight: 700; }
+
+@media (max-width: 600px) {
+    .picker-label { flex-basis: 52px; }
+    .picker-price { flex-wrap: wrap; }
+    .picker-price select.text-field { margin-left: 0; }
+}
+
 /* Table Styling for Compare */
 .compare-table {
     width: 100%;

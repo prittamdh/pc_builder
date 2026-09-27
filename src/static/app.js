@@ -678,7 +678,54 @@ async function openSelectModal(slotKey, slotName) {
     const compatToggle = document.getElementById('select-modal-compatible-only');
     if (compatToggle) compatToggle.checked = true;
 
+    // Chips start clear for every slot: a brand picked for the GPU means nothing for RAM.
+    state.picker = { brand: null, size: null, minPrice: '', maxPrice: '', sort: 'price' };
+    document.getElementById('picker-min').value = '';
+    document.getElementById('picker-max').value = '';
+    const sortSel = document.getElementById('picker-sort');
+    sortSel.value = 'price';
+    // "Best value" compares a card with the cheapest card on the same chip and memory,
+    // which only means something for graphics cards.
+    sortSel.querySelector('option[value="value"]').hidden = slotKey !== 'gpu';
+    document.getElementById('picker-size-label').innerText = PICKER_SIZE_LABEL[slotKey] || 'Size';
+
     await loadSlotCandidates();
+}
+
+const PICKER_SIZE_LABEL = {
+    gpu: 'VRAM', ram: 'Capacity', storage: 'Capacity', psu: 'Wattage', monitor: 'Screen',
+};
+
+function setPickerChip(kind, value) {
+    state.picker[kind] = state.picker[kind] === value ? null : value;
+    loadSlotCandidates();
+}
+
+function onPickerPriceInput() {
+    state.picker.minPrice = document.getElementById('picker-min').value;
+    state.picker.maxPrice = document.getElementById('picker-max').value;
+    onSlotSearchInput();
+}
+
+function onPickerSort() {
+    state.picker.sort = document.getElementById('picker-sort').value;
+    loadSlotCandidates();
+}
+
+// One chip row. The active chip stays listed even when the other filter would leave it
+// no models, so it can always be clicked off again.
+function renderPickerChips(hostId, kind, options) {
+    const host = document.getElementById(hostId);
+    const row = host.closest('.picker-row');
+    const active = state.picker[kind];
+    const opts = options.slice();
+    if (active && !opts.some(o => o.value === active)) opts.unshift({ value: active, count: 0 });
+    row.hidden = opts.length < 2 && !active;
+    host.innerHTML = opts.map(o => `
+        <button class="picker-chip${o.value === active ? ' active' : ''}"
+                onclick="setPickerChip('${kind}', ${escapeHtml(JSON.stringify(o.value))})">
+            ${escapeHtml(o.value)}<span>${o.count}</span>
+        </button>`).join('');
 }
 
 // Debounced so typing doesn't fire a request per keystroke.
@@ -712,7 +759,12 @@ async function loadSlotCandidates() {
                 slot: slotKey,
                 selected_product_ids: selectedIds,
                 q: q || null,
-                compatible_only: compatibleOnly
+                compatible_only: compatibleOnly,
+                brand: state.picker?.brand || null,
+                size: state.picker?.size || null,
+                min_price: state.picker?.minPrice ? Number(state.picker.minPrice) : null,
+                max_price: state.picker?.maxPrice ? Number(state.picker.maxPrice) : null,
+                sort: state.picker?.sort || 'price'
             })
         });
         if (!res.ok) throw new Error(`${res.status}`);
@@ -723,6 +775,10 @@ async function loadSlotCandidates() {
     }
 
     const items = data.items || [];
+    if (data.facets) {
+        renderPickerChips('picker-brands', 'brand', data.facets.brand || []);
+        renderPickerChips('picker-sizes', 'size', data.facets.size || []);
+    }
 
     if (countEl) {
         const hidden = data.filtered_out || 0;
@@ -749,7 +805,13 @@ async function loadSlotCandidates() {
     list.innerHTML = items.map((m, idx) => `
         <div class="model-row">
             <button class="model-head" onclick="toggleModelOffers(${idx})" aria-expanded="false">
-                <span class="model-name">${escapeHtml(m.name)}${conditionBadge(m.condition)}</span>
+                <span class="model-thumb">${m.image_url
+                    ? `<img src="/api/v1/images?u=${encodeURIComponent(m.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`
+                    : ''}</span>
+                <span class="model-name">${escapeHtml(m.name)}${conditionBadge(m.condition)}
+                    ${state.picker?.sort === 'value' && m.premium_pct > 0
+                        ? `<em class="model-premium">+${m.premium_pct}% over cheapest ${escapeHtml(m.size || '')} card on this chip</em>`
+                        : state.picker?.sort === 'value' ? '<em class="model-premium best">Cheapest on this chip</em>' : ''}</span>
                 <span class="model-price">
                     <strong>₹${Number(m.best_price || 0).toLocaleString('en-IN')}</strong>
                     <em>${m.offer_count} ${m.offer_count === 1 ? 'store' : 'stores'}</em>
