@@ -362,7 +362,11 @@ class GenericParser:
 
             title = card.select_one(self.selectors["title"])
             prices = card.select(self.selectors["price"])
-            price = prices[-1] if prices else None
+            # Never an amount inside <del>: that is the struck-through MRP. Taking the
+            # last match assumed WooCommerce's usual <del> then <ins> order; PrimeABGB
+            # prints <ins> first, so 45 of its 57 CPUs carried their MRP (2026-10-02).
+            not_struck = [p for p in prices if p.find_parent("del") is None]
+            price = (not_struck or prices)[-1] if prices else None
             mrp = card.select_one(self.selectors["mrp"])
             image = card.select_one(self.selectors["image"])
 

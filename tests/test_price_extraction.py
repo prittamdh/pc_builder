@@ -198,3 +198,51 @@ def test_prices_under_1000_are_read(parser, title, price, mrp):
     assert len(results) == 1
     assert results[0].price == int(price)
     assert results[0].mrp == int(mrp)
+
+
+# WooCommerce stores (PrimeABGB, PCStudio). Selectors as stored for these stores.
+_WOO_SELECTORS = {
+    "product_card": "ul.products > li.product",
+    "title": "h3 a",
+    "price": "ins .woocommerce-Price-amount, .price .woocommerce-Price-amount",
+    "mrp": "del .woocommerce-Price-amount",
+    "image": "img",
+}
+
+
+def _woo_parser():
+    return GenericParser(Store(
+        id=4, name="primeabgb", display_name="PrimeABGB", domain="primeabgb.com",
+        base_url="https://www.primeabgb.com", currency="INR", currency_symbol="₹",
+        search_config={"selectors": _WOO_SELECTORS, "attributes": {"url": "href"}},
+        product_config={}, active=True,
+    ))
+
+
+def _woo_card(price_html: str) -> str:
+    return f"""<ul class="products"><li class="product">
+      <h3><a href="https://www.primeabgb.com/p/ryzen-5-9600x/">AMD Ryzen 5 9600X</a></h3>
+      <span class="price">{price_html}</span>
+    </li></ul>"""
+
+
+_SALE = '<ins><span class="woocommerce-Price-amount amount"><bdi>₹21,476</bdi></span></ins>'
+_MRP = '<del aria-hidden="true"><span class="woocommerce-Price-amount amount"><bdi>₹37,826</bdi></span></del>'
+
+
+@pytest.mark.parametrize("order", ["sale_first", "mrp_first"])
+def test_struck_through_price_is_never_the_price(order):
+    # PrimeABGB prints the sale price BEFORE the struck-through one (found 2026-10-02:
+    # 45 of its 57 CPU offers carried the MRP, e.g. a Ryzen 7 7800X3D at Rs 68,075
+    # instead of Rs 40,498). Standard WooCommerce prints it after. Either way the price
+    # is the amount not inside <del>.
+    html = _woo_card(_SALE + _MRP if order == "sale_first" else _MRP + _SALE)
+    [r] = _woo_parser().parse_search(html)
+    assert r.price == 21476
+    assert r.mrp == 37826
+
+
+def test_price_without_a_sale_is_read():
+    html = _woo_card('<span class="woocommerce-Price-amount amount"><bdi>₹21,476</bdi></span>')
+    [r] = _woo_parser().parse_search(html)
+    assert r.price == 21476
