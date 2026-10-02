@@ -31,7 +31,7 @@ class SearchService:
         from matching.category_classifier import CategoryClassifier
         from matching.condition_policy import detect_condition
         p_category = CategoryClassifier.get_p_category(hard_category, result.name)
-        condition = detect_condition(result.name)
+        condition = detect_condition(result.name, p_category)
 
         product, created = self.product_repository.get_or_create(
             sid=result.sid,

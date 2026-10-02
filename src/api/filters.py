@@ -19,6 +19,18 @@ def from_active_store():
     return Product.sid.in_(select(Store.id).where(Store.active.is_(True)))
 
 
+def is_new_stock():
+    """True for new, retail-boxed listings: no open box, repacked, refurbished or
+    OEM/tray (matching/condition_policy.py). Owner decision 2026-10-02: only new stock
+    is listed anywhere on the site."""
+    return Product.condition.is_(None)
+
+
+def is_listed():
+    """What the site shows: new stock from an active store."""
+    return from_active_store() & is_new_stock()
+
+
 def has_usable_price():
     """True for listings carrying a real, positive price.
 

@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.filters import from_active_store, has_usable_price, search_conditions
+from api.filters import is_listed, has_usable_price, search_conditions
 from api.rate_limit import limiter
 from configs import settings
 from db.models.canonical_part import CanonicalPart
@@ -256,7 +256,7 @@ def list_slot_candidates(
             # An unpriced listing would be added to a build at zero cost, quietly
             # understating the total by a whole component.
             has_usable_price(),
-            from_active_store(),
+            is_listed(),
         )
     )
     if req.q:

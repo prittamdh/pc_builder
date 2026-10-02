@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.filters import from_active_store, has_usable_price, search_conditions as _search_conditions
+from api.filters import is_listed, has_usable_price, search_conditions as _search_conditions
 from api.spec_filters import (
     ENUM,
     RANGE,
@@ -85,7 +85,7 @@ def list_products(
             detail=f"sort must be one of {', '.join(SORT_OPTIONS)}",
         )
 
-    conditions = [from_active_store()]
+    conditions = [is_listed()]
 
     if q:
         conditions.extend(_search_conditions(q))
@@ -196,7 +196,7 @@ def list_product_models(
             detail=f"sort must be one of {', '.join(SORT_OPTIONS)}",
         )
 
-    conditions = [has_usable_price(), from_active_store()]
+    conditions = [has_usable_price(), is_listed()]
     if q:
         conditions.extend(_search_conditions(q))
     if p_category:
@@ -318,7 +318,7 @@ def get_catalog_stats(db: Session = Depends(get_db)):
     """
     products = db.scalar(
         select(func.count(Product.id)).where(
-            Product.is_legacy.is_(False), has_usable_price(), from_active_store()
+            Product.is_legacy.is_(False), has_usable_price(), is_listed()
         )
     ) or 0
     stores = db.scalar(select(func.count(Store.id)).where(Store.active.is_(True))) or 0
@@ -370,7 +370,7 @@ def list_spec_facets(
         Product.is_legacy.is_(False),
         Product.in_stock.is_(True),
         has_usable_price(),
-        from_active_store(),
+        is_listed(),
         Product.canonical_id.is_not(None),
     ]
     if q:
@@ -442,7 +442,7 @@ def _visible_product_or_404(db: Session, product_id: int) -> Product:
 
     An inactive store's page would show its last, stale prices as current.
     """
-    product = db.scalar(select(Product).where(Product.id == product_id, from_active_store()))
+    product = db.scalar(select(Product).where(Product.id == product_id, is_listed()))
     if product is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

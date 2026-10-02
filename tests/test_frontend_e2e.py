@@ -630,15 +630,16 @@ class TestCatalogCredibility:
         assert int(shown) == stats["products"]
         assert stats["stores"] > 0 and stats["price_snapshots"] > 0
 
-    def test_opened_stock_is_labelled(self, page):
-        """Repacked/open-box units undercut sealed ones, so they win price sorts.
-        Saying so is the difference between a bargain and a misleading listing."""
-        labelled = page.evaluate("""async () => {
+    def test_opened_and_oem_stock_is_not_listed(self, page):
+        """Owner decision 2026-10-02: only new, retail-boxed stock is listed. Open-box
+        and OEM units used to be shown with a badge; now they are not shown at all."""
+        hidden = page.evaluate("""async () => {
             const r = await fetch('/api/v1/products?q=open%20box&size=20');
-            const items = (await r.json()).items;
-            return items.length && items.every(i => i.condition !== null);
+            const o = await fetch('/api/v1/products?q=oem&size=20');
+            return (await r.json()).items.length === 0
+                && (await o.json()).items.every(i => i.condition === null);
         }""")
-        assert labelled is True
+        assert hidden is True
 
     def test_flat_picker_still_ranks_sealed_stock_above_opened(self, page):
         conditions = page.evaluate("""async () => {
