@@ -345,6 +345,21 @@ class TestWattageEstimate:
         s = _run(monkeypatch, {"cpu": [_view("cpu", tdp=105)], "gpu": [_view("gpu", tdp=200)]})
         assert s.estimated_wattage == 105 + 200 + 50
 
+    def test_cpu_counts_at_its_maximum_power_not_its_tdp(self, monkeypatch):
+        # Owner decision 2026-10-06: an i5-14500 is 65 W TDP but draws up to 154 W.
+        s = _run(monkeypatch, {"cpu": [_view("cpu", tdp=65, max_power=154, max_power_source="intel")],
+                               "gpu": [_view("gpu", tdp=200)]})
+        assert s.estimated_wattage == 154 + 200 + 50
+        assert s.wattage_notes == []
+
+    def test_an_estimated_maximum_says_so(self, monkeypatch):
+        s = _run(monkeypatch, {"cpu": [_view("cpu", name="Old Intel", tdp=65, max_power=130,
+                                              max_power_source="estimate")],
+                               "gpu": [_view("gpu", tdp=200)]})
+        assert s.estimated_wattage == 130 + 200 + 50
+        assert len(s.wattage_notes) == 1
+        assert "Old Intel" in s.wattage_notes[0] and "130" in s.wattage_notes[0]
+
     def test_estimate_notes_come_after_psu_capacity_warnings(self, monkeypatch):
         s = _run(monkeypatch, {"cpu": [_view("cpu", tdp=None)], "gpu": [_view("gpu", tdp=None)],
                                "psu": [_view("psu", wattage=450)]})

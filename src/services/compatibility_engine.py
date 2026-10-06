@@ -41,6 +41,7 @@ from db.models.cabinet_title_extraction import CabinetTitleExtraction
 from db.models.cooler_title_extraction import CoolerTitleExtraction
 from db.models.storage_title_extraction import StorageTitleExtraction
 from domain.builder import CompatibilityWarning
+from matching.cpu_power import cpu_max_power
 from services.compatibility_rules import (
     RULES, FIELD_LABELS, SLOT_LABELS, cooler_kind, form_factor_index, rule_applies,
     WATTAGE_HEADROOM, DEFAULT_CPU_TDP, DEFAULT_GPU_TDP,
@@ -82,12 +83,16 @@ class CompatibilityEngine:
             specs = {s.canonical_id: s for s in self.session.scalars(
                 select(CPUSpecs).where(CPUSpecs.canonical_id.in_(canonical_ids))
             )} if canonical_ids else {}
-            return [
-                _merge(specs.get(p.canonical_id), None, {
+            views = []
+            for p in products:
+                view = _merge(specs.get(p.canonical_id), None, {
                     "socket": "socket", "tdp": "tdp", "cores": "cores", "threads": "threads",
                 })
-                for p in products
-            ]
+                # The PSU estimate counts a CPU at its maximum draw (matching/cpu_power.py).
+                view.max_power, view.max_power_source = cpu_max_power(
+                    p.canonical_id, view.socket, view.tdp)
+                views.append(view)
+            return views
 
         if category == "motherboard":
             specs = {s.canonical_id: s for s in self.session.scalars(
@@ -318,7 +323,10 @@ class CompatibilityEngine:
                             compatible = False
 
         # Aggregate wattage check (sum, not pairwise - handled separately from RULES).
-        cpu_watt = sum((self._get(c, "tdp") or DEFAULT_CPU_TDP) for c in selections.get("cpu", []))
+        # A CPU counts at its maximum power, not its TDP: an i5-14500 is 65 W TDP and
+        # 154 W at full turbo (owner decision 2026-10-06; matching/cpu_power.py).
+        cpu_watt = sum((self._get(c, "max_power") or self._get(c, "tdp") or DEFAULT_CPU_TDP)
+                       for c in selections.get("cpu", []))
         gpu_watt = sum((self._get(g, "tdp") or DEFAULT_GPU_TDP) for g in selections.get("gpu", []))
         estimated_wattage = cpu_watt + gpu_watt + 50  # base system draw (board/RAM/storage/fans)
 
@@ -363,6 +371,15 @@ class CompatibilityEngine:
                         level="estimate",
                         message=f"Wattage estimate: {name} has no listed TDP, so a typical {default} W was used.",
                     ))
+
+        for view in selections.get("cpu", []):
+            if self._get(view, "max_power_source") == "estimate":
+                name = self._get(view, "product_name") or "the selected CPU"
+                warnings.append(CompatibilityWarning(
+                    level="estimate",
+                    message=f"Wattage estimate: {name} has no published maximum power, so "
+                            f"{self._get(view, 'max_power')} W (twice its {self._get(view, 'tdp')} W TDP) was used.",
+                ))
 
         return compatible, warnings, estimated_wattage
 
