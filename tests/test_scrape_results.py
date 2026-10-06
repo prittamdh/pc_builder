@@ -16,7 +16,10 @@ from db.models.scrape_target import ScrapeTarget
 from db.models.store import Store
 from pipeline import agent_tokens, job_queue, scrape_planning, scrape_results
 
-T0 = datetime(2026, 10, 1, 12, 0, 0)
+# A day ahead of the real clock, never a fixed date: jobs enqueued without a time get
+# the real "now", and a fixed T0 that slips into the past makes every lease at T0 find
+# nothing (it did on 2026-10-06, when T0 was 2026-10-01).
+T0 = (datetime.utcnow() + timedelta(days=1)).replace(second=0, microsecond=0)
 JSON_CT = "application/json; charset=utf-8"
 
 
