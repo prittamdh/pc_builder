@@ -11,4 +11,6 @@ TASK_INTERVALS: dict[str, timedelta] = {
     "price_freshness": timedelta(hours=1),
     # A model mixing sizes (8GB with 16GB) means a wrong merge; see identity_audit.py.
     "identity_audit": timedelta(days=1),
+    # A listing whose title names another category (an SSD under Power Supply).
+    "category_audit": timedelta(days=1),
 }

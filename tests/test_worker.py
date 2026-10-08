@@ -146,3 +146,8 @@ def test_cli_help():
         capture_output=True, text=True, encoding="utf-8", check=True, cwd=ROOT / "src",
     ).stdout
     assert "--once" in out
+
+
+def test_the_daily_audit_also_checks_categories():
+    audit = next(u for u in worker.UNITS if u.name == "identity_audit")
+    assert [s.name for s in audit.steps] == ["identity_audit", "category_audit"]
