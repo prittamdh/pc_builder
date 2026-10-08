@@ -41,6 +41,7 @@ from db.models.cabinet_title_extraction import CabinetTitleExtraction
 from db.models.cooler_title_extraction import CoolerTitleExtraction
 from db.models.storage_title_extraction import StorageTitleExtraction
 from domain.builder import CompatibilityWarning
+from matching.cooler_sockets import CURRENT_SOCKETS, normalize_sockets, socket_supported
 from matching.cpu_power import cpu_max_power
 from services.compatibility_rules import (
     RULES, FIELD_LABELS, SLOT_LABELS, cooler_kind, form_factor_index, rule_applies,
@@ -282,7 +283,12 @@ class CompatibilityEngine:
         elif rule.op == "le":
             fails = float(val_a) > float(val_b)
         elif rule.op == "contains_in":
-            fails = str(val_a).strip().upper() not in str(val_b).strip().upper()
+            # Whole sockets, with LGA115x expanded (matching/cooler_sockets.py). A cooler
+            # list with nothing recognisable falls back to the plain text check.
+            supported = socket_supported(str(val_a), str(val_b))
+            if normalize_sockets(str(val_b)) is None:
+                supported = str(val_a).strip().upper() in str(val_b).strip().upper()
+            fails = not supported
         elif rule.op == "form_factor_fits":
             ia, ib = form_factor_index(val_a), form_factor_index(val_b)
             fails = ia is not None and ib is not None and ia > ib
@@ -312,6 +318,16 @@ class CompatibilityEngine:
                     val_a, val_b = self._get(item_a, rule.field_a), self._get(item_b, rule.field_b)
                     unknown_a = self._unknown(rule, val_a)
                     unknown_b = self._unknown(rule, val_b)
+                    if (rule.op == "contains_in" and unknown_b and not unknown_a
+                            and str(val_a).strip().upper() in CURRENT_SOCKETS):
+                        # Unknown cooler sockets with a current CPU socket: almost every
+                        # cooler sold today fits it, so a note, not an unverified check.
+                        warnings.append(CompatibilityWarning(
+                            level="estimate",
+                            message=f"Cooler sockets: {getattr(item_b, 'product_name', None) or 'the selected cooler'} doesn't list its supported "
+                                    f"sockets. Almost every cooler sold today fits {val_a}, but "
+                                    f"check the box says {val_a}."))
+                        continue
                     if unknown_a or unknown_b:
                         # Never a silent pass, never a guessed value (FIT-01).
                         warnings.append(self._unverified(rule, item_a, item_b, unknown_a, unknown_b))
