@@ -99,6 +99,8 @@ def test_each_rule_reports_unverified_when_a_value_is_missing(monkeypatch, rule_
     }
     setattr(views[missing_slot], missing_field, None)
     views[missing_slot].product_name = "Missing-Data Part"
+    if missing_field == "memory_slots":
+        views["ram"].modules = 4  # 2 or fewer always fit (every desktop board has 2+)
 
     summary = _run(monkeypatch, {k: [v] for k, v in views.items()})
 
@@ -273,7 +275,7 @@ def test_warnings_are_deterministic(monkeypatch):
     sel = {
         "cpu": [_view("cpu", socket=None)],
         "motherboard": [_view("motherboard", memory_slots=None)],
-        "ram": [_view("ram")],
+        "ram": [_view("ram", modules=4)],
         "gpu": [_view("gpu")],
         "case": [_view("case", max_gpu_length_mm=None)],
     }
@@ -501,3 +503,155 @@ class TestPsuWattageUnknown:
         summary = _run(monkeypatch, {"cpu": [_view("cpu", tdp=None)],
                                      "psu": [_view("psu", wattage=None)]})
         assert [w.level for w in summary.warnings] == ["unverified", "estimate"]
+
+
+# ---------------------------------------------------------------------------
+# RAM vs motherboard when the board's slot count / maximum memory is unknown
+# (2026-10-08: 869 of 903 boards have no slot count, none has a maximum).
+# ---------------------------------------------------------------------------
+class TestUnknownSlotCount:
+    @pytest.mark.parametrize("modules", [1, 2])
+    def test_two_or_fewer_modules_always_fit(self, monkeypatch, modules):
+        """Every desktop motherboard has at least 2 DIMM slots."""
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", memory_slots=None)],
+            "ram": [_view("ram", modules=modules)],
+        })
+        assert summary.warnings == [] and summary.verdict == "All checks passed"
+
+    def test_more_than_two_modules_stays_unverified(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", "Slotless Board", memory_slots=None)],
+            "ram": [_view("ram", modules=4)],
+        })
+        items = _levels(summary, "unverified")
+        assert len(items) == 1
+        assert "Slotless Board" in items[0].message
+        assert FIELD_LABELS["memory_slots"] in items[0].message
+
+    def test_unknown_module_count_stays_unverified(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", memory_slots=None)],
+            "ram": [_view("ram", modules=None)],
+        })
+        assert len(_levels(summary, "unverified")) == 1
+
+    def test_known_slots_still_checked(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", memory_slots=2)],
+            "ram": [_view("ram", modules=4)],
+        })
+        assert [w.level for w in summary.warnings] == ["error"]
+
+
+class TestPlatformMaxMemory:
+    @staticmethod
+    def _board():
+        return _view("motherboard", "Estimated Board", chipset="B650M", memory_slots=None,
+                     max_memory_gb=96, max_memory_source="platform_estimate")
+
+    def test_fitting_ram_passes_with_an_estimate_note(self, monkeypatch):
+        summary = _run(monkeypatch, {"motherboard": [self._board()],
+                                     "ram": [_view("ram", capacity_gb=64)]})
+        notes = _levels(summary, "estimate")
+        assert len(notes) == 1, summary.warnings
+        msg = notes[0].message
+        assert "Estimated Board" in msg and "96" in msg and "platform estimate" in msg
+        assert _levels(summary, "unverified") == []
+        assert summary.verdict == "All checks passed"
+
+    def test_memory_note_is_not_a_wattage_note(self, monkeypatch):
+        """The UI marks the wattage "(estimate)" whenever wattage_notes is non-empty."""
+        summary = _run(monkeypatch, {"motherboard": [self._board()], "ram": [_view("ram")],
+                                     "cpu": [_view("cpu")]})
+        assert len(_levels(summary, "estimate")) == 1
+        assert summary.wattage_notes == []
+
+    def test_ram_over_the_estimate_is_unverified_not_an_error(self, monkeypatch):
+        """The estimate is a floor: the real board may take more, so never a hard error."""
+        summary = _run(monkeypatch, {"motherboard": [self._board()],
+                                     "ram": [_view("ram", "Big Kit", capacity_gb=Decimal("128.00"))]})
+        assert summary.compatible is True
+        assert "Big Kit is 128GB" in summary.warnings[0].message  # not "128.00GB"
+        assert _levels(summary, "error") == []
+        items = _levels(summary, "unverified")
+        assert len(items) == 1
+        assert "Estimated Board" in items[0].message and "96" in items[0].message
+
+    def test_published_maximum_is_still_a_hard_check(self, monkeypatch):
+        summary = _run(monkeypatch, {
+            "motherboard": [_view("motherboard", max_memory_gb=64, max_memory_source="published")],
+            "ram": [_view("ram", capacity_gb=128)],
+        })
+        assert [w.level for w in summary.warnings] == ["error"]
+
+    def test_estimated_maximum_never_filters_a_board_out(self, monkeypatch):
+        class _P:
+            id, p_category, canonical_id, name = 1, "Motherboard", None, "board-1"
+
+        engine = CompatibilityEngine(session=None)
+        monkeypatch.setattr(engine, "_group_selections",
+                            lambda ids: {"ram": [_view("ram", capacity_gb=128)]})
+        monkeypatch.setattr(engine, "_resolve_slot", lambda slot, prods: [self._board()])
+        candidates = [_P()]
+        assert engine.filter_candidates("motherboard", [9], candidates) == candidates
+
+
+class TestMotherboardResolve:
+    def _resolve(self, ext=None, **spec_kw):
+        from db.models.category_specs import MotherboardSpecs
+        from db.models.motherboard_title_extraction import MotherboardTitleExtraction
+        product = SimpleNamespace(id=1, canonical_id="mb-1", name="Some Board")
+        spec = dict(canonical_id="mb-1", socket="AM5", chipset="B650", form_factor="ATX",
+                    memory_type="DDR5", memory_slots=None, max_memory_gb=None)
+        spec.update(spec_kw)
+        rows = {MotherboardSpecs: [SimpleNamespace(**spec)]}
+        if ext:
+            rows[MotherboardTitleExtraction] = [SimpleNamespace(product_id=1, **ext)]
+        engine = CompatibilityEngine(session=_FakeSession(rows))
+        return engine._resolve_slot("motherboard", [product])[0]
+
+    def test_mini_itx_board_has_two_slots(self):
+        assert self._resolve(form_factor="ITX").memory_slots == 2
+
+    def test_atx_board_with_unknown_slots_stays_unknown(self):
+        assert self._resolve().memory_slots is None
+
+    def test_missing_maximum_filled_from_the_platform_table(self):
+        view = self._resolve(memory_slots=4)
+        assert (view.max_memory_gb, view.max_memory_source) == (192, "platform_estimate")
+
+    def test_unknown_slots_use_the_lower_two_slot_figure(self):
+        view = self._resolve()
+        assert (view.max_memory_gb, view.max_memory_source) == (96, "platform_estimate")
+
+    def test_extraction_chipset_and_memory_type_are_used(self):
+        ext = dict(socket="LGA1700", chipset="H610M", form_factor="MATX", memory_type="DDR4")
+        assert self._resolve(ext=ext).max_memory_gb == 64
+
+    def test_published_maximum_wins(self):
+        view = self._resolve(max_memory_gb=128, memory_slots=4)
+        assert (view.max_memory_gb, view.max_memory_source) == (128, "published")
+
+    def test_unknown_platform_stays_unknown(self):
+        view = self._resolve(chipset="TRX50")
+        assert view.max_memory_gb is None and view.max_memory_source is None
+
+
+class TestGpuResolve:
+    def _resolve(self, canonical_id, tdp):
+        from db.models.category_specs import GPUSpecs
+        product = SimpleNamespace(id=1, canonical_id=canonical_id, name="Some GPU")
+        spec = SimpleNamespace(canonical_id=canonical_id, length_mm=None, tdp=tdp,
+                               recommended_psu=None, chipset=None)
+        engine = CompatibilityEngine(session=_FakeSession({GPUSpecs: [spec]}))
+        return engine._resolve_slot("gpu", [product])[0]
+
+    def test_missing_tdp_filled_from_the_chip(self):
+        assert self._resolve("gpu:pny:rtx_5070:oc_triple_fan", None).tdp == 250
+
+    def test_listed_tdp_is_kept(self):
+        assert self._resolve("gpu:asus:rtx_5070:12gb:prime", 300).tdp == 300
+
+    def test_unknown_chip_stays_unknown(self):
+        assert self._resolve("gpu:asus:mystery_9999", None).tdp is None

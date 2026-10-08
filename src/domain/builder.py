@@ -21,7 +21,8 @@ class CompatibilityWarning(BaseModel):
     # "error"      - a known mismatch; the build won't work as chosen.
     # "warning"    - a likely problem worth checking (retailer pages can be incomplete).
     # "unverified" - a check that could not run because a spec is missing (FIT-01).
-    # "estimate"   - a figure built on a typical value, e.g. a default TDP (FIT-03).
+    # "estimate"   - a figure built on a typical value, e.g. a default TDP (FIT-03)
+    #                or a board's platform memory limit.
     level: str
     message: str
 
@@ -64,4 +65,7 @@ class BuildSummary(BaseModel):
     @computed_field
     @property
     def wattage_notes(self) -> list[str]:
-        return [w.message for w in self.warnings if w.level == "estimate"]
+        # Only the notes behind estimated_wattage - the UI marks the wattage
+        # "(estimate)" when this is non-empty.
+        return [w.message for w in self.warnings
+                if w.level == "estimate" and w.message.startswith("Wattage estimate")]
