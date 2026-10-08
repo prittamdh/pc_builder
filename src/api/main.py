@@ -1,14 +1,16 @@
 import html
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from api.deps import get_db
 from api.rate_limit import limiter
 from common.logger import get_logger
 from configs import settings
@@ -19,7 +21,7 @@ logger = get_logger(__name__)
 # otherwise fail first with an unhelpful TypeError on a None DATABASE_URL).
 settings.require_database_url()
 
-from api.routes import builder, compare, images, products, stores
+from api.routes import agent, builder, compare, images, products, stores
 
 _docs_enabled = settings.ENV != "production"
 
@@ -106,15 +108,26 @@ app.include_router(products.router, prefix="/api/v1")
 app.include_router(builder.router, prefix="/api/v1")
 app.include_router(compare.router, prefix="/api/v1")
 app.include_router(images.router, prefix="/api/v1")
+# Scrape agents (plan 02-04): token-only, per-token limits, not in the public schema.
+app.include_router(agent.router)
+app.include_router(agent.health_router)
 
 # Mount Static UI Files
 static_dir = Path(__file__).resolve().parent.parent / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
+def public_base(request: Request) -> str:
+    """The site's address for links search engines keep: PUBLIC_URL when set, because
+    the Host header is whatever the client sent; the request's own host otherwise."""
+    return settings.PUBLIC_URL or str(request.base_url).rstrip("/")
+
+
 @app.get("/", include_in_schema=False)
-def serve_index():
-    return FileResponse(static_dir / "index.html")
+def serve_index(request: Request):
+    body = (static_dir / "index.html").read_text(encoding="utf-8")
+    body = body.replace("{{PUBLIC_URL}}", html.escape(public_base(request)))
+    return Response(content=body, media_type="text/html")
 
 
 # WEB-01: a bad URL for a page shows the branded 404 page; a bad /api/* path
@@ -161,19 +174,21 @@ def serve_about():
 
 
 @app.get("/health", tags=["Health"])
-def health_check():
-    """Health check endpoint."""
+def health_check(db=Depends(get_db)):
+    """Up, and the database answers (OPS-04). 503 otherwise, with no details: the
+    uptime monitor only needs to know it failed; the log has the reason."""
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("/health: database check failed")
+        return JSONResponse({"status": "fail", "app": "PC Builder API"}, status_code=503)
     return {"status": "ok", "app": "PC Builder API"}
 
 
-# SEO-01: robots.txt and a minimal sitemap. The canonical link on index.html
-# is relative because no production domain exists yet; Phase 3 (plan 03-02)
-# switches it and this sitemap's <loc> base to the real domain and turns on
-# uvicorn's proxy headers so request.base_url reports https/the real host
-# behind the proxy.
+# SEO-01: robots.txt and a minimal sitemap, with absolute links from public_base().
 @app.get("/robots.txt", include_in_schema=False)
 def robots_txt(request: Request):
-    sitemap_url = str(request.base_url).rstrip("/") + "/sitemap.xml"
+    sitemap_url = public_base(request) + "/sitemap.xml"
     body = (
         "User-agent: *\n"
         "Allow: /\n"
@@ -185,7 +200,7 @@ def robots_txt(request: Request):
 
 @app.get("/sitemap.xml", include_in_schema=False)
 def sitemap_xml(request: Request):
-    base = str(request.base_url).rstrip("/")
+    base = public_base(request)
     urls = "".join(f"<url><loc>{base}/{path}</loc></url>" for path in ("", "about", "privacy"))
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>'

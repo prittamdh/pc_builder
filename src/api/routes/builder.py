@@ -1,16 +1,21 @@
 import secrets
 
+from collections import Counter
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.filters import from_active_store, has_usable_price
+from api.filters import is_listed, has_usable_price, search_conditions
 from api.rate_limit import limiter
 from configs import settings
+from db.models.canonical_part import CanonicalPart
 from db.models.product import Product
 from db.models.category_specs import PSUSpecs
+from matching.canonical_key_builder import extract_brand
+from matching.size_from_title import size_label, size_sort_key
 from db.models.saved_build import SavedBuild
 from db.models.store import Store
 from domain.builder import BuildSelection, BuildSummary, ComponentSlot
@@ -54,7 +59,34 @@ class CandidateRequest(BaseModel):
     # One entry per model with its store offers nested, rather than one row per
     # listing. Pass false for the old flat shape.
     group_by_model: bool = True
+    # Picker chips (grouped shape only). `size` is a label from facets.size, e.g.
+    # "16GB", "850W", '27"'; `brand` one from facets.brand.
+    brand: str | None = None
+    size: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    sort: str = "price"
 
+
+PICKER_SORTS = ("price", "price_desc", "stores", "value")
+
+# How a brand is written on chips; anything else is title-cased. Stores and the
+# extraction spell makes every way ("Asrock", "AsRock", "ASRock").
+_BRAND_DISPLAY = {
+    "asrock": "ASRock", "asus": "ASUS", "msi": "MSI", "amd": "AMD", "nzxt": "NZXT",
+    "pny": "PNY", "xfx": "XFX", "g.skill": "G.Skill", "gskill": "G.Skill",
+    "adata": "ADATA", "wd": "WD", "western digital": "WD", "hp": "HP", "lg": "LG",
+    "aoc": "AOC", "benq": "BenQ", "fsp": "FSP", "evga": "EVGA", "tp-link": "TP-Link",
+    "powercolor": "PowerColor", "inno3d": "Inno3D", "deepcool": "DeepCool", "zotac": "ZOTAC",
+    "teamgroup": "TeamGroup", "be quiet!": "be quiet!", "lian li": "Lian Li",
+}
+
+
+def display_brand(brand: str | None) -> str | None:
+    b = (brand or "").strip()
+    if not b or b.lower() == "unknown":
+        return None
+    return _BRAND_DISPLAY.get(b.lower(), b.title())
 
 class SaveBuildRequest(BaseModel):
     # slot key -> product id, e.g. {"cpu": 4089, "motherboard": 4867}
@@ -145,6 +177,11 @@ def _group_by_model(db: Session, candidates: list[Product]) -> list[dict]:
         s.id: (s.display_name or s.name)
         for s in db.scalars(select(Store))
     }
+    parts = {
+        cp.canonical_id: cp
+        for cp in db.scalars(select(CanonicalPart).where(CanonicalPart.canonical_id.in_(
+            {p.canonical_id for p in candidates if p.canonical_id})))
+    }
 
     grouped: dict[str, list[Product]] = {}
     for product in candidates:
@@ -155,10 +192,20 @@ def _group_by_model(db: Session, candidates: list[Product]) -> list[dict]:
     for key, listings in grouped.items():
         listings.sort(key=lambda p: (float(p.current_price), p.condition is not None))
         best = listings[0]
+        name = min((p.name for p in listings), key=len)
+        part = parts.get(best.canonical_id)
+        size = next((lbl for p in listings if (lbl := size_label(p.p_category, p.name))), None)
+        chipset = (part.key_fields or {}).get("chipset") if part else None
         models.append({
             "canonical_id": key,
             # The shortest title is the least padded with store-specific boilerplate.
-            "name": min((p.name for p in listings), key=len),
+            "name": name,
+            "brand": display_brand(part.brand if part else None) or display_brand(extract_brand(name)),
+            "size": size,
+            # What "comparable" means for the value sort: same chip and size for a GPU,
+            # same size otherwise.
+            "chip": f"{chipset or ''}|{size or ''}",
+            "image_url": next((p.image_url for p in listings if p.image_url), None),
             "best_price": float(best.current_price),
             "offer_count": len(listings),
             "condition": best.condition,
@@ -197,6 +244,8 @@ def list_slot_candidates(
     category = SLOT_CATEGORY.get(req.slot)
     if category is None:
         return {"items": [], "total": 0, "filtered_out": 0, "error": f"unknown slot '{req.slot}'"}
+    if req.sort not in PICKER_SORTS:
+        raise HTTPException(status_code=422, detail=f"sort must be one of {', '.join(PICKER_SORTS)}")
 
     stmt = (
         select(Product)
@@ -207,14 +256,16 @@ def list_slot_candidates(
             # An unpriced listing would be added to a build at zero cost, quietly
             # understating the total by a whole component.
             has_usable_price(),
-            from_active_store(),
+            is_listed(),
         )
     )
     if req.q:
-        stmt = stmt.where(Product.name.ilike(f"%{req.q}%"))
+        # Same matching as the catalog: "9060xt" finds "RX 9060 XT".
+        stmt = stmt.where(*search_conditions(req.q))
 
-    # Pull a wider pool than we return, since compatibility filtering thins it.
-    candidates = list(db.scalars(stmt.limit(limit * 5)))
+    # The whole in-stock category, cheapest first: brand and size chips are counted
+    # over it, so a narrower pool would leave options out.
+    candidates = list(db.scalars(stmt.order_by(Product.current_price, Product.id).limit(3000)))
     total_before = len(candidates)
 
     if req.compatible_only and req.selected_product_ids:
@@ -241,13 +292,53 @@ def list_slot_candidates(
             "filtered_out": total_before - len(candidates),
         }
 
-    models = _group_by_model(db, candidates)[:limit]
+    models = _group_by_model(db, candidates)
+    models, facets = _apply_picker_chips(models, req)
+    models = _sort_models(models, req.sort)[:limit]
     return {
         "items": models,
         "total": len(models),
         "offer_count": sum(m["offer_count"] for m in models),
         "filtered_out": total_before - len(candidates),
+        "facets": facets,
     }
+
+
+def _apply_picker_chips(models: list[dict], req: CandidateRequest) -> tuple[list[dict], dict]:
+    """Price range, then brand and size chips. Each chip's options are counted with the
+    other chip applied but not itself, so choosing 16GB still offers 8GB to switch to."""
+    lo, hi = req.min_price, req.max_price
+    in_range = [m for m in models
+                if (lo is None or m["best_price"] >= lo) and (hi is None or m["best_price"] <= hi)]
+
+    # Value is measured against every comparable model in range, whatever the brand.
+    cheapest: dict[str, float] = {}
+    for m in in_range:
+        cheapest[m["chip"]] = min(cheapest.get(m["chip"], m["best_price"]), m["best_price"])
+    for m in in_range:
+        low = cheapest[m["chip"]]
+        m["premium_pct"] = round((m["best_price"] - low) / low * 100) if low else 0
+
+    brand_ok = lambda m: req.brand is None or m["brand"] == req.brand
+    size_ok = lambda m: req.size is None or m["size"] == req.size
+
+    brands = Counter(m["brand"] for m in in_range if size_ok(m) and m["brand"])
+    sizes = Counter(m["size"] for m in in_range if brand_ok(m) and m["size"])
+    facets = {
+        "brand": [{"value": b, "count": n} for b, n in sorted(brands.items(), key=lambda x: (-x[1], x[0]))],
+        "size": [{"value": s, "count": n} for s, n in sorted(sizes.items(), key=lambda x: size_sort_key(x[0]))],
+    }
+    return [m for m in in_range if brand_ok(m) and size_ok(m)], facets
+
+
+def _sort_models(models: list[dict], sort: str) -> list[dict]:
+    if sort == "price_desc":
+        return sorted(models, key=lambda m: -m["best_price"])
+    if sort == "stores":
+        return sorted(models, key=lambda m: (-m["offer_count"], m["best_price"]))
+    if sort == "value":
+        return sorted(models, key=lambda m: (m["premium_pct"], m["best_price"]))
+    return sorted(models, key=lambda m: m["best_price"])
 
 
 @router.post("/builds", dependencies=[Depends(cap_body_size)])

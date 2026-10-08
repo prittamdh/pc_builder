@@ -418,7 +418,7 @@ def make_canonical_key_string(category: str, key_dict: dict) -> str:
 # The test to apply before adding a field here: could this value, on its own, name a
 # product to someone who knew the catalogue? "Bronze" and "White" cannot. "750w" and a
 # model number can.
-_NON_IDENTIFYING_FIELDS = frozenset({"category", "efficiency", "color", "colour", "brand", "aib_brand"})
+_NON_IDENTIFYING_FIELDS = frozenset({"category", "efficiency", "color", "colour", "brand", "aib_brand", "memory"})
 
 
 def disambiguate_failed_key(key_dict: dict, product_id: int) -> dict:

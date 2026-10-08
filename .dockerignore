@@ -1,0 +1,17 @@
+.git
+.env
+.env.*
+!.env.example
+.claude
+.planning
+.superpowers
+**/__pycache__
+**/*.pyc
+tests
+extension
+logs
+dags
+docs
+*.html
+*.sql
+project_tree.txt

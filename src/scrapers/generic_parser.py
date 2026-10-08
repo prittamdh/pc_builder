@@ -241,11 +241,15 @@ class GenericParser:
             # price identical to a number in its own title.
             # Same failure as the PSU-efficiency carousel bug: an unanchored regex
             # over too much text returns a confident wrong answer.
-            numbers = re.findall(r"₹\s*(\d{1,3}(?:,\d{3})+|\d{4,6})", card_text)
+            # With the sign required, short amounts are safe to read. Requiring 4+ digits
+            # (and dropping anything under 500) skipped every price under Rs 1,000, so
+            # the struck-through MRP became the price: Ant Value ECO400 at Rs 2,999
+            # instead of Rs 879 (found 2026-09-27).
+            numbers = re.findall(r"₹\s*(\d{1,3}(?:,\d{3})+|\d{2,7})", card_text)
             clean_nums = []
             for n in numbers:
                 val = self._clean_price(n)
-                if val > 500:
+                if val >= 10:
                     clean_nums.append(val)
 
             # No rupee-marked amount means the price wasn't found. Skipping keeps the
@@ -358,7 +362,11 @@ class GenericParser:
 
             title = card.select_one(self.selectors["title"])
             prices = card.select(self.selectors["price"])
-            price = prices[-1] if prices else None
+            # Never an amount inside <del>: that is the struck-through MRP. Taking the
+            # last match assumed WooCommerce's usual <del> then <ins> order; PrimeABGB
+            # prints <ins> first, so 45 of its 57 CPUs carried their MRP (2026-10-02).
+            not_struck = [p for p in prices if p.find_parent("del") is None]
+            price = (not_struck or prices)[-1] if prices else None
             mrp = card.select_one(self.selectors["mrp"])
             image = card.select_one(self.selectors["image"])
 

@@ -1,4 +1,4 @@
-"""Refresh products a catalog re-scrape never reached, by fetching their own pages.
+"""Refresh products a catalog re-scrape never reached, by queueing their own pages.
 
 A category re-scrape only walks listing pages, so anything that has fallen off them -
 out of stock on the site, or past the target's `max_pages` - keeps whatever price it
@@ -10,54 +10,21 @@ a history row on every scrape even when the product row itself is unchanged, so 
 no history row since the run started" is the only precise test for "never seen".
 `updated_at` cannot distinguish "not seen" from "seen but identical".
 
+Since plan 02-02 this only queues `product_page` jobs; the browser-extension agents
+fetch the pages and the server saves them (pipeline/scrape_results.py). A 404/410 from
+the store marks the product out of stock; any other failure leaves it unchanged.
+
     python scripts/repair_unseen_products.py computechstore
     python scripts/repair_unseen_products.py computechstore --hours 3 --dry-run
 """
 import argparse
 import sys
-from decimal import Decimal
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 
-from db.session import SessionLocal
-from db.models.price_history import PriceHistory
-from db.models.product import Product
 from db.models.store import Store
-from scrapers.http_client import HttpClient
-from scrapers.generic_scraper import GenericScraper
-
-
-def _is_gone(exc: BaseException) -> bool:
-    """True only when the store says the page does not exist.
-
-    Deliberately narrow: marking a product unavailable is a claim about the store's
-    inventory, so it must come from the store, not from our own parser falling over.
-    """
-    for err in (exc, getattr(exc, "__cause__", None), getattr(exc, "__context__", None)):
-        status = getattr(err, "code", None) or getattr(
-            getattr(err, "response", None), "status_code", None
-        )
-        if status in (404, 410):
-            return True
-    return False
-
-
-def find_unseen(db, sid: int, hours: int) -> list[Product]:
-    ids = db.scalars(
-        text(
-            """
-            SELECT p.id FROM products p
-            WHERE p.sid = :sid AND NOT EXISTS (
-                SELECT 1 FROM price_history h
-                WHERE h.product_id = p.id
-                  AND h.scraped_at >= now() - (:hours * interval '1 hour')
-            )
-            ORDER BY p.id
-            """
-        ),
-        {"sid": sid, "hours": hours},
-    ).all()
-    return list(db.scalars(select(Product).where(Product.id.in_(ids)))) if ids else []
+from db.session import SessionLocal
+from pipeline.scrape_planning import enqueue_products, find_unseen_products
 
 
 def main() -> int:
@@ -77,75 +44,20 @@ def main() -> int:
             print(f"No store matched '{args.store}'.")
             return 1
 
-        targets = find_unseen(db, store.id, args.hours)
+        targets = find_unseen_products(db, store.id, args.hours)
         print(f"{store.display_name} (sid={store.id}): "
               f"{len(targets)} products not seen in the last {args.hours}h")
         if not targets:
             return 0
         if args.dry_run:
             for p in targets[:20]:
-                print(f"  would refetch  {str(p.current_price):>10}  {p.name[:52]}")
+                print(f"  would queue  {str(p.current_price):>10}  {p.name[:52]}")
             return 0
 
-        changed = delisted = failed = 0
-        with HttpClient() as client:
-            scraper = GenericScraper(client, store)
-
-            for idx, product in enumerate(targets, 1):
-                try:
-                    parsed = scraper.scrape_product(product.product_url)
-                except Exception as exc:
-                    # Only a 404/410 means the listing is genuinely gone. Any other
-                    # failure - a parser bug, a timeout, a blocked request - says
-                    # nothing about the product, and treating it as a delisting once
-                    # marked 61 in-stock PCStudio products unavailable because a
-                    # TypeError in the image handling failed every page.
-                    if _is_gone(exc):
-                        product.in_stock = False
-                        delisted += 1
-                        print(f"  [{idx}/{len(targets)}] gone -> out of stock: "
-                              f"{product.name[:44]}")
-                    else:
-                        failed += 1
-                        print(f"  [{idx}/{len(targets)}] fetch/parse failed "
-                              f"({type(exc).__name__}: {exc}) - left unchanged: "
-                              f"{product.name[:40]}")
-                    continue
-
-                if parsed is None or parsed.price is None:
-                    failed += 1
-                    print(f"  [{idx}/{len(targets)}] unparseable: {product.name[:44]}")
-                    continue
-
-                old = product.current_price
-                product.current_price = float(parsed.price)
-                product.current_mrp = float(parsed.mrp) if parsed.mrp is not None else None
-                product.in_stock = bool(parsed.in_stock)
-
-                # Product pages carry a JSON-LD image. Not copying it left every
-                # product repaired this way with no picture at all - which is how
-                # Computech ended up with imageless cards even after a re-scrape.
-                if not (product.image_url or "").strip() and parsed.image:
-                    product.image_url = str(parsed.image)
-
-                db.add(PriceHistory(
-                    product_id=product.id,
-                    price=Decimal(parsed.price),
-                    mrp=Decimal(parsed.mrp) if parsed.mrp is not None else None,
-                    in_stock=bool(parsed.in_stock),
-                ))
-
-                if old is None or float(old) != float(parsed.price):
-                    changed += 1
-                    print(f"  [{idx}/{len(targets)}] {str(old):>10} -> "
-                          f"{str(parsed.price):>10}  {product.name[:44]}")
-
-                if idx % 25 == 0:
-                    db.commit()
-
-            db.commit()
-
-        print(f"\nprice changed: {changed} | delisted: {delisted} | failed: {failed}")
+        queued = enqueue_products(db, targets)
+        print(f"queued {queued} product_page jobs ({len(targets) - queued} already waiting)")
+        if not store.active:
+            print("note: this store is inactive, so agents won't be given these jobs")
     return 0
 
 

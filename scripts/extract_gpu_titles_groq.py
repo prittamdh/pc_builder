@@ -19,6 +19,7 @@ from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.gpu_title_extraction import GPUTitleExtraction
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
+from matching.gpu_identity import gpu_key_fields
 from services.groq_extraction_service import (
     GroqExtractionError, identity_prompt,
     default_service,
@@ -72,12 +73,10 @@ def extract_gpu_identity(reprocess_all: bool = False, limit: int | None = None, 
                 parsed = result["parsed"]
                 conf = parsed.get("confidence")
 
-                key_dict = {
-                    "category": "gpu",
-                    "aib_brand": parsed.get("brand") or "Unknown",
-                    "chipset": parsed.get("chipset") or "",
-                    "variant_model": parsed.get("variant") or "",
-                }
+                # Memory size and spelling normalisation: see matching/gpu_identity.py.
+                key_dict = gpu_key_fields(
+                    parsed.get("brand"), parsed.get("chipset"), parsed.get("variant"), product.name
+                )
                 key_dict = disambiguate_failed_key(key_dict, product.id)
                 canonical_id = make_canonical_key_string("gpu", key_dict)
 

@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "PC Builder Price Agent",
+  "version": "0.1.0",
+  "description": "Fetches store price pages for your PC Builder server, a few at a time.",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "alarms",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://mdcomputers.in/*",
+    "https://*.mdcomputers.in/*",
+    "https://pcstudio.in/*",
+    "https://*.pcstudio.in/*",
+    "https://vedantcomputers.com/*",
+    "https://*.vedantcomputers.com/*",
+    "https://primeabgb.com/*",
+    "https://*.primeabgb.com/*",
+    "https://elitehubs.com/*",
+    "https://*.elitehubs.com/*",
+    "https://shop.clarioncomputers.in/*",
+    "https://*.shop.clarioncomputers.in/*",
+    "https://computechstore.in/*",
+    "https://*.computechstore.in/*",
+    "https://tpstech.in/*",
+    "https://*.tpstech.in/*",
+    "https://modxcomputers.com/*",
+    "https://*.modxcomputers.com/*",
+    "https://tlggaming.com/*",
+    "https://*.tlggaming.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "PC Builder Price Agent"
+  },
+  "options_page": "options.html"
+}

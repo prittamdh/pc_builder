@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true,
+    "gsd-core@gsd-core": true
+  }
+}

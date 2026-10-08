@@ -9,10 +9,11 @@ from api.main import app
 client = TestClient(app)
 
 
-def test_home_has_single_title_containing_pc_builder():
+def test_home_has_single_title_with_the_brand():
     html = client.get("/").text
     titles = re.findall(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
     assert len(titles) == 1
+    assert "rigcheck" in titles[0]
     assert "PC Builder" in titles[0]
 
 
@@ -66,3 +67,27 @@ def test_sitemap_xml_is_valid_and_absolute():
     assert "/" in paths
     assert "/about" in paths
     assert "/privacy" in paths
+
+
+def test_public_url_pins_sitemap_robots_and_canonical(monkeypatch):
+    # With PUBLIC_URL set, links never come from the request's Host header, which a
+    # client controls.
+    from configs import settings
+
+    monkeypatch.setattr(settings, "PUBLIC_URL", "https://rigcheck.in")
+    evil = {"host": "evil.example"}
+    sitemap = client.get("/sitemap.xml", headers=evil).text
+    assert "evil.example" not in sitemap
+    assert "<loc>https://rigcheck.in/about</loc>" in sitemap
+    assert "Sitemap: https://rigcheck.in/sitemap.xml" in client.get("/robots.txt", headers=evil).text
+    html = client.get("/", headers=evil).text
+    assert '<link rel="canonical" href="https://rigcheck.in/">' in html
+    assert '<meta property="og:url" content="https://rigcheck.in/">' in html
+
+
+def test_without_public_url_links_follow_the_request(monkeypatch):
+    from configs import settings
+
+    monkeypatch.setattr(settings, "PUBLIC_URL", "")
+    assert "<loc>http://testserver/about</loc>" in client.get("/sitemap.xml").text
+    assert '<link rel="canonical" href="http://testserver/">' in client.get("/").text

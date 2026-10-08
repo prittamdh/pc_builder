@@ -1,0 +1,36 @@
+# Caddy in front of the API (plan 03-02). Runbook: docs/DEPLOY.md.
+#
+# SITE_ADDRESS (from /srv/pcbuilder/.env via docker-compose.prod.yml):
+#   ":80"                          plain HTTP, for testing on the VM itself
+#   "rigcheck.in www.rigcheck.in"  production: Caddy gets and renews a Let's Encrypt
+#                                  certificate itself (HTTP-01 challenge, which reaches
+#                                  it through Cloudflare on port 80), and redirects
+#                                  HTTP to HTTPS. Cloudflare's SSL mode is Full (strict)
+#                                  and its "Always Use HTTPS" stays off, or the challenge
+#                                  would be redirected away from port 80.
+{
+	admin off
+}
+
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# One address for the site: www.* redirects to the bare domain.
+	@www header_regexp www Host ^www\.(.+)$
+	redir @www https://{re.www.1}{uri} permanent
+
+	# Agent uploads are the biggest requests: a page of at most 5 MB inside JSON
+	# (the API itself refuses more than 8 MB). Nothing legitimate is larger.
+	request_body {
+		max_size 10MB
+	}
+
+	header {
+		-Server
+		# Browsers ignore this on plain HTTP, so it is harmless in ":80" mode. No
+		# includeSubDomains/preload until every subdomain is known to be HTTPS.
+		Strict-Transport-Security "max-age=31536000"
+	}
+
+	reverse_proxy api:8000
+}

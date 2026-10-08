@@ -1,12 +1,11 @@
-import re
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import String, func, nullslast, or_, select
+from sqlalchemy import String, func, nullslast, select
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
-from api.filters import from_active_store, has_usable_price
+from api.filters import is_listed, has_usable_price, search_conditions as _search_conditions
 from api.spec_filters import (
     ENUM,
     RANGE,
@@ -43,27 +42,6 @@ def _order_by(sort: str):
         "name_asc": (Product.name.asc(),),
     }[sort]
     return (*clauses, Product.id.asc())
-
-
-def _search_conditions(q: str) -> list:
-    """Match every token in `q`, against either the title as written or the title
-    with punctuation and spacing stripped out.
-
-    Store titles spell model numbers inconsistently - "RTX 4070", "RTX4070",
-    "RTX-4070" all occur - so a single ILIKE on the raw query silently misses
-    whichever spelling the shopper didn't happen to type. Matching per token also
-    makes word order irrelevant: "4070 asus" finds "ASUS ... RTX 4070".
-    """
-    squashed_name = func.regexp_replace(func.lower(Product.name), r"[^a-z0-9]", "", "g")
-
-    conditions = []
-    for token in q.split():
-        variants = [Product.name.ilike(f"%{token}%")]
-        squashed_token = re.sub(r"[^a-z0-9]", "", token.lower())
-        if squashed_token:
-            variants.append(squashed_name.like(f"%{squashed_token}%"))
-        conditions.append(or_(*variants))
-    return conditions
 
 
 @router.get("", response_model=ProductListResponse)
@@ -107,7 +85,7 @@ def list_products(
             detail=f"sort must be one of {', '.join(SORT_OPTIONS)}",
         )
 
-    conditions = [from_active_store()]
+    conditions = [is_listed()]
 
     if q:
         conditions.extend(_search_conditions(q))
@@ -212,13 +190,13 @@ def list_product_models(
     of listings in Python would give pages of wildly differing size and miss cheaper
     offers that fell beyond the page boundary.
     """
-    if sort not in ("price_asc", "price_desc", "name_asc"):
+    if sort not in SORT_OPTIONS:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="sort must be price_asc, price_desc or name_asc",
+            detail=f"sort must be one of {', '.join(SORT_OPTIONS)}",
         )
 
-    conditions = [has_usable_price(), from_active_store()]
+    conditions = [has_usable_price(), is_listed()]
     if q:
         conditions.extend(_search_conditions(q))
     if p_category:
@@ -269,6 +247,8 @@ def list_product_models(
     ) or 0
 
     order = {
+        # A model is as recent as its most recently updated listing.
+        "recent": func.max(Product.updated_at).desc(),
         "price_asc": nullslast(func.min(Product.current_price).asc()),
         "price_desc": nullslast(func.min(Product.current_price).desc()),
         "name_asc": func.min(Product.name).asc(),
@@ -338,7 +318,7 @@ def get_catalog_stats(db: Session = Depends(get_db)):
     """
     products = db.scalar(
         select(func.count(Product.id)).where(
-            Product.is_legacy.is_(False), has_usable_price(), from_active_store()
+            Product.is_legacy.is_(False), has_usable_price(), is_listed()
         )
     ) or 0
     stores = db.scalar(select(func.count(Store.id)).where(Store.active.is_(True))) or 0
@@ -390,7 +370,7 @@ def list_spec_facets(
         Product.is_legacy.is_(False),
         Product.in_stock.is_(True),
         has_usable_price(),
-        from_active_store(),
+        is_listed(),
         Product.canonical_id.is_not(None),
     ]
     if q:
@@ -462,7 +442,7 @@ def _visible_product_or_404(db: Session, product_id: int) -> Product:
 
     An inactive store's page would show its last, stale prices as current.
     """
-    product = db.scalar(select(Product).where(Product.id == product_id, from_active_store()))
+    product = db.scalar(select(Product).where(Product.id == product_id, is_listed()))
     if product is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

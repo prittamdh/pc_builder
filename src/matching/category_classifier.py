@@ -224,6 +224,62 @@ def _classify_from_title(title: str | None) -> str | None:
     return None
 
 
+# A title that plainly names another kind of product overrides the store's category.
+# Stores file SSDs, CCTV supplies and PSU testers under Power Supply, monitors and
+# coolers under Cabinet, a Ryzen CPU under Motherboard (owner review 2026-10-08). A
+# re-scrape sets p_category from here every time, so a hand fix only sticks if these
+# rules agree with it.
+#
+# Each rule: (category it moves to, store categories it may move out of, title pattern,
+# words that cancel it). Rules are scoped to the categories they were seen in, because
+# passing mentions are everywhere: Cooler Master PSUs, motherboards "with NVMe slot",
+# cabinets "with ARGB controller", CPUs "no stock cooler". First match wins, so the
+# accessory rules go first (a PSU tester names "PSU").
+_ALL_PARTS = frozenset(PRODUCTION_CATEGORIES) - {"Accessories"}
+_ENCLOSURE_WORDS = r"\b(?:cabinet|case|chassis|mid[- ]?tower)\b"
+STRAY_TITLE_RULES = (
+    ("Accessories", _ALL_PARTS,
+     re.compile(r"\btester\b|\bcctv\b|\bmouse\b|\bracing wheel\b|\bpen ?drive\b|\bmemory card\b", re.I), None),
+    ("Accessories", frozenset({"Cabinet"}),
+     re.compile(r"\blcd screen\b", re.I), re.compile(_ENCLOSURE_WORDS, re.I)),
+    ("Accessories", frozenset({"CPU Cooler"}),
+     re.compile(r"\bcabinet (?:cooler|fan)\b|\bcase fan\b|\bdistr(?:o|ibution) plate\b|\bfittings\b", re.I), None),
+    ("Accessories", frozenset({"GPU"}),
+     re.compile(r"\bsync(?:hroni[sz]ation)? module\b", re.I), None),
+    ("Accessories", frozenset({"Storage"}),
+     re.compile(r"\benclosure\b|\bcaddy\b|\bdocking station\b", re.I), None),
+    ("Storage", _ALL_PARTS - {"Storage", "Motherboard"},
+     re.compile(r"\b(?:ssd|nvme|hdd|hard (?:disk|drive))\b", re.I),
+     re.compile(r"\b(?:slot|enclosure|motherboard)\b", re.I)),
+    ("RAM", frozenset({"Storage", "Power Supply", "GPU", "Cabinet", "Monitor"}),
+     re.compile(r"\bddr[345]\b.*\b(?:ram|memory)\b|\b(?:ram|memory)\b.*\bddr[345]\b", re.I),
+     re.compile(r"\b(?:graphics|gpu|motherboard)\b", re.I)),
+    ("Motherboard", frozenset({"Power Supply", "Storage", "GPU", "RAM", "Monitor"}),
+     re.compile(r"\bmotherboard\b", re.I), None),
+    ("CPU", _ALL_PARTS - {"CPU", "CPU Cooler"},
+     re.compile(r"\b(?:ryzen|core i\d|core ultra|xeon|pentium|celeron|athlon|threadripper|epyc)\b.*\bprocessor\b", re.I),
+     re.compile(r"\b(?:motherboard|mainboard|socket|supports?|for)\b", re.I)),
+    ("Monitor", frozenset({"Cabinet", "Power Supply", "GPU", "Storage"}),
+     re.compile(r"\bmonitor\b", re.I), re.compile(r"\b(?:arm|mount|stand|light ?bar|lamp)\b", re.I)),
+    ("CPU Cooler", frozenset({"Cabinet", "Power Supply", "Storage", "Monitor"}),
+     re.compile(r"\b(?:cpu (?:air |liquid )?cooler|liquid cpu cooler|(?:aio|liquid|air) cooler)\b", re.I),
+     re.compile(_ENCLOSURE_WORDS, re.I)),
+)
+
+
+def category_named_by_title(p_category: str, title: str | None) -> str | None:
+    """The category the title plainly names when it isn't p_category, else None."""
+    if not title:
+        return None
+    for target, sources, pattern, cancel in STRAY_TITLE_RULES:
+        if p_category not in sources or not pattern.search(title):
+            continue
+        if cancel is not None and cancel.search(title):
+            continue
+        return target
+    return None
+
+
 class CategoryClassifier:
     @staticmethod
     def get_p_category(raw_category: str | None = None, title: str | None = None) -> str:
@@ -268,5 +324,5 @@ class CategoryClassifier:
         if p_cat == "GPU" and _title_indicates_removable_media(title):
             return "Accessories"
 
-        return p_cat
+        return category_named_by_title(p_cat, title) or p_cat
 

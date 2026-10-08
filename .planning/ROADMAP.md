@@ -101,11 +101,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01 (data-engineer): Migration for `scrape_jobs`, `scrape_agents` (hashed token, name, last_seen, revoked_at) and `pipeline_runs`; `stores.min_fetch_interval_s`; agent/job ids on `price_history`. Queue service: enqueue, lease (`FOR UPDATE SKIP LOCKED` plus the per-store interval), reaper, idempotent `complete(job_id, lease_id, body)`. `scripts/agent_tokens.py`. Concurrency tests. Publish the JSON contract (below) as `docs/AGENT_PROTOCOL.md`.
-- [ ] 02-02 (data-engineer): Split `GenericScraper` into a request planner (url + headers per platform and page) and the unchanged `GenericParser`. Upload validation and challenge detection. Server-driven pagination. The `product_page` job type for `repair_unseen_products`. The server-side retailer fetch is refused in production (kept for tests and local debugging). Files: `src/scrapers/*`, new `src/pipeline/scrape_results.py`, tests. Runs after 02-01.
-- [ ] 02-03 (data-engineer): The worker: `src/pipeline/worker.py` runs the existing DAG task functions (`execute_canonical_extraction`, `execute_physical_spec_extraction`, `execute_catalog_policy`, the freshness checks) plus enqueue/reap/parse on a schedule. Each run goes into `pipeline_runs`, and exceptions are recorded and re-raised. A `worker` service in compose. Airflow stays for local dev until Phase 3 has run clean for 7 days, then it is retired.
-- [ ] 02-04 (web-dev): Agent endpoints under `/api/agent/` (lease, result, heartbeat) calling 02-01's queue service. Bearer-token auth, per-token rate limits, excluded from the OpenAPI schema. `/health/pipeline`. Starts once `docs/AGENT_PROTOCOL.md` exists; can overlap 02-02.
-- [ ] 02-05 (web-dev): The extension in `extension/`: `manifest.json` (MV3; permissions `alarms`, `storage`; `host_permissions` = the 10 store hosts plus the server), a service worker, an options page, badge status, and `extension/README.md` (install unpacked, paste a token). Tested against a local server with fixture jobs. After 02-04.
+- [x] 02-01 (data-engineer): Migration for `scrape_jobs`, `scrape_agents` (hashed token, name, last_seen, revoked_at) and `pipeline_runs`; `stores.min_fetch_interval_s`; agent/job ids on `price_history`. Queue service: enqueue, lease (`FOR UPDATE SKIP LOCKED` plus the per-store interval), reaper, idempotent `complete(job_id, lease_id, body)`. `scripts/agent_tokens.py`. Concurrency tests. Publish the JSON contract (below) as `docs/AGENT_PROTOCOL.md`.
+- [x] 02-02 (data-engineer): Split `GenericScraper` into a request planner (url + headers per platform and page) and the unchanged `GenericParser`. Upload validation and challenge detection. Server-driven pagination. The `product_page` job type for `repair_unseen_products`. The server-side retailer fetch is refused in production (kept for tests and local debugging). Files: `src/scrapers/*`, new `src/pipeline/scrape_results.py`, tests. Runs after 02-01.
+- [x] 02-03 (data-engineer): The worker: `src/pipeline/worker.py` runs the existing DAG task functions (`execute_canonical_extraction`, `execute_physical_spec_extraction`, `execute_catalog_policy`, the freshness checks) plus enqueue/reap/parse on a schedule. Each run goes into `pipeline_runs`, and exceptions are recorded and re-raised. A `worker` service in compose. Airflow stays for local dev until Phase 3 has run clean for 7 days, then it is retired.
+- [x] 02-04 (web-dev): Agent endpoints under `/api/agent/` (lease, result, heartbeat) calling 02-01's queue service. Bearer-token auth, per-token rate limits, excluded from the OpenAPI schema. `/health/pipeline`. Starts once `docs/AGENT_PROTOCOL.md` exists; can overlap 02-02.
+- [x] 02-05 (web-dev): The extension in `extension/`: `manifest.json` (MV3; permissions `alarms`, `storage`; `host_permissions` = the 10 store hosts plus the server), a service worker, an options page, badge status, and `extension/README.md` (install unpacked, paste a token). Tested against a local server with fixture jobs. After 02-04.
 
 **Extension and job-queue design**
 
@@ -141,7 +141,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 03-01 (owner + manager, starts now): OCI signup in the home region, the pay-as-you-go decision (see Decisions), and an Ampere A1 VM (4 OCPU / 24 GB, Ubuntu 24.04 arm64): 50 GB boot volume plus a 150 GB block volume mounted at `/data` for Postgres and Docker volumes. SSH key-only, and the security list set to Cloudflare ranges. Domain bought, with DNS on Cloudflare (proxied) and a Cloudflare Origin CA certificate.
+- [ ] 03-01 (owner + manager, starts now): OCI signup in the home region, the pay-as-you-go decision (see Decisions), and one Ampere A1 VM (2 OCPU / 12 GB, the whole Always Free A1 allowance as of 2026; Ubuntu 24.04 arm64): 50 GB boot volume plus a 150 GB block volume mounted at `/data` for Postgres and Docker volumes. SSH key-only, and the security list set to Cloudflare ranges. Domain bought, with DNS on Cloudflare (proxied) and a Cloudflare Origin CA certificate.
 - [ ] 03-02 (web-dev): `Dockerfile` (arm64), `docker-compose.prod.yml` (Caddy, API, worker, Postgres on `/data`), `Caddyfile` (Origin CA cert, HSTS, compression), `scripts/deploy.sh`, `/health` and `/health/freshness`, Sentry hook, log rotation, `docs/DEPLOY.md`. **Parallel with 03-03.**
 - [ ] 03-03 (data-engineer): `scripts/backup_db.sh` (nightly to OCI Object Storage; weekly copy to R2; retention sized to 20 GB / 10 GB; size check), a restore test, the rebuild drill script, `scripts/oci_free_audit.py`, and applying the OPS-07 rollup if growth needs it. **Parallel with 03-02.**
 - [ ] 03-04 (manager + owner): One-time `pg_dump` from home and restore to the VM. Point the extensions at production. Run the launch checklist (all Phase 1-3 requirements green). Turn the Cloudflare proxy on and announce a soft launch. Stop home Airflow once production has run clean for 7 days.
@@ -150,20 +150,30 @@ Plans:
 
 | Gotcha | What happens | How we handle it |
 |--------|--------------|------------------|
-| "Out of host capacity" for A1 | VM creation fails, sometimes for days, in popular regions | Start 03-01 on day one. Retry creation (the OCI CLI in a slow loop is fine). If needed, start at 2 OCPU / 12 GB and resize later. Upgrading to pay-as-you-go usually removes the problem. The home region can't be changed after signup, so pick it deliberately |
+| "Out of host capacity" for A1 | VM creation fails, sometimes for days, in popular regions | Start 03-01 on day one. Retry creation (the OCI CLI in a slow loop is fine). 2 OCPU / 12 GB is the whole free allowance (1,500 OCPU-hours and 9,000 GB-hours a month), so there is nothing to resize up to for free. Upgrading to pay-as-you-go usually removes the problem. The home region can't be changed after signup, so pick it deliberately |
 | Idle reclaim | Oracle stops Always Free VMs that look idle over 7 days: CPU 95th percentile under 20%, network under 20%, and (for A1) memory under 20%. A light site can meet all three | **Recommended: upgrade the account to pay-as-you-go.** Always Free resources stay free, and PAYG accounts are exempt from idle reclaim. Guard against accidental spend with the ₹1 budget alert and the monthly free-resource audit. Don't burn CPU artificially to look busy |
 | Account termination | Free-tier accounts have been closed with little warning | Keep one backup copy **off Oracle** (R2). Keep DNS on Cloudflare so a move is a DNS change. Keep the git repo plus `docs/DEPLOY.md` as the whole setup. The rebuild drill proves recovery. Don't store anything only on Oracle |
 | Storage limit | 200 GB total block storage across boot and block volumes. Object Storage is 20 GB free | 50 GB boot plus 150 GB data volume. `price_history` retention (OPS-07). Backup retention sized to the free tiers |
 | ARM (aarch64) | Every image and wheel must exist for arm64 | Postgres, Caddy and python-slim images are multi-arch. psycopg binary, lxml and curl_cffi publish aarch64 wheels, and curl_cffi is no longer needed in production anyway. 03-02 builds on arm64 first thing to catch surprises |
 | Egress, bandwidth | 10 TB/month out is free | Cloudflare caches static files and proxied images, so it's far below the limit |
 
-**Airflow on ARM, verdict:** it would run (arm64 images exist, and 24 GB is plenty), but it
+**Airflow on ARM, verdict:** it would run (arm64 images exist), but it
 isn't worth it. `airflow standalone`, which is what runs today, is documented as dev-only. A
 proper deployment is a scheduler, webserver, triggerer and metadata database for one
 15-minute task chain. A single worker process calling the same task functions, with a
 `pipeline_runs` table and `/health/pipeline`, keeps failures loud with far less to break.
-Rough memory plan: Postgres 4-6 GB, API 1 GB, worker 1-2 GB, Caddy negligible. That leaves more
-than half the VM spare.
+Rough memory plan (owner decision 2026-09-25: one VM runs everything, frontend included,
+since the frontend is static files the API serves): the database is 132 MB and Postgres
+uses ~120 MB today, so Postgres is tuned small (few connections) with a 1-2 GB cache;
+API ~0.5-1 GB, worker ~0.5-1 GB, Caddy ~50 MB. About 2-4 GB of the 12 in use. Splitting
+into two 1-OCPU VMs was rejected: half the resources each, two machines to run, and a
+second ~50 GB boot volume out of the 200 GB.
+
+**Cost guard (owner decision 2026-09-25, done the same day):** OCI budget
+`zero-spend-guard` on the root compartment, 1 (account currency) per month, alert rule at
+100% of actual spend, emailed to the owner. Needed because the account starts in the
+Free Trial, where paid resources can be created by mistake. The owner does the
+pay-as-you-go upgrade (a billing change) when ready.
 
 **Tailscale:** dropped. Nothing crosses from home to server except the extensions over
 HTTPS. Admin database access uses an SSH tunnel.

@@ -62,6 +62,32 @@ services:
     command: >
       bash -c "airflow standalone"
 
+  # Plan 02-03: the pipeline worker that replaces Airflow in production. Opt-in here
+  # (`docker compose --profile worker up -d worker`) so it doesn't run alongside local
+  # Airflow; stop Airflow first, and set SCRAPE_VIA_AGENTS=true so it queues work for
+  # the browser extensions. Phase 3 (03-02) gives it a proper image.
+  worker:
+    image: python:3.12-slim
+    container_name: pc_builder_worker
+    profiles: ["worker"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+psycopg://pc_builder:${POSTGRES_PASSWORD}@postgres:5432/pc_builder
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+    working_dir: /app
+    volumes:
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - ./requirements.txt:/app/requirements.txt
+    command: >
+      bash -c "pip install --quiet --no-cache-dir -r requirements.txt && python -m pipeline.worker"
+
 volumes:
   postgres_data:
   pgadmin_data:

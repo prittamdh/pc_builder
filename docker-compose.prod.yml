@@ -1,0 +1,85 @@
+# Production stack on the Oracle VM (plan 03-02). Runbook: docs/DEPLOY.md.
+#
+#   docker compose -f docker-compose.prod.yml --env-file ../.env up -d
+#
+# ../.env (i.e. /srv/pcbuilder/.env, mode 600) holds the secrets; it is never in git.
+# Everything that must survive a redeploy lives on the /data volume.
+name: pcbuilder
+
+x-app: &app
+  image: pcbuilder-app:latest
+  restart: unless-stopped
+  env_file: ../.env
+  environment:
+    ENV: production
+    DATABASE_URL: postgresql+psycopg://pc_builder:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in /srv/pcbuilder/.env}@postgres:5432/pc_builder
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    # Same major version as the local database, so a pg_dump from home restores as is.
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pc_builder
+      POSTGRES_DB: pc_builder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in /srv/pcbuilder/.env}
+    # Sized for a ~150 MB database on a 12 GB VM: a small connection count (one API
+    # process, one worker, admin sessions) and a cache big enough to hold the whole
+    # database in memory. Not published on any host port: only the containers reach it
+    # (OPS-02); admins use `docker compose exec postgres psql`.
+    command:
+      - postgres
+      - -c
+      - max_connections=40
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - effective_cache_size=3GB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - log_min_duration_statement=1000
+    shm_size: 256mb
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pc_builder -d pc_builder"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    <<: *app
+    build: .
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "pipeline.worker"]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # ":80" until the domain exists; then the domain name (docs/DEPLOY.md, "Domain").
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /data/caddy:/data

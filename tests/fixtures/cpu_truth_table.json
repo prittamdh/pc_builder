@@ -1,0 +1,5242 @@
+{
+ "category": "CPU",
+ "reviewed_on": "2026-10-03",
+ "source": "CPU Truth Table, human review of rigcheck.in live catalogue (new retail stock only)",
+ "listings": [
+  {
+   "listing_id": 1530,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 5800X3D Processor 10th Anniversary Edition With Carbice Ice Pad",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 8,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 1531,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 3 3200G Processor with Radeon Vega 8 Graphics",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 1533,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 3400G Processor with Radeon RX Vega 11 Graphics",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 9,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 1534,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5500 Processor",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 0,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 1535,
+   "store": "MDComputers",
+   "title": "Intel Core i3-12100F Processor",
+   "model_key_at_review": "cpu:intel:12100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 3,
+   "product": "group:3"
+  },
+  {
+   "listing_id": 1536,
+   "store": "MDComputers",
+   "title": "Intel Core i3-14100F Processor",
+   "model_key_at_review": "cpu:intel:14100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 7,
+   "product": "group:7"
+  },
+  {
+   "listing_id": 1537,
+   "store": "MDComputers",
+   "title": "Intel Core i5-10400F Processor",
+   "model_key_at_review": "cpu:intel:10400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 2,
+   "product": "group:2"
+  },
+  {
+   "listing_id": 1538,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5500GT Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 1539,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5600 Processor",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 5,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 1540,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 225F Processor",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 6,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 1541,
+   "store": "MDComputers",
+   "title": "Intel Core i5-10400 Processor",
+   "model_key_at_review": "cpu:intel:10400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 13,
+   "product": "group:13"
+  },
+  {
+   "listing_id": 1542,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5600X Processor",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 11,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 1543,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 8500G Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 1544,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 7500F Desktop Processor",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 1545,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5600GT Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 1546,
+   "store": "MDComputers",
+   "title": "Intel Core i5-12400F Processor",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 1547,
+   "store": "MDComputers",
+   "title": "Intel Core i5-14400F Processor",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 1548,
+   "store": "MDComputers",
+   "title": "Intel Core i5-13400F Processor",
+   "model_key_at_review": "cpu:intel:13400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "13400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:13400f:core_i5"
+  },
+  {
+   "listing_id": 1549,
+   "store": "MDComputers",
+   "title": "Intel Core i3-12100 Processor",
+   "model_key_at_review": "cpu:intel:12100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12100:core_i3"
+  },
+  {
+   "listing_id": 1550,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 7600X Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 1551,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 225 Processor",
+   "model_key_at_review": "cpu:unknown:225",
+   "extracted": {
+    "brand": "unknown",
+    "model_number": "225",
+    "series": ""
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 1552,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 8600G Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 1553,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 5700G Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 1554,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 9600X Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 1555,
+   "store": "MDComputers",
+   "title": "Intel Core i5-12400 Desktop Processor",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 1556,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 245K Processor",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 1557,
+   "store": "MDComputers",
+   "title": "Intel Core i5-14400 Processor",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 1558,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 250KF Plus Processor",
+   "model_key_at_review": "cpu:intel:250kf:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250kf",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250kf:core_ultra_5"
+  },
+  {
+   "listing_id": 1559,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 7700X Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 1560,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 8700G Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 1561,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 7 265KF Processor",
+   "model_key_at_review": "cpu:intel:265kf:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265kf",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265kf:core_ultra_7"
+  },
+  {
+   "listing_id": 1562,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 250K Plus Processor",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 1563,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 9700X Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 1564,
+   "store": "MDComputers",
+   "title": "Intel Core i7-12700F Processor",
+   "model_key_at_review": "cpu:intel:12700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700f:core_i7"
+  },
+  {
+   "listing_id": 1565,
+   "store": "MDComputers",
+   "title": "Intel Core i5-14600K Processor",
+   "model_key_at_review": "cpu:intel:14600k:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14600k",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14600k:core_i5"
+  },
+  {
+   "listing_id": 1566,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 7 265K Processor",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 1567,
+   "store": "MDComputers",
+   "title": "Intel Core i7-12700 Processor",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 1568,
+   "store": "MDComputers",
+   "title": "Intel Core i7-14700F Processor",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 1569,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 9 7900X Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 1570,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 7700X3D Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7700x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x3d:ryzen_7"
+  },
+  {
+   "listing_id": 1571,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 7 270K Plus Processor",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 1572,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 7800X3D Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 1573,
+   "store": "MDComputers",
+   "title": "Intel Core i7-14700KF Processor",
+   "model_key_at_review": "cpu:intel:14700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 10,
+   "product": "group:10"
+  },
+  {
+   "listing_id": 2677,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 5800X3D Processor 10th Anniversary Edition With Carbice Ice Pad",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 8,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 2679,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5500 Processor",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 0,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 2680,
+   "store": "MDComputers",
+   "title": "Intel Core i3-12100F Processor",
+   "model_key_at_review": "cpu:intel:12100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 3,
+   "product": "group:3"
+  },
+  {
+   "listing_id": 2681,
+   "store": "MDComputers",
+   "title": "Intel Core i3-14100F Processor",
+   "model_key_at_review": "cpu:intel:14100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 7,
+   "product": "group:7"
+  },
+  {
+   "listing_id": 2682,
+   "store": "MDComputers",
+   "title": "Intel Core i5-10400F Processor",
+   "model_key_at_review": "cpu:intel:10400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 2,
+   "product": "group:2"
+  },
+  {
+   "listing_id": 2683,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5600 Processor",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 5,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 2684,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 225F Processor",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 6,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 2685,
+   "store": "MDComputers",
+   "title": "Intel Core i5-10400 Processor",
+   "model_key_at_review": "cpu:intel:10400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 13,
+   "product": "group:13"
+  },
+  {
+   "listing_id": 2686,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 5600X Processor",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 11,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 2968,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 3400G Processor with Radeon RX Vega 11 Graphics",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 9,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 2985,
+   "store": "MDComputers",
+   "title": "Intel Core i3-14100 Processor",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 3077,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 5800X3D Gaming Processor 100-100000651POF 10th Anniversary Edition",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 3078,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 7700X3D Desktop Processor 100-100002235WOF",
+   "model_key_at_review": "cpu:amd:7700x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x3d:ryzen_7"
+  },
+  {
+   "listing_id": 3081,
+   "store": "PrimeABGB",
+   "title": "Intel Core Ultra 5 250K Plus Processor BX80768250K",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 3082,
+   "store": "PrimeABGB",
+   "title": "Intel Core Ultra 7 270K Plus Processor BX80768270K",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 3083,
+   "store": "PrimeABGB",
+   "title": "Intel Core i7-14700F 2.1 GHz 20-Core LGA 1700 Processor BX8071514700F",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 3085,
+   "store": "PrimeABGB",
+   "title": "Intel Core Ultra 5 225 Desktop Processor 10 cores up to 4.9 GHz",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 3086,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 7500F 7th Generation Processor 6 Cores 12 Threads 100-100000597BOX",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 3087,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5600F AM4 Desktop Processor 6 Cores 12 Threads 100-000001903BOX",
+   "model_key_at_review": "cpu:amd:5600f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600f:ryzen_5"
+  },
+  {
+   "listing_id": 3088,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5600 AM4 Desktop Processor 6 Cores 12 Threads 100-100000927BOX",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 3089,
+   "store": "PrimeABGB",
+   "title": "Intel Core Ultra 5 245K 4.2 GHz 14-Core LGA 1851 Processor BX80768245K",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 3091,
+   "store": "PrimeABGB",
+   "title": "Intel Core Ultra 7 265K 3.9 GHz 20-Core LGA 1851 Processor BX80768265K",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 3093,
+   "store": "PrimeABGB",
+   "title": "Intel Core I5-14400F Processor BX8071514400F",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 3094,
+   "store": "PrimeABGB",
+   "title": "Intel Core i5-14400 10-Core LGA 1700 Processor BX8071514400",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 3097,
+   "store": "PrimeABGB",
+   "title": "Intel Core i5-12400F 12th Gen Alder Lake 6-Core 2.5 GHz LGA 1700 Desktop Processor BX8071512400F",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 3098,
+   "store": "PrimeABGB",
+   "title": "Intel Core i5-12400 12th Gen Alder Lake Processor",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 3109,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 9700X 3.8 GHz 8-Core AM5 Processor 100-100001404WOF",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 3110,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 9600X 3.9 GHz 6-Core AM5 Processor 100-100001405WOF",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 3112,
+   "store": "PrimeABGB",
+   "title": "Intel Core i3-14100 3.5 GHz 4-Core LGA 1700 Processor BX8071514100",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 3113,
+   "store": "PrimeABGB",
+   "title": "Intel Core i7-12700 12 Core 2.10GHz 10nm Alder Lake LGA1700 Desktop Processor BX8071512700",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 3114,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5600GT Ryzen 5 5000 Series 6-Core 3.6 GHz Socket AM4 65W AMD Radeon Graphics Processor 100-100001488BOX",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 3115,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5500GT Ryzen 5 5000 Series 6-Core 3.6 GHz Socket AM4 65W AMD Radeon Graphics Processor 100-100001489BOX",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 3116,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 8700G Desktop Processor 100-100001236BOX",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 3117,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 8600G Desktop Processor 100-100001237BOX",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 3118,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 8500G Desktop Processor 100-100000931BOX",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 3127,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 7800X3D Gaming Processor 100-100000910WOF",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 3128,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 7600X Desktop Processor 100-100000593WOF",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 3129,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 7700X Desktop Processor 100-100000591WOF",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 3130,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5500 Desktop Processor (6 Cores/12 Threads/3.6GHz) 100-100000457BOX",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 3131,
+   "store": "PrimeABGB",
+   "title": "Intel Core i3-12100 12th Gen Alder Lake Quad-Core Desktop Processor BX8071512100",
+   "model_key_at_review": "cpu:intel:12100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12100:core_i3"
+  },
+  {
+   "listing_id": 3132,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 5700G Desktop Processor With Integrated Radeon Graphics 100-100000263BOX",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 3133,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5600G Desktop Processor With Integrated Radeon Graphics 100-100000252BOX",
+   "model_key_at_review": "cpu:amd:5600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600g:ryzen_5"
+  },
+  {
+   "listing_id": 3135,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 5600X Desktop Processor (6 Cores/12 Threads/3.7GHz)",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 3136,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 3 3200G with Radeon Vega 8 Graphics 3rd Gen Desktop Processor YD3200C5FHBOX",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 3137,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 5 3400G with Radeon RX Vega 11 Graphics 3rd Gen Desktop Processor YD3400C5FHBOX",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 3138,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 7 3700X 3rd Gen Desktop Processor 100-100000071BOX",
+   "model_key_at_review": "cpu:amd:3700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3700x:ryzen_7"
+  },
+  {
+   "listing_id": 4083,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 7600X Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.3GHz, AM5 Socket and 38MB Cache)",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 4084,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 9600X Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.4GHz, AM5 Socket and 38MB Cache)",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 4085,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 7 5800X3D 10th Anniversary Edition Gaming Processor",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 4087,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 7 7700X Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.4GHz, AM5 Socket and 40MB Cache)",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 4088,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 7 7700X3D Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 4.5 GHz, AM5 Socket and 104MB Cache)",
+   "model_key_at_review": "cpu:amd:7700x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x3d:ryzen_7"
+  },
+  {
+   "listing_id": 4089,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 7 7800X3D Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.0GHz, AM5 Socket and 104MB Cache)",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 4090,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 7 9700X Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 5.5GHz, AM5 Socket and 40MB Cache)",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 4093,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 9 7900X Processor with Radeon Graphics (12 Cores, 24 Threads, Max. Boost Clock Up To 5.6GHz, AM5 Socket and 76MB Cache)",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 4099,
+   "store": "Vedant Computers",
+   "title": "Intel Core i5 Processor - 14400 (20M Cache, up to 4.70 GHz)",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 4100,
+   "store": "Vedant Computers",
+   "title": "Intel Core i5 Processor - 14400F (20M Cache, up to 4.70 GHz)",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 4102,
+   "store": "Vedant Computers",
+   "title": "Intel Core i7 Processor - 14700F (33M Cache, up to 5.40 GHz)",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 4107,
+   "store": "Vedant Computers",
+   "title": "Intel Core Ultra 5 Processor 225 (20M Cache, up to 4.90 GHz)",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 4108,
+   "store": "Vedant Computers",
+   "title": "Intel Core Ultra 5 Processor 225F (20M Cache, up to 4.90 GHz)",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 4109,
+   "store": "Vedant Computers",
+   "title": "Intel Core Ultra 5 Processor 245K (24M Cache, up to 5.20 GHz)",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 4110,
+   "store": "Vedant Computers",
+   "title": "Intel Core Ultra 5 Processor 250K Plus (30M Cache, up to 5.30 GHz)",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 4111,
+   "store": "Vedant Computers",
+   "title": "Intel Core Ultra 7 Processor 265K (30M Cache, up to 5.50 GHz)",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 4112,
+   "store": "Vedant Computers",
+   "title": "Intel Core Ultra 7 Processor 270K Plus (40M Cache, up to 5.50 GHz)",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 4114,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 3 3200G Processor with Radeon Vega 8 Graphics (4 Cores, 4 Threads, Max. Boost Clock Up To 4.0GHz, AM4 Socket and 6MB Cache)",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 4116,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 3400G Processor With Radeon Vega 11 Graphics (Upto 4.2GHz 6MB Cache)",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 4117,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 5500 Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.2GHz, AM4 Socket and 19MB Cache)",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 4118,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 5500GT Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 4.4GHz, AM4 Socket and 19MB Cache)",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 4119,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 5600 Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.4GHz, AM4 Socket and 35MB Cache)",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 4120,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 5600GT Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 19MB Cache)",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 4121,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 5600X Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 35MB Cache)",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 4122,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 7500F Processor (6 Cores, 12 Threads, Max. Boost Clock Up To 5GHz, AM5 Socket and 38MB Cache)",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 4124,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 8500G Processor with Radeon 740M Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.0GHz, AM5 Socket and 22MB Cache)",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 4125,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 8600G Processor with Radeon 760M Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 5.0GHz, AM5 Socket and 22MB Cache)",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 4126,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 7 5700G Processor with Radeon Graphics (8 Cores, 16 Threads, Max. Boost Clock Up To 4.6GHz, AM4 Socket and 20MB Cache)",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 4128,
+   "store": "Vedant Computers",
+   "title": "Intel Core i5-10400 Processor (12M Cache, up to 4.30 GHz)",
+   "model_key_at_review": "cpu:intel:10400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:13"
+  },
+  {
+   "listing_id": 4129,
+   "store": "Vedant Computers",
+   "title": "Intel Core i5-12400 Processor (18M Cache, up to 4.40 GHz)",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 4130,
+   "store": "Vedant Computers",
+   "title": "Intel Core i5-12400F Processor (18M Cache, up to 4.40 GHz)",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 4131,
+   "store": "Vedant Computers",
+   "title": "Intel Core i7-12700 Processor (25M Cache, up to 4.90 GHz)",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 4132,
+   "store": "Vedant Computers",
+   "title": "Intel Core i7-12700F Processor (25M Cache, up to 4.90 GHz)",
+   "model_key_at_review": "cpu:intel:12700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700f:core_i7"
+  },
+  {
+   "listing_id": 6527,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 5700G 5th Generation Processor (4.6 GHz / 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 6531,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 8700G Processor With Radeon Graphics ( 5.1 GHz/ 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 6538,
+   "store": "EliteHubs",
+   "title": "INTEL Core i5 10400 10th Generation Processor ( 4.3 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:intel:10400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:13"
+  },
+  {
+   "listing_id": 6542,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 8700F 8th Generation Processor ( 4.1 GHz / 8cores / 16Threads )",
+   "model_key_at_review": "cpu:amd:8700f:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700f",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700f:ryzen_7"
+  },
+  {
+   "listing_id": 6550,
+   "store": "EliteHubs",
+   "title": "INTEL Core i3 14100 14th Generation Processor ( 4.7 GHz / 4 Cores / 8 Threads )",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 6554,
+   "store": "EliteHubs",
+   "title": "INTEL Core i3 14100F 14th Generation Processor ( 4 GHz / 4 Cores / 8 Threads )",
+   "model_key_at_review": "cpu:intel:14100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:7"
+  },
+  {
+   "listing_id": 6555,
+   "store": "EliteHubs",
+   "title": "INTEL Core i3 10105F 10th Generation Processor ( 4.4 GHz / 4 Cores / 8 Threads )",
+   "model_key_at_review": "cpu:intel:10105f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10105f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:10105f:core_i3"
+  },
+  {
+   "listing_id": 6562,
+   "store": "EliteHubs",
+   "title": "AMD RYZEN 5 9600X 9th Generation Processor (5.4 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 6563,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 9700X 9th Generation Processor ( 5.5 GHz / 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 6565,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 8500G 8th Generation Processor ( 5 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 6569,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 5600 5th Generation Processor ( 4.4 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 6571,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 8600G 8th Generation Processor ( 5 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 6572,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 5600GT 5th Generation (4.6 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 6573,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 5600X 5th Gen Processor  ( 4.6 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 6574,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 5500GT 5th Generation ( 4.4 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 6575,
+   "store": "EliteHubs",
+   "title": "INTEL Core i3 12100F 12th Generation Processor ( 4.3 GHz / 4 Cores / 8 Threads )",
+   "model_key_at_review": "cpu:intel:12100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:3"
+  },
+  {
+   "listing_id": 6578,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 9 7900X 7th Generation Processor ( 5.6 GHz / 12 Cores / 24 Threads )",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 6581,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 3400G APU 2nd Generation Processor ( 4.2 GHz / 4 Cores / 8 Threads )",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 6583,
+   "store": "EliteHubs",
+   "title": "INTEL Core i5 12400 12th Generation Processor ( 4.4 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 6587,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 3 3200G 3rd Generation Processor ( 4GHz / 4 Cores / 4 Threads )",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 6591,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 245K Processor ( 5.2 GHz / 14 Cores / 14 Threads )",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 6592,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 7 265K Processor ( 5.5 GHz / 20 Cores / 20 Threads )",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 6594,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 7 265KF Processor ( 5.50 GHz / 20 Core / 20 Threads )",
+   "model_key_at_review": "cpu:intel:265kf:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265kf",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265kf:core_ultra_7"
+  },
+  {
+   "listing_id": 6597,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 7600X 7th Generation Processor ( 5.3 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 6607,
+   "store": "EliteHubs",
+   "title": "Intel Core I5 14400 14th Generation Processor ( 4.7 GHz / 10 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 6608,
+   "store": "EliteHubs",
+   "title": "INTEL Core i7 12700 12th Generation Processor ( 4.9 GHz / 12 Cores / 20 Threads )",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 6610,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 7700X 7th Generation Processor ( 5.4 GHz / 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 6611,
+   "store": "EliteHubs",
+   "title": "INTEL Core i5 14400F 14th Generation Processor ( 4.7 GHz / 10 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 6613,
+   "store": "EliteHubs",
+   "title": "INTEL Core i5 12400F 12th Generation Processor ( 4.4 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 6614,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 7600 7th Generation Processor ( 5.1 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:7600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600:ryzen_5"
+  },
+  {
+   "listing_id": 6615,
+   "store": "EliteHubs",
+   "title": "INTEL Core i7 14700KF 14th Generation Processor ( 5.6 GHz / 20 Cores / 28 Threads )",
+   "model_key_at_review": "cpu:intel:14700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:10"
+  },
+  {
+   "listing_id": 6616,
+   "store": "EliteHubs",
+   "title": "INTEL Core i7 14700F 14th Generation Processor ( 5.4 GHz / 20 Cores / 28 Threads )",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 6618,
+   "store": "EliteHubs",
+   "title": "INTEL Core i5 14600K 14th Generation Processor ( 5.3 GHz / 14 Cores / 20 Threads )",
+   "model_key_at_review": "cpu:intel:14600k:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14600k",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14600k:core_i5"
+  },
+  {
+   "listing_id": 6723,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 7800X3D 7th Generation Processor ( 5 GHz / 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 6738,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 225 Processor ( 4.9 GHz / 10 Core / 10 Threads )",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 6739,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 7500F 7th Generation Processor ( 5 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 6740,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 5600F 5th Generation Processor ( 4 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:5600f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600f:ryzen_5"
+  },
+  {
+   "listing_id": 6743,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 7 270K Plus Processor ( 5.5 GHz / 24 Core / 24 Threads )",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 6744,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 250K Plus Processor ( 5.3 GHz / 18 Core / 18 Threads )",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 6745,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 250KF Plus Processor ( 5.3 GHz / 18 Core / 18 Threads )",
+   "model_key_at_review": "cpu:intel:250kf:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250kf",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250kf:core_ultra_5"
+  },
+  {
+   "listing_id": 6746,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 225F Processor ( 4.9GHz / 10 Cores / 10 Threads )",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 6749,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 5800X3D 5th generation 10th Anniversary Edition Processor ( 4.5 GHz / 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 6750,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 7 7700X3D 7th Generation Processor ( 4.5 GHz / 8 Cores / 16 Threads )",
+   "model_key_at_review": "cpu:amd:7700x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x3d:ryzen_7"
+  },
+  {
+   "listing_id": 14698,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 7500F Processor",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 14700,
+   "store": "Clarion Computers",
+   "title": "Intel Core Ultra 5 225 10 Core 10 Threads LGA 1851 Desktop Prosser",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 14701,
+   "store": "Clarion Computers",
+   "title": "Intel Core Ultra 5 225F 10 Core 10 Threads LGA 1851 Desktop Prosser",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 14707,
+   "store": "Clarion Computers",
+   "title": "Intel Core Ultra 5-245K 14-Core 14-Threads Desktop Processor",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 14708,
+   "store": "Clarion Computers",
+   "title": "Intel Core Ultra 7 265K 20 Core 20 Threads Desktop Processor",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 14711,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 7 9700X 8-Core 16-Threads 9000 Series Desktop Processor",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 14712,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 9600X 6-Core 12-Threads 9000 Series Desktop Processor",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 14713,
+   "store": "Clarion Computers",
+   "title": "Intel Core I5 14400F 14th Gen LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 14714,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 5500GT 6-core 12-threads AM4 Desktop Processor",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 14715,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 5600GT desktop processor with Radeon graphics",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 14716,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 8600G 6-Core 12-Threads AM5 8000 Series Desktop Processor with Radeon 760M Graphics",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 14717,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 7 8700G 8-Core 16-Threads AM5 8000 Series Desktop Processor with Radeon 780M Graphics",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 14718,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 8500G 6-Core 12-Threads AM5 8000 Series Desktop Processor with Radeon 740M Graphics",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 14719,
+   "store": "Clarion Computers",
+   "title": "Intel Core I7 14700F 14th Gen LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 14721,
+   "store": "Clarion Computers",
+   "title": "Intel Core I3 14100 14th Gen LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 14722,
+   "store": "Clarion Computers",
+   "title": "Intel Core I5 14400 14th Gen LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 14724,
+   "store": "Clarion Computers",
+   "title": "Intel Core i7-14700KF 14th Gen 20-Core (8P+12E) LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:10"
+  },
+  {
+   "listing_id": 14725,
+   "store": "Clarion Computers",
+   "title": "Intel Core I5-14600K Raptor Lake 14 Core LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14600k:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14600k",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14600k:core_i5"
+  },
+  {
+   "listing_id": 14726,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 7 7800X3D 8-Core 16-Threads Desktop Processor with 106MB 3D-V Cache",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 14727,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 7600 6-core 12-threads 7000 Series Desktop Processor",
+   "model_key_at_review": "cpu:amd:7600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600:ryzen_5"
+  },
+  {
+   "listing_id": 14728,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 7600X 6-core 12-threads 7000 Series ZEN 4 Desktop Processor",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 14729,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 5600 Desktop Processor (6 Cores/12 Threads)",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 14730,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 5500 6-core 12-threads AM4 Desktop Processor",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 14731,
+   "store": "Clarion Computers",
+   "title": "Intel Core I7-12700 12th Gen Alder Lake 12-core LGA1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 14732,
+   "store": "Clarion Computers",
+   "title": "Intel Core i7-12700F 12th Gen Alder Lake 12-core LGA1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:12700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700f:core_i7"
+  },
+  {
+   "listing_id": 14733,
+   "store": "Clarion Computers",
+   "title": "Intel Core I5-12400 12th Gen 6-core Alder Lake Desktop Processor",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 14734,
+   "store": "Clarion Computers",
+   "title": "Intel Core I5-12400F 12th Gen 6-core 12-threads 2.5ghz Alder Lake Desktop Processor (BX8071512400F)",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 14735,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 7 5700G desktop processor with Radeon graphics",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 14736,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 3 3200G processor",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 14737,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 5600X processor",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 15102,
+   "store": "Clarion Computers",
+   "title": "Intel Core I3 14100F 14th Gen LGA 1700 Desktop Processor",
+   "model_key_at_review": "cpu:intel:14100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:7"
+  },
+  {
+   "listing_id": 15103,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 7700X3D Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7700x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x3d:ryzen_7"
+  },
+  {
+   "listing_id": 15105,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 5800X3D 10th Anniversary Edition Gaming Processor",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 15107,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 5 250K Plus Processor",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 15110,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 9700X AM5 Desktop Processor (5.5 GHz / 8 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 15111,
+   "store": "Computech Store",
+   "title": "Amd Ryzen 5 7600X AM5 Desktop Processor (5.3 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 15113,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 9600X AM5 Desktop Processor (5.4 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 15114,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 7 270K Plus Processor",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 15121,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 5600F AM4 Desktop Processor (4 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:5600f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600f:ryzen_5"
+  },
+  {
+   "listing_id": 15122,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 5 245KF LGA1851 Desktop Processor (5.2 GHz / 14 Cores / 14 Threads)",
+   "model_key_at_review": "cpu:intel:245kf:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245kf",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245kf:core_ultra_5"
+  },
+  {
+   "listing_id": 15339,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 5 225F LGA1851 Desktop Processor (4.9 GHz/ 10 Cores / 10 Threads)",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 15340,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 5 225 LGA1851 Desktop Processor (4.9 GHz / 10 Cores / 10 Threads)",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 15341,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 7500F AM5 Desktop Processor (5 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 15364,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 5 245K LGA1851 Desktop Processor (5.2 GHz / 14 Cores / 14 Threads)",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 15367,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 7 265KF LGA1851 Desktop Processor (5.5 GHz / 20 Cores / 20 Threads)",
+   "model_key_at_review": "cpu:intel:265kf:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265kf",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265kf:core_ultra_7"
+  },
+  {
+   "listing_id": 15368,
+   "store": "Computech Store",
+   "title": "Intel Core Ultra 7 265K LGA1851 Desktop Processor (5.5 GHz / 20 Cores / 20 Threads)",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 15373,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 5600GT AM4 Desktop Processor (4.6 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 15374,
+   "store": "Computech Store",
+   "title": "Amd Ryzen 5 8500G AM5 Desktop Processor (5 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 15375,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 8600G AM5 Desktop Processor (5 GHz/  6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 15376,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 8700G AM5 Desktop Processor (5.1 GHz / 8 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 15377,
+   "store": "Computech Store",
+   "title": "Intel Core i5-14400F LGA1700 Desktop Processor (4.7 GHz / 10Cores / 16 Threads)",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 15378,
+   "store": "Computech Store",
+   "title": "Intel Core i5-14400 LGA1700 Desktop Processor (4.7 GHz / 10 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 15380,
+   "store": "Computech Store",
+   "title": "Intel Core i3-14100 LGA1700 Desktop Processor (4.7 GHz / 4 Cores / 8 Threads)",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 15382,
+   "store": "Computech Store",
+   "title": "Intel Core i3-14100F LGA1700 Desktop Processor (4.7 GHz / 4 Cores / 8 Threads)",
+   "model_key_at_review": "cpu:intel:14100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:7"
+  },
+  {
+   "listing_id": 15384,
+   "store": "Computech Store",
+   "title": "Intel Core i7-14700F LGA1700 Desktop Processor (5.4 GHz / 20 Cores / 28 Threads)",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 15385,
+   "store": "Computech Store",
+   "title": "Intel Core i7-14700KF LGA1700 Desktop Processor (5.6 GHz / 20 Cores / 28 Threads)",
+   "model_key_at_review": "cpu:intel:14700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:10"
+  },
+  {
+   "listing_id": 15389,
+   "store": "Computech Store",
+   "title": "Intel Core i5-14600K LGA1700 Desktop Processor (5.3 GHz / 14 Cores / 20 Threads)",
+   "model_key_at_review": "cpu:intel:14600k:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14600k",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14600k:core_i5"
+  },
+  {
+   "listing_id": 15390,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 5600 AM4 Desktop Processor (4.4 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 15395,
+   "store": "Computech Store",
+   "title": "Intel Core i5-13400F LGA1700 Desktop Processor (4.60 GHz / 10 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:intel:13400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "13400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:13400f:core_i5"
+  },
+  {
+   "listing_id": 15396,
+   "store": "Computech Store",
+   "title": "Intel Core i5-13400 LGA1700 Desktop Processor (4.60 GHz / 10 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:intel:13400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "13400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:13400:core_i5"
+  },
+  {
+   "listing_id": 15398,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 7800X3D AM5 Desktop Processor (5 GHz / 8 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 15399,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 7600 AM5 Desktop Processor (5.1 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:7600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600:ryzen_5"
+  },
+  {
+   "listing_id": 15405,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 9 7900X AM5 Desktop Processor (5.6 GHz / 12 Cores / 24 Threads)",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 15406,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 7700X AM5 Desktop Processor (5.4 GHz / 8 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 15408,
+   "store": "Computech Store",
+   "title": "Intel Core i9-12900F LGA1700 Desktop Processor (5.10 GHz / 16 Cores / 24 Threads)",
+   "model_key_at_review": "cpu:intel:12900f:core_i9",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12900f",
+    "series": "core i9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12900f:core_i9"
+  },
+  {
+   "listing_id": 15409,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 5500 AM4 Desktop Processor (4.2 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 15411,
+   "store": "Computech Store",
+   "title": "Intel Core i7-12700F LGA1700 Desktop Processor (4.90 GHz / 12 Cores / 20 Threads)",
+   "model_key_at_review": "cpu:intel:12700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700f:core_i7"
+  },
+  {
+   "listing_id": 15412,
+   "store": "Computech Store",
+   "title": "Intel Core i7 12700 Processor",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 15414,
+   "store": "Computech Store",
+   "title": "Intel Core i5-12400F LGA1700 Desktop Processor (4.40 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 15415,
+   "store": "Computech Store",
+   "title": "Intel Core i5-12400 LGA1700 Desktop Processor (4.40 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 15416,
+   "store": "Computech Store",
+   "title": "Intel Core i3-12100F LGA1700 Desktop Processor (4.30 GHz / 4 Cores / 8 Threads)",
+   "model_key_at_review": "cpu:intel:12100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:3"
+  },
+  {
+   "listing_id": 15417,
+   "store": "Computech Store",
+   "title": "Intel Core i3-12100 LGA1700 Desktop Processor (4.30 GHz / 4 Cores / 8 Threads)",
+   "model_key_at_review": "cpu:intel:12100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12100:core_i3"
+  },
+  {
+   "listing_id": 15419,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 7 5700G AM4 Desktop Processor (4.6 GHz / 8 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 15420,
+   "store": "Computech Store",
+   "title": "Intel Core i3-10105F LGA1200 Desktop Processor (4.40 GHz / 4 Cores / 8 Threads)",
+   "model_key_at_review": "cpu:intel:10105f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10105f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:10105f:core_i3"
+  },
+  {
+   "listing_id": 15421,
+   "store": "Computech Store",
+   "title": "Intel Core i7-10700K LGA1200 Desktop Processor (5.10 GHz / 8 Cores / 16 Threads)",
+   "model_key_at_review": "cpu:intel:10700k:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10700k",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:10700k:core_i7"
+  },
+  {
+   "listing_id": 15422,
+   "store": "Computech Store",
+   "title": "Amd Ryzen 5 5600X AM4 Desktop Processor (4.6 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 15423,
+   "store": "Computech Store",
+   "title": "Amd Ryzen 3 3200G AM4 Desktop Processor (4 GHz /  4 Cores / 4 Threads)",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 15424,
+   "store": "Computech Store",
+   "title": "Intel Core i5-10400 LGA1200 Desktop Processor (4.30 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:intel:10400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:13"
+  },
+  {
+   "listing_id": 15425,
+   "store": "Computech Store",
+   "title": "AMD Ryzen 5 3400G AM4 Desktop Processor (4.2 GHz / 4 Cores / 8 Threads)",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 15426,
+   "store": "Computech Store",
+   "title": "Intel Core i5-10400F LGA1200 Desktop Processor (4.30 GHz / 6 Cores / 12 Threads)",
+   "model_key_at_review": "cpu:intel:10400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:2"
+  },
+  {
+   "listing_id": 17045,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 3 3200G 4 Cores 4 Threads 3.6GHz 6MB Cache AM4 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 17046,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 3400G Desktop Processor 4 Cores up to 4.2GHz 6MB Cache AM4 Socket",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 17048,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 5600G 6 Cores 12 Threads 4.4GHz 19MB Cache AM4 Socket Radeon Graphics Desktop Processor",
+   "model_key_at_review": "cpu:amd:5600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600g:ryzen_5"
+  },
+  {
+   "listing_id": 17050,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 5500 6 Cores 12 Threads 4.2GHz 19MB Cache AM4 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 17052,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 7600 6 Cores 12 Threads 5.1GHz 38MB Cache AM5 Socket Radeon Graphics Desktop Processor",
+   "model_key_at_review": "cpu:amd:7600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600:ryzen_5"
+  },
+  {
+   "listing_id": 17053,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 8600G 6 Cores 12 Threads 5GHz 22MB Cache AM5 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 17054,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 9 9950X 3D 16 Cores 32 Threads 5.7GHz 128MB Cache AM5 Socket Gaming Processor",
+   "model_key_at_review": "cpu:amd:9950x:ryzen_9_3d",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9950x",
+    "series": "ryzen 9 3d"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 1,
+   "product": "group:1"
+  },
+  {
+   "listing_id": 17056,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 7 8700G 8 Cores 16 Threads 5.1GHz 24MB Cache AM5 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 17057,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 9600X 6 Cores 12 Threads 5.4GHz 38MB Cache AM5 Socket Desktop Processor",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 17058,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 7600X Desktop Processor 6 Cores up to 5.3GHz 38MB Cache AM5 Socket with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 17062,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 7 9700X 8 Cores 16 Threads 5.5GHz 40MB Cache AM5 Socket Desktop Processor",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 17063,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 7 7800X 3D 8 Cores 16 Threads 5.6GHz 104MB Cache AM5 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 17064,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 8500G 6 Cores 12 Threads 5GHz 22MB Cache AM5 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 17065,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 5600GT 6 Cores 12 Threads 4.6GHz 19MB Cache AM4 Socket 64-bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 17066,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 5 5500GT 6 Cores 12 Threads 3.6GHz 16MB Cache AM4 Socket 64-Bit Desktop Processor",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 17074,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 7 5700G Desktop Processor 8 Cores up to 4.6GHz 20MB Cache AM4 Socket with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:5700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5700g:ryzen_7"
+  },
+  {
+   "listing_id": 17080,
+   "store": "TPS Tech",
+   "title": "Intel Core 12th Gen i5-12400F LGA1700 Desktop Processor 6 Cores up to 4.4GHz 18MB Cache",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 17081,
+   "store": "TPS Tech",
+   "title": "Intel Core i5-10400 LGA1200 Desktop Processor 6 Cores up to 4.30GHz 12MB Cache",
+   "model_key_at_review": "cpu:intel:10400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:13"
+  },
+  {
+   "listing_id": 17084,
+   "store": "TPS Tech",
+   "title": "Intel Core 12th Gen i5-12400 LGA1700 Desktop Processor 6 Cores up to 4.4GHz 18MB Cache",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 17087,
+   "store": "TPS Tech",
+   "title": "Intel Core i5-14400F up to 4.70 GHz LGA1700 Socket 10 Cores 20M Cache 14th Gen Desktop Processor",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 17088,
+   "store": "TPS Tech",
+   "title": "Intel Core 12th Gen i7-12700 LGA1700 Desktop Processor 12 Cores up to 4.9GHz 25MB Cache",
+   "model_key_at_review": "cpu:intel:12700:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700:core_i7"
+  },
+  {
+   "listing_id": 17090,
+   "store": "TPS Tech",
+   "title": "Intel Core 12th Gen i7-12700F LGA1700 Desktop Processor 12 Cores up to 4.9GHz 25MB Cache",
+   "model_key_at_review": "cpu:intel:12700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700f:core_i7"
+  },
+  {
+   "listing_id": 17098,
+   "store": "TPS Tech",
+   "title": "Intel Core Ultra 7 265K 20 Cores 20 Threads 3.9GHz LGA1851 Socket 30MB Cache Desktop Processor",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 17100,
+   "store": "TPS Tech",
+   "title": "Intel Core Ultra 5 245K 14 Cores 14 Threads 3.6GHz LGA1851 Socket 24MB Cache Desktop Processor",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 17101,
+   "store": "TPS Tech",
+   "title": "Intel Core i7-14700F 20 Cores 28 Threads 33MB Cache 5.4 GHz LGA1700 14th Gen Desktop Processor",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 17102,
+   "store": "TPS Tech",
+   "title": "Intel Core i3-14100F up to 4.70 GHz LGA1700 Socket 4 Cores 8 Threads 12 MB Smart Cache Desktop Processor",
+   "model_key_at_review": "cpu:intel:14100f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:7"
+  },
+  {
+   "listing_id": 17109,
+   "store": "TPS Tech",
+   "title": "Intel Core i7-14700KF 20 Cores 28 Threads 33MB Cache 5.6 GHz LGA 1700 14th Gen RAPTOR LAKE Desktop Processor",
+   "model_key_at_review": "cpu:intel:14700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:10"
+  },
+  {
+   "listing_id": 17110,
+   "store": "TPS Tech",
+   "title": "Intel Core Ultra 5 225 LGA1851 10 Cores Up to 4.9GHz 20MB Cache Desktop Processor",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 17111,
+   "store": "TPS Tech",
+   "title": "Intel® Core Ultra 5 225F LGA1851 10 Cores Up to 4.9 GHz 20MB Cache Desktop Processor",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 17113,
+   "store": "TPS Tech",
+   "title": "Intel Core i3-14100 up to 4.70 GHz LGA1700 Socket 4 Cores 8 Threads 12 MB Smart Cache Desktop Processor",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 18705,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 5 5500",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 18706,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 5 5600",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 18707,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 5 7500F",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 18709,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 5 8500G",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 18710,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 5 9600X",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 18711,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 7 5800X3D 10th Anniversary Edition Gaming Processor",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 18712,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 7 7700X3D",
+   "model_key_at_review": "cpu:amd:7700x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x3d:ryzen_7"
+  },
+  {
+   "listing_id": 18713,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 7 9700X",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 18716,
+   "store": "TLG Gaming",
+   "title": "Intel core i5 12400F",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 18717,
+   "store": "TLG Gaming",
+   "title": "Intel Core Ultra 5 225",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 18718,
+   "store": "TLG Gaming",
+   "title": "Intel Core Ultra 5 225F Processor (BX80768225F)",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 18719,
+   "store": "TLG Gaming",
+   "title": "Intel Core Ultra 5 245K",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 18720,
+   "store": "TLG Gaming",
+   "title": "Intel Core Ultra 7 265K",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 18853,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 5500 Processor",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 18854,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 3400G Processor",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 18855,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 5500GT Processor",
+   "model_key_at_review": "cpu:amd:5500gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5500gt:ryzen_5"
+  },
+  {
+   "listing_id": 18856,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 5600 Processor",
+   "model_key_at_review": "cpu:amd:5600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:5"
+  },
+  {
+   "listing_id": 18857,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 5600G Processor",
+   "model_key_at_review": "cpu:amd:5600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600g:ryzen_5"
+  },
+  {
+   "listing_id": 18858,
+   "store": "ModxComputers",
+   "title": "Intel Core Ultra 5 225F Processor",
+   "model_key_at_review": "cpu:intel:225f:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225f",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:6"
+  },
+  {
+   "listing_id": 18859,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 5600X Processor",
+   "model_key_at_review": "cpu:amd:5600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:11"
+  },
+  {
+   "listing_id": 18860,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 7500F Processor",
+   "model_key_at_review": "cpu:amd:7500f:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7500f",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7500f:ryzen_5"
+  },
+  {
+   "listing_id": 18861,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 5600GT Processor",
+   "model_key_at_review": "cpu:amd:5600gt:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600gt",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600gt:ryzen_5"
+  },
+  {
+   "listing_id": 18862,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 8500G Processor",
+   "model_key_at_review": "cpu:amd:8500g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8500g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8500g:ryzen_5"
+  },
+  {
+   "listing_id": 18939,
+   "store": "ModxComputers",
+   "title": "Intel Core I5-12400F Processor",
+   "model_key_at_review": "cpu:intel:12400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400f:core_i5"
+  },
+  {
+   "listing_id": 18940,
+   "store": "ModxComputers",
+   "title": "Intel Core I5-14400F Processor",
+   "model_key_at_review": "cpu:intel:14400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400f:core_i5"
+  },
+  {
+   "listing_id": 18941,
+   "store": "ModxComputers",
+   "title": "Intel Core Ultra 5 225 Processor",
+   "model_key_at_review": "cpu:intel:225:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "225",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 14,
+   "product": "group:14"
+  },
+  {
+   "listing_id": 18943,
+   "store": "ModxComputers",
+   "title": "Intel Core I3-14100 Intel Processor",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 18944,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 7600X Processor",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 18945,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 8600G Processor",
+   "model_key_at_review": "cpu:amd:8600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8600g:ryzen_5"
+  },
+  {
+   "listing_id": 18946,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 5 9600X Processor",
+   "model_key_at_review": "cpu:amd:9600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:9600x:ryzen_5"
+  },
+  {
+   "listing_id": 18948,
+   "store": "ModxComputers",
+   "title": "Intel Core Ultra 5 245K Processor",
+   "model_key_at_review": "cpu:intel:245k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245k:core_ultra_5"
+  },
+  {
+   "listing_id": 18949,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 7 7700X Processor",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 18950,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 7 8700G Processor",
+   "model_key_at_review": "cpu:amd:8700g:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "8700g",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:8700g:ryzen_7"
+  },
+  {
+   "listing_id": 18951,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 7 9700X Processor",
+   "model_key_at_review": "cpu:amd:9700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "9700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 4,
+   "product": "group:4"
+  },
+  {
+   "listing_id": 18952,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 9 7900X Processor",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 18953,
+   "store": "ModxComputers",
+   "title": "Intel Core Ultra 7 265K Processor",
+   "model_key_at_review": "cpu:intel:265k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265k:core_ultra_7"
+  },
+  {
+   "listing_id": 18954,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 7 5800X3D Processor",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 18955,
+   "store": "ModxComputers",
+   "title": "Intel Core I7-14700F Processor",
+   "model_key_at_review": "cpu:intel:14700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14700f:core_i7"
+  },
+  {
+   "listing_id": 18956,
+   "store": "ModxComputers",
+   "title": "Intel Core Ultra 7 270K Plus Processor",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 18957,
+   "store": "ModxComputers",
+   "title": "AMD Ryzen 7 7800X3D Processor",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 19396,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 7 7800X3D Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 19397,
+   "store": "MDComputers",
+   "title": "Intel Core i7-14700KF Processor",
+   "model_key_at_review": "cpu:intel:14700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": 10,
+   "product": "group:10"
+  },
+  {
+   "listing_id": 19404,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 3 3200G Processor with Radeon Vega 8 Graphics",
+   "model_key_at_review": "cpu:amd:3200g:ryzen_3",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3200g",
+    "series": "ryzen 3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:3200g:ryzen_3"
+  },
+  {
+   "listing_id": 19446,
+   "store": "MDComputers",
+   "title": "Intel Core I3-10105F Processor",
+   "model_key_at_review": "cpu:intel:10105f:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10105f",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:10105f:core_i3"
+  },
+  {
+   "listing_id": 19499,
+   "store": "MDComputers",
+   "title": "Intel Core i7-12700KF Processor",
+   "model_key_at_review": "cpu:intel:12700kf:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700kf",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700kf:core_i7"
+  },
+  {
+   "listing_id": 19648,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 245KF Processor",
+   "model_key_at_review": "cpu:intel:245kf:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245kf",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245kf:core_ultra_5"
+  },
+  {
+   "listing_id": 19649,
+   "store": "MDComputers",
+   "title": "Intel Core Ultra 5 235 Processor",
+   "model_key_at_review": "cpu:intel:235:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "235",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:235:core_ultra_5"
+  },
+  {
+   "listing_id": 19696,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 5 7600x",
+   "model_key_at_review": "cpu:amd:7600x:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600x",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600x:ryzen_5"
+  },
+  {
+   "listing_id": 19915,
+   "store": "PrimeABGB",
+   "title": "AMD Ryzen 9 7900X Desktop Processor 100-100000589WOF",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 20057,
+   "store": "Vedant Computers",
+   "title": "Intel Core i3 Processor - 14100 (12M Cache, up to 4.70 GHz)",
+   "model_key_at_review": "cpu:intel:14100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14100:core_i3"
+  },
+  {
+   "listing_id": 20060,
+   "store": "EliteHubs",
+   "title": "AMD Ryzen 5 5500 5th Generation Processor ( 4.2 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:amd:5500:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5500",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:0"
+  },
+  {
+   "listing_id": 20118,
+   "store": "ModxComputers",
+   "title": "Intel Core I5-12400",
+   "model_key_at_review": "cpu:intel:12400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12400:core_i5"
+  },
+  {
+   "listing_id": 20174,
+   "store": "Clarion Computers",
+   "title": "Intel Core Ultra 7 265KF 20 Core 20 Threads Desktop Processor",
+   "model_key_at_review": "cpu:intel:265kf:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "265kf",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:265kf:core_ultra_7"
+  },
+  {
+   "listing_id": 20175,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 9 7900X 12-core 24-threads 7000 Series ZEN 4 Desktop Processor With 76mb Cache",
+   "model_key_at_review": "cpu:amd:7900x:ryzen_9",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7900x",
+    "series": "ryzen 9"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7900x:ryzen_9"
+  },
+  {
+   "listing_id": 20176,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 7 7700X 8-core 16-threads 7000 Series ZEN 4 Desktop Processor",
+   "model_key_at_review": "cpu:amd:7700x:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7700x",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7700x:ryzen_7"
+  },
+  {
+   "listing_id": 20177,
+   "store": "Clarion Computers",
+   "title": "AMD Ryzen 5 3400G processor",
+   "model_key_at_review": "cpu:amd:3400g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "3400g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:9"
+  },
+  {
+   "listing_id": 20377,
+   "store": "TPS Tech",
+   "title": "AMD Ryzen 7 5800X3D Desktop Processor 8 Cores up to 4.5GHz 100MB Cache AM4 Socket",
+   "model_key_at_review": "cpu:amd:5800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:8"
+  },
+  {
+   "listing_id": 20380,
+   "store": "ModxComputers",
+   "title": "Intel Core I5-14400 Intel Processor",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 20381,
+   "store": "ModxComputers",
+   "title": "Intel Core Ultra 5 250K Plus Processor",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 20408,
+   "store": "TLG Gaming",
+   "title": "AMD Ryzen 7 7800X3D",
+   "model_key_at_review": "cpu:amd:7800x3d:ryzen_7",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7800x3d",
+    "series": "ryzen 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7800x3d:ryzen_7"
+  },
+  {
+   "listing_id": 20409,
+   "store": "TLG Gaming",
+   "title": "Intel Core Ultra 7 270K Plus",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 20604,
+   "store": "Clarion Computers",
+   "title": "Intel Core ultra 5 250K Plus 18-Core 18-Threads Desktop Processor",
+   "model_key_at_review": "cpu:intel:250k:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "250k",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:250k:core_ultra_5"
+  },
+  {
+   "listing_id": 20605,
+   "store": "Clarion Computers",
+   "title": "Intel Core Ultra 7 270K Plus 24 Cores 24 Threads Desktop Processor",
+   "model_key_at_review": "cpu:intel:270k:core_ultra_7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "270k",
+    "series": "core ultra 7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:270k:core_ultra_7"
+  },
+  {
+   "listing_id": 20739,
+   "store": "MDComputers",
+   "title": "AMD Ryzen 5 7600 Processor with Radeon Graphics",
+   "model_key_at_review": "cpu:amd:7600:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "7600",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:7600:ryzen_5"
+  },
+  {
+   "listing_id": 20740,
+   "store": "MDComputers",
+   "title": "Intel Core i5-13400 Processor",
+   "model_key_at_review": "cpu:intel:13400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "13400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:13400:core_i5"
+  },
+  {
+   "listing_id": 21034,
+   "store": "Vedant Computers",
+   "title": "Intel Core i5 Processor - 14600K (24M Cache, up to 5.30 GHz)",
+   "model_key_at_review": "cpu:intel:14600k:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14600k",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14600k:core_i5"
+  },
+  {
+   "listing_id": 21035,
+   "store": "Vedant Computers",
+   "title": "AMD Ryzen 5 5600G Processor with Radeon Graphics (6 Cores, 12 Threads, Max. Boost Clock Up To 4.4GHz, AM4 Socket and 19MB Cache)",
+   "model_key_at_review": "cpu:amd:5600g:ryzen_5",
+   "extracted": {
+    "brand": "amd",
+    "model_number": "5600g",
+    "series": "ryzen 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:amd:5600g:ryzen_5"
+  },
+  {
+   "listing_id": 21054,
+   "store": "EliteHubs",
+   "title": "INTEL Core i5 10400F 10th Generation Processor ( 4.3 GHz / 6 Cores / 12 Threads )",
+   "model_key_at_review": "cpu:intel:10400f:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "10400f",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "group:2"
+  },
+  {
+   "listing_id": 21055,
+   "store": "EliteHubs",
+   "title": "INTEL Core i3 12100 12th Generation Processor ( 4.3 GHz / 4 Cores / 8 Threads )",
+   "model_key_at_review": "cpu:intel:12100:core_i3",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12100",
+    "series": "core i3"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12100:core_i3"
+  },
+  {
+   "listing_id": 21056,
+   "store": "EliteHubs",
+   "title": "INTEL Core i7 12700F 12th Generation Processor ( 4.9 GHz / 12 Cores / 20 Threads )",
+   "model_key_at_review": "cpu:intel:12700f:core_i7",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "12700f",
+    "series": "core i7"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:12700f:core_i7"
+  },
+  {
+   "listing_id": 21057,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 245KF Processor ( 5.2 GHz / 14 Cores / 14 Threads )",
+   "model_key_at_review": "cpu:intel:245kf:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "245kf",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:245kf:core_ultra_5"
+  },
+  {
+   "listing_id": 21058,
+   "store": "EliteHubs",
+   "title": "INTEL Core Ultra 5 235 Processor ( 5 GHz / 14 Cores / 14 Threads )",
+   "model_key_at_review": "cpu:intel:235:core_ultra_5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "235",
+    "series": "core ultra 5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:235:core_ultra_5"
+  },
+  {
+   "listing_id": 21128,
+   "store": "TPS Tech",
+   "title": "Intel Core i5-14400 up to 4.7GHz LGA1700 Socket 10 Cores 20M Cache 14th Gen Desktop Processor",
+   "model_key_at_review": "cpu:intel:14400:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14400",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14400:core_i5"
+  },
+  {
+   "listing_id": 21476,
+   "store": "MDComputers",
+   "title": "Intel Core i5-14500 Processor",
+   "model_key_at_review": "cpu:intel:14500:core_i5",
+   "extracted": {
+    "brand": "intel",
+    "model_number": "14500",
+    "series": "core i5"
+   },
+   "verdict": "ok",
+   "should_be": null,
+   "same_product_group": null,
+   "product": "cpu:intel:14500:core_i5"
+  }
+ ]
+}

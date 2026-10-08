@@ -24,13 +24,19 @@ from .mixins import TimestampMixin
 from .price_history import PriceHistory
 from .product import Product
 from .product_target import ProductTarget
+from .pipeline_run import PipelineRun
 from .saved_build import SavedBuild
+from .scrape_agent import ScrapeAgent
+from .scrape_job import ScrapeJob
 from .scrape_target import ScrapeTarget
 from .store import Store
 
 __all__ = [
     "Store",
     "ScrapeTarget",
+    "ScrapeAgent",
+    "ScrapeJob",
+    "PipelineRun",
     "Product",
     "ProductTarget",
     "PriceHistory",

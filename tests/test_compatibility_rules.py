@@ -99,6 +99,10 @@ def test_each_rule_reports_unverified_when_a_value_is_missing(monkeypatch, rule_
     }
     setattr(views[missing_slot], missing_field, None)
     views[missing_slot].product_name = "Missing-Data Part"
+    if rule.op == "contains_in" and side == "b":
+        # With a current socket an unknown cooler list is only a note (see
+        # test_unknown_cooler_sockets_*); an older socket still needs the real list.
+        views["cpu"].socket = "LGA1200"
 
     summary = _run(monkeypatch, {k: [v] for k, v in views.items()})
 
@@ -159,7 +163,7 @@ def test_unrecognised_form_factor_is_unverified_not_passed(monkeypatch):
 
 def test_blank_string_counts_as_missing(monkeypatch):
     summary = _run(monkeypatch, {
-        "cpu": [_view("cpu", "Test CPU")],
+        "cpu": [_view("cpu", "Test CPU", socket="LGA1200")],
         "cooler": [_view("cooler", "Blank Cooler", supported_sockets="  ")],
     })
     assert len(_levels(summary, "unverified")) == 1
@@ -345,6 +349,21 @@ class TestWattageEstimate:
         s = _run(monkeypatch, {"cpu": [_view("cpu", tdp=105)], "gpu": [_view("gpu", tdp=200)]})
         assert s.estimated_wattage == 105 + 200 + 50
 
+    def test_cpu_counts_at_its_maximum_power_not_its_tdp(self, monkeypatch):
+        # Owner decision 2026-10-06: an i5-14500 is 65 W TDP but draws up to 154 W.
+        s = _run(monkeypatch, {"cpu": [_view("cpu", tdp=65, max_power=154, max_power_source="intel")],
+                               "gpu": [_view("gpu", tdp=200)]})
+        assert s.estimated_wattage == 154 + 200 + 50
+        assert s.wattage_notes == []
+
+    def test_an_estimated_maximum_says_so(self, monkeypatch):
+        s = _run(monkeypatch, {"cpu": [_view("cpu", name="Old Intel", tdp=65, max_power=130,
+                                              max_power_source="estimate")],
+                               "gpu": [_view("gpu", tdp=200)]})
+        assert s.estimated_wattage == 130 + 200 + 50
+        assert len(s.wattage_notes) == 1
+        assert "Old Intel" in s.wattage_notes[0] and "130" in s.wattage_notes[0]
+
     def test_estimate_notes_come_after_psu_capacity_warnings(self, monkeypatch):
         s = _run(monkeypatch, {"cpu": [_view("cpu", tdp=None)], "gpu": [_view("gpu", tdp=None)],
                                "psu": [_view("psu", wattage=450)]})
@@ -486,3 +505,54 @@ class TestPsuWattageUnknown:
         summary = _run(monkeypatch, {"cpu": [_view("cpu", tdp=None)],
                                      "psu": [_view("psu", wattage=None)]})
         assert [w.level for w in summary.warnings] == ["unverified", "estimate"]
+
+
+def _cooler_rule():
+    return next(r for r in RULES if r.op == "contains_in")
+
+
+@pytest.mark.parametrize("cpu, cooler, fails", [
+    ("LGA1151", "LGA115X,LGA1200", False),   # the 115x family covers 1151
+    ("LGA1700", "LGA1200,LGA1700,AM5", False),
+    ("AM4", "LGA1700,AM5", True),
+    ("LGA1151", "LGA1150", True),            # a substring is not a socket match
+])
+def test_cooler_socket_check_matches_whole_sockets(cpu, cooler, fails):
+    engine = CompatibilityEngine(session=None)
+    warning = engine._eval_rule(_cooler_rule(), cpu, cooler)
+    assert (warning is not None) == fails
+
+
+# Owner decision 2026-10-08: almost every cooler sold today mounts on AM4, AM5, LGA1700
+# and LGA1851; coolers differ on older sockets. An unknown list is a note for a current
+# socket and stays unverified for an older one.
+@pytest.mark.parametrize("socket", ["AM4", "AM5", "LGA1700", "LGA1851"])
+def test_unknown_cooler_sockets_with_a_current_socket_is_a_note(monkeypatch, socket):
+    summary = _run(monkeypatch, {
+        "cpu": [_view("cpu", "Test CPU", socket=socket)],
+        "cooler": [_view("cooler", "Mystery Cooler", supported_sockets=None)],
+    })
+    assert _levels(summary, "unverified") == []
+    notes = _levels(summary, "estimate")
+    assert len(notes) == 1 and "Mystery Cooler" in notes[0].message and socket in notes[0].message
+
+
+@pytest.mark.parametrize("socket", ["LGA1200", "LGA1151", "sTR5"])
+def test_unknown_cooler_sockets_with_an_older_socket_stays_unverified(monkeypatch, socket):
+    summary = _run(monkeypatch, {
+        "cpu": [_view("cpu", "Test CPU", socket=socket)],
+        "cooler": [_view("cooler", "Mystery Cooler", supported_sockets=None)],
+    })
+    assert len(_levels(summary, "unverified")) == 1
+
+
+@pytest.mark.parametrize("cpu, cooler", [
+    ("LGA1851", "LGA1200,LGA1700"),   # LGA1851 keeps LGA1700's cooler mounting
+    ("AM5", "LGA1700,AM4"),           # AM5 keeps AM4's cooler mounting
+])
+def test_mounting_carries_over_to_the_newer_socket(monkeypatch, cpu, cooler):
+    summary = _run(monkeypatch, {
+        "cpu": [_view("cpu", "Test CPU", socket=cpu)],
+        "cooler": [_view("cooler", "Older Cooler", supported_sockets=cooler)],
+    })
+    assert summary.warnings == []

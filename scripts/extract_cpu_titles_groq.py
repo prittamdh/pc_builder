@@ -20,6 +20,7 @@ from db.session import SessionLocal
 from db.models.product import Product
 from db.models.canonical_part import CanonicalPart
 from db.models.cpu_title_extraction import CPUTitleExtraction
+from matching.cpu_identity import cpu_key_fields
 from matching.canonical_key_builder import make_canonical_key_string, disambiguate_failed_key
 from services.groq_extraction_service import GroqExtractionError, default_service, identity_prompt
 
@@ -71,12 +72,10 @@ def extract_cpu_identity(reprocess_all: bool = False, limit: int | None = None, 
                 parsed = result["parsed"]
                 conf = parsed.get("confidence")
 
-                key_dict = {
-                    "category": "cpu",
-                    "brand": parsed.get("brand") or "Unknown",
-                    "series": parsed.get("series") or "",
-                    "model_number": parsed.get("model_number") or "",
-                }
+                # Brand + model number; see matching/cpu_identity.py.
+                key_dict = cpu_key_fields(
+                    parsed.get("brand"), parsed.get("series"), parsed.get("model_number"), product.name
+                )
                 key_dict = disambiguate_failed_key(key_dict, product.id)
                 canonical_id = make_canonical_key_string("cpu", key_dict)
 

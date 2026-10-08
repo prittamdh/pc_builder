@@ -1,0 +1,203 @@
+# Deploying PC Builder
+
+Production is one Oracle Cloud VM. This page is the whole setup: with the git repo, an
+off-Oracle database dump and this page, the site can be rebuilt on a fresh VM.
+
+## What runs where
+
+| Piece | Where |
+|---|---|
+| VM | Oracle Cloud, Mumbai (`ap-mumbai-1`), `pcbuilder-prod`, VM.Standard.A1.Flex 2 OCPU / 12 GB (Always Free), Ubuntu 24.04 arm64 |
+| Public IP | `144.24.104.36` (ephemeral: it changes only if the VM is deleted) |
+| Network | VCN `pcbuilder-vcn`, public subnet `pcbuilder-public`, internet gateway `pcbuilder-igw`, default route table `0.0.0.0/0 -> pcbuilder-igw` |
+| Disks | 47 GB boot (OS, Docker images); 150 GB block volume `pcbuilder-data` mounted at `/data` (Postgres, Caddy state, backups, container logs) |
+| Code | `/srv/pcbuilder/app` (unpacked by `scripts/deploy.sh`; previous release in `app.prev`) |
+| Secrets | `/srv/pcbuilder/.env`, mode 600, never in git |
+| Containers | `docker-compose.prod.yml`: `caddy` (ports 80/443), `api`, `worker`, `postgres` (no host port) |
+| Cost guard | OCI budget `zero-spend-guard`: alert at 100% of 1/month, emailed to the owner |
+
+Everything counts against the Always Free allowance: 2 OCPU / 12 GB of A1, 200 GB of
+block storage (47 + 150 used). The account is pay-as-you-go (upgraded 2026-09-26: the
+Free Trial could not get A1 capacity in Mumbai), so a paid resource *can* be created by
+mistake. When creating anything, pick shapes and sizes marked "Always Free-eligible":
+the create-instance form now defaults to the paid E5.Flex shape, and the block-volume
+form to 1024 GB.
+
+## Free-resource audit (OPS-10)
+
+Monthly, and after creating anything in the Oracle console: open **Cloud Shell** (the
+`>_` icon at the top of the console), upload `scripts/oci_free_audit.py` (Cloud Shell's
+gear menu, Upload), then run `python3 oci_free_audit.py`. It runs as the signed-in
+owner, so the VM needs no extra permissions. "ALL FREE" means clean; otherwise it lists
+each problem: a paid shape, A1 over 2 OCPU / 12 GB, block storage over 200 GB, Object
+Storage over 20 GB, any spend this month, or a resource type outside the expected list.
+
+## Log in
+
+```
+ssh -i ~/.ssh/pcbuilder_oracle ubuntu@144.24.104.36
+```
+
+Password login is off. The private key is only on the owner's PC; lose it and you need
+the Oracle console's "Console connection" to add a new one.
+
+Useful once logged in (`dc` = `docker compose -f docker-compose.prod.yml --env-file ../.env`,
+run from `/srv/pcbuilder/app`):
+
+```
+dc ps                          # what is running
+dc logs --tail 100 -f api      # API log (also: worker, caddy, postgres)
+dc exec postgres psql -U pc_builder pc_builder
+cat /srv/pcbuilder/app/DEPLOYED_COMMIT
+```
+
+Postgres has no public port. From the owner's PC, reach it through SSH:
+`ssh -i ~/.ssh/pcbuilder_oracle -L 5433:localhost:5432 ubuntu@144.24.104.36`, then run
+`dc exec` there, or add a port mapping only on `127.0.0.1` temporarily.
+
+## Deploy
+
+From the repo on the owner's PC, with the change committed:
+
+```
+scripts/deploy.sh
+```
+
+It runs the whole test suite with `REQUIRE_E2E=1` (about 12 minutes; a skipped browser
+test fails the deploy), ships the committed tree with `git archive` (uncommitted edits
+never reach production; the VM needs no GitHub access), builds the image on the VM,
+starts Postgres and waits until it is healthy, runs `alembic upgrade head`, restarts
+everything, and checks `/health` through Caddy. `SKIP_TESTS=1 scripts/deploy.sh` only
+for redeploying a commit that already passed.
+
+### Rollback
+
+```
+ssh -i ~/.ssh/pcbuilder_oracle ubuntu@144.24.104.36
+cd /srv/pcbuilder && mv app app.bad && mv app.prev app && cd app
+docker compose -f docker-compose.prod.yml --env-file ../.env up -d --build
+```
+
+A migration is not undone by this. If the bad release migrated the database, either
+downgrade (`dc run --rm api alembic downgrade -1`, when that migration has a working
+downgrade) or restore the last dump.
+
+## Secrets: /srv/pcbuilder/.env
+
+Created on the VM, never copied through chat or git. Keys (see `.env.example` for all):
+
+- `POSTGRES_PASSWORD`: generated on the VM at setup (`openssl rand -hex 24`).
+- `ENV=production`: hides `/docs`, sets production behaviour.
+- `SCRAPE_VIA_AGENTS=true`: production never fetches store pages itself; the worker
+  queues jobs for the browser extensions (and `HttpClient` refuses store hosts anyway).
+- LLM keys (`MISTRAL_API_KEY`, `GOOGLE_API_KEY`, ...): the owner pastes them in by hand
+  (`nano /srv/pcbuilder/.env`), then `dc up -d` to apply. Without them the worker's
+  extraction steps fail and `/health/pipeline` says so.
+- `SITE_ADDRESS="rigcheck.in www.rigcheck.in"` and `TRUST_CF_CONNECTING_IP=true` (see
+  below). Still to add: `CONTACT_EMAIL`.
+
+## Domain, Cloudflare and the firewall (OPS-02)
+
+- Domain `rigcheck.in`, bought at Spaceship (1 year, auto-renew on). Nameservers point
+  to Cloudflare (free plan), which proxies `rigcheck.in` and `www.rigcheck.in` (orange
+  cloud) to 144.24.104.36.
+- HTTPS end to end: Cloudflare to the visitor, and Caddy's own Let's Encrypt certificate
+  to Cloudflare (SSL mode **Full (strict)**). Caddy renews it itself; the HTTP-01
+  challenge reaches it through Cloudflare on port 80, so Cloudflare's **"Always Use
+  HTTPS" must stay off** (Caddy redirects HTTP to HTTPS itself). No certificate or key
+  was ever copied by hand.
+- `SITE_ADDRESS="rigcheck.in www.rigcheck.in"` in `.env`; `www` redirects to the bare
+  domain; HSTS is on (no `includeSubDomains` yet).
+- Only Cloudflare reaches ports 80/443, in two layers:
+  1. OCI security list of `pcbuilder-public`: 22 from anywhere (key-only SSH), 80 and
+     443 from each of Cloudflare's IPv4 ranges (description "Cloudflare").
+  2. On the VM, `pcbuilder-firewall.service` runs `scripts/firewall_cloudflare.sh`
+     whenever Docker starts: chain `PCB-CF` in `DOCKER-USER` (Docker-published ports
+     skip the INPUT chain, so INPUT rules would not protect them).
+  Cloudflare's ranges change rarely; when they do, rerun the script on the VM and
+  update the security list (the Cloud Shell steps are in git history, commit
+  "firewall"). Check: `curl -m 8 http://144.24.104.36/` from anywhere must time out.
+- `TRUST_CF_CONNECTING_IP=true` in `.env` now that only Cloudflare can connect, so rate
+  limits count real visitors, not Cloudflare's edge.
+
+## Health checks (for the uptime monitor)
+
+| URL | 503 when |
+|---|---|
+| `/health` | the database does not answer |
+| `/health/freshness` | no price saved in 24 h |
+| `/health/pipeline` | no agent checked in for 24 h, no price for 24 h, or a worker task failed or is late |
+
+Public: `https://rigcheck.in/health` etc. On the VM, bypassing Cloudflare:
+`curl -sk --resolve rigcheck.in:443:127.0.0.1 https://rigcheck.in/health`.
+
+## Backups (OPS-03)
+
+| Copy | Where | Kept |
+|---|---|---|
+| Nightly `pg_dump -Fc`, 03:00 IST | `/data/backups` on the VM | newest 7 |
+| Same file, uploaded | OCI Object Storage, private bucket `pcbuilder-backups`, `daily/` (namespace `bmsq379l3bq3`, with a lowercase L; the script asks OCI for it) | 30 days |
+| Weekly pull to the owner's PC | `~/pcbuilder-backups` (`scripts/pull_backup.sh`) | newest 8 |
+
+- The systemd timer `pcbuilder-backup.timer` runs `scripts/backup_db.sh` (installed by
+  `scripts/server_setup.sh`). Check it: `systemctl list-timers pcbuilder-backup.timer`,
+  `journalctl -u pcbuilder-backup --since today`.
+- Upload auth is the VM's **instance principal**: dynamic group `pcbuilder-prod` (matches
+  only this VM's OCID) and policy `pcbuilder-backups` (manage objects / read buckets, only
+  where `target.bucket.name='pcbuilder-backups'`). No API key is stored anywhere. A rebuilt
+  VM has a new OCID: update the dynamic group's matching rule.
+- Each run is a `db_backup` row in `pipeline_runs`. A failed run, or none for 2 days,
+  makes `/health/pipeline` return 503, so the uptime monitor emails the owner.
+- A dump under half the previous one's size is kept as `.suspect`, not uploaded, and the
+  run fails: a sudden drop means something is wrong with the data, not the backup.
+- Why not Cloudflare R2 for the off-Oracle copy: R2 needs a card on a Cloudflare account;
+  the home PC already exists and is outside Oracle. Switch to R2 if the PC is retired.
+
+Restore (into the running stack, replacing the database):
+
+```
+dc stop api worker
+cat pc_builder-XXXX.dump | dc exec -T postgres pg_restore -U pc_builder -d pc_builder --clean --if-exists --no-owner
+dc start api worker
+```
+
+From OCI: `/opt/oci-cli/bin/oci os object get --auth instance_principal --namespace bmsq379l3bq3 --bucket-name pcbuilder-backups --name daily/<file> --file /tmp/<file>`.
+
+## Rebuild from scratch (the drill, OPS-09)
+
+1. **VM**: Oracle console, Compute, Create instance. Shape VM.Standard.A1.Flex, 2 OCPU,
+   12 GB (check "Always Free-eligible"); image Canonical Ubuntu 24.04; network
+   `pcbuilder-vcn` / public subnet (if the VCN is new, it needs an internet gateway and a
+   `0.0.0.0/0` route to it, or SSH times out); paste `~/.ssh/pcbuilder_oracle.pub`.
+   After creation: the VNIC's IP administration, Edit, Ephemeral public IP.
+2. **Data disk**: Storage, Block volumes, Create: custom size 150 GB (not the 1024 GB
+   default), Balanced, no backup policy, same AD. Attached instances, Attach:
+   Paravirtualized, read/write. On the VM:
+   ```
+   sudo mkfs.ext4 -L pcbuilder-data /dev/sdb          # only on a NEW, empty disk
+   sudo mkdir -p /data
+   echo "UUID=$(sudo blkid -o value -s UUID /dev/sdb) /data ext4 defaults,noatime,nofail,_netdev 0 2" | sudo tee -a /etc/fstab
+   sudo mount /data
+   ```
+3. **Base setup**: `scp scripts/server_setup.sh ubuntu@<ip>:/tmp/ && ssh ubuntu@<ip> 'sudo bash /tmp/server_setup.sh'`
+   (Docker, logs rotated at 10 MB x 5, password SSH off, security updates on).
+4. **Secrets**: create `/srv/pcbuilder/.env` as above (`umask 077` first).
+5. **Database**: restore the newest dump into the `postgres` container before or after
+   the first deploy (`pg_restore` into `pc_builder`); then deploy runs
+   `alembic upgrade head`, a no-op if the dump is current. An empty database also works:
+   the migrations build the full schema.
+6. **Deploy**: `DEPLOY_HOST=ubuntu@<new-ip> scripts/deploy.sh`.
+7. Point Cloudflare DNS at the new IP.
+
+Record how long each step took in the drill notes.
+
+## First data move (2026-09-26)
+
+Production started from a `pg_dump -Fc` of the home database, restored with the
+`pg_restore` command above (6 s): 12,936 products, 427,645 price rows, both scrape
+agents and their tokens. Since then only the browser extensions feed production; the
+home Airflow still scrapes into the home database, which production never reads.
+
+## Not done yet (Phase 3)
+
+- Sentry (needs the `sentry-sdk` package approved).

@@ -186,7 +186,7 @@ def test_invalid_rate_limit_images_string_raises_naming_variable(monkeypatch):
 def test_env_example_with_only_database_url_boots_with_rate_limiting_enabled(tmp_path):
     """End-to-end: a fresh copy of .env.example, with only DATABASE_URL
     filled in (every other key stays blank, as shipped), must boot the app
-    with rate limiting enabled and a healthy /health - not crash, and not
+    with rate limiting enabled and answer /health - not crash, and not
     silently disable rate limiting."""
     env_example = ROOT / ".env.example"
     content = env_example.read_text(encoding="utf-8")
@@ -216,5 +216,7 @@ def test_env_example_with_only_database_url_boots_with_rate_limiting_enabled(tmp
         timeout=30,
     )
     assert proc.returncode == 0, proc.stderr
-    assert "STATUS 200" in proc.stdout, proc.stdout + proc.stderr
+    # The URL points at no real database, so since 03-02 (/health checks the database,
+    # OPS-04) the answer is 503. What matters here is that the app booted and answered.
+    assert "STATUS 503" in proc.stdout, proc.stdout + proc.stderr
     assert "ENABLED True" in proc.stdout, proc.stdout + proc.stderr
