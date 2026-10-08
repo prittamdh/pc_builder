@@ -11,9 +11,8 @@ differ, the key "<chip>:<qualifier>" (a memory size or "sff") holds the variant 
 the bare chip holds the common card; for a chip sold in several memory types with
 no qualifier (GT 730), the higher figure is used, since this sizes a PSU.
 
-Not covered on purpose:
-- gpu:powercolor:rx_9000:... is a mis-keyed RX 9060 XT; fix the key, not this table.
-- RX 9050: its board power isn't confirmed from a primary source yet.
+Not covered on purpose: the RX 9050, whose board power isn't confirmed from a
+primary source yet.
 """
 from __future__ import annotations
 
