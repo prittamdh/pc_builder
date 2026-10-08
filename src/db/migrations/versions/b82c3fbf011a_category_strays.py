@@ -10,7 +10,7 @@ The classifier now files these titles the same way (category_named_by_title), so
 re-scrape keeps them where they are put here.
 
 Revision ID: b82c3fbf011a
-Revises: a7c2e9f4b118
+Revises: b8d3f1a6c924
 Create Date: 2026-10-08 22:00:00.000000
 
 """
@@ -19,7 +19,7 @@ from typing import Sequence, Union
 from alembic import op
 
 revision: str = 'b82c3fbf011a'
-down_revision: Union[str, Sequence[str], None] = 'a7c2e9f4b118'
+down_revision: Union[str, Sequence[str], None] = 'b8d3f1a6c924'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
