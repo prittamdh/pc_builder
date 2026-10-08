@@ -6,7 +6,7 @@ no board power. The title says RX 9060 XT (RX9060XT-16G-L-OC-WHITE). Applied to 
 local copy of live first.
 
 Revision ID: b3d8f1a6c925
-Revises: a7c2e9f4b118
+Revises: b82c3fbf011a
 Create Date: 2026-10-08 23:00:00.000000
 
 """
@@ -16,7 +16,7 @@ from alembic import op
 from sqlalchemy.orm import Session
 
 revision: str = 'b3d8f1a6c925'
-down_revision: Union[str, Sequence[str], None] = 'a7c2e9f4b118'
+down_revision: Union[str, Sequence[str], None] = 'b82c3fbf011a'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

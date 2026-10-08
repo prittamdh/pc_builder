@@ -101,6 +101,10 @@ def test_each_rule_reports_unverified_when_a_value_is_missing(monkeypatch, rule_
     views[missing_slot].product_name = "Missing-Data Part"
     if missing_field == "memory_slots":
         views["ram"].modules = 4  # 2 or fewer always fit (every desktop board has 2+)
+    if rule.op == "contains_in" and side == "b":
+        # With a current socket an unknown cooler list is only a note (see
+        # test_unknown_cooler_sockets_*); an older socket still needs the real list.
+        views["cpu"].socket = "LGA1200"
 
     summary = _run(monkeypatch, {k: [v] for k, v in views.items()})
 
@@ -161,7 +165,7 @@ def test_unrecognised_form_factor_is_unverified_not_passed(monkeypatch):
 
 def test_blank_string_counts_as_missing(monkeypatch):
     summary = _run(monkeypatch, {
-        "cpu": [_view("cpu", "Test CPU")],
+        "cpu": [_view("cpu", "Test CPU", socket="LGA1200")],
         "cooler": [_view("cooler", "Blank Cooler", supported_sockets="  ")],
     })
     assert len(_levels(summary, "unverified")) == 1
@@ -655,3 +659,54 @@ class TestGpuResolve:
 
     def test_unknown_chip_stays_unknown(self):
         assert self._resolve("gpu:asus:mystery_9999", None).tdp is None
+
+
+def _cooler_rule():
+    return next(r for r in RULES if r.op == "contains_in")
+
+
+@pytest.mark.parametrize("cpu, cooler, fails", [
+    ("LGA1151", "LGA115X,LGA1200", False),   # the 115x family covers 1151
+    ("LGA1700", "LGA1200,LGA1700,AM5", False),
+    ("AM4", "LGA1700,AM5", True),
+    ("LGA1151", "LGA1150", True),            # a substring is not a socket match
+])
+def test_cooler_socket_check_matches_whole_sockets(cpu, cooler, fails):
+    engine = CompatibilityEngine(session=None)
+    warning = engine._eval_rule(_cooler_rule(), cpu, cooler)
+    assert (warning is not None) == fails
+
+
+# Owner decision 2026-10-08: almost every cooler sold today mounts on AM4, AM5, LGA1700
+# and LGA1851; coolers differ on older sockets. An unknown list is a note for a current
+# socket and stays unverified for an older one.
+@pytest.mark.parametrize("socket", ["AM4", "AM5", "LGA1700", "LGA1851"])
+def test_unknown_cooler_sockets_with_a_current_socket_is_a_note(monkeypatch, socket):
+    summary = _run(monkeypatch, {
+        "cpu": [_view("cpu", "Test CPU", socket=socket)],
+        "cooler": [_view("cooler", "Mystery Cooler", supported_sockets=None)],
+    })
+    assert _levels(summary, "unverified") == []
+    notes = _levels(summary, "estimate")
+    assert len(notes) == 1 and "Mystery Cooler" in notes[0].message and socket in notes[0].message
+
+
+@pytest.mark.parametrize("socket", ["LGA1200", "LGA1151", "sTR5"])
+def test_unknown_cooler_sockets_with_an_older_socket_stays_unverified(monkeypatch, socket):
+    summary = _run(monkeypatch, {
+        "cpu": [_view("cpu", "Test CPU", socket=socket)],
+        "cooler": [_view("cooler", "Mystery Cooler", supported_sockets=None)],
+    })
+    assert len(_levels(summary, "unverified")) == 1
+
+
+@pytest.mark.parametrize("cpu, cooler", [
+    ("LGA1851", "LGA1200,LGA1700"),   # LGA1851 keeps LGA1700's cooler mounting
+    ("AM5", "LGA1700,AM4"),           # AM5 keeps AM4's cooler mounting
+])
+def test_mounting_carries_over_to_the_newer_socket(monkeypatch, cpu, cooler):
+    summary = _run(monkeypatch, {
+        "cpu": [_view("cpu", "Test CPU", socket=cpu)],
+        "cooler": [_view("cooler", "Older Cooler", supported_sockets=cooler)],
+    })
+    assert summary.warnings == []
