@@ -41,8 +41,12 @@ from db.models.cabinet_title_extraction import CabinetTitleExtraction
 from db.models.cooler_title_extraction import CoolerTitleExtraction
 from db.models.storage_title_extraction import StorageTitleExtraction
 from domain.builder import CompatibilityWarning
+from matching.board_memory import (
+    MIN_DESKTOP_DIMM_SLOTS, base_chipset, board_slots, platform_max_memory_gb,
+)
 from matching.cooler_sockets import CURRENT_SOCKETS, normalize_sockets, socket_supported
 from matching.cpu_power import cpu_max_power
+from matching.gpu_power import gpu_board_power
 from services.compatibility_rules import (
     RULES, FIELD_LABELS, SLOT_LABELS, cooler_kind, form_factor_index, rule_applies,
     WATTAGE_HEADROOM, DEFAULT_CPU_TDP, DEFAULT_GPU_TDP,
@@ -100,13 +104,23 @@ class CompatibilityEngine:
                 select(MotherboardSpecs).where(MotherboardSpecs.canonical_id.in_(canonical_ids))
             )} if canonical_ids else {}
             ext = {e.product_id: e for e in self.session.scalars(select(MotherboardTitleExtraction).where(MotherboardTitleExtraction.product_id.in_(ids)))}
-            return [
+            views = [
                 _merge(specs.get(p.canonical_id), ext.get(p.id), {
                     "socket": "socket", "chipset": "chipset", "form_factor": "form_factor",
                     "memory_type": "memory_type", "memory_slots": "memory_slots", "max_memory_gb": "max_memory_gb",
                 })
                 for p in products
             ]
+            # Few listings state slots or maximum memory (matching/board_memory.py):
+            # a Mini-ITX board has 2 slots, and a missing maximum is the platform's.
+            for v in views:
+                v.memory_slots = board_slots(v.memory_slots, v.form_factor)
+                if v.max_memory_gb:
+                    v.max_memory_source = "published"
+                else:
+                    v.max_memory_gb = platform_max_memory_gb(v.chipset, v.memory_type, v.memory_slots)
+                    v.max_memory_source = "platform_estimate" if v.max_memory_gb else None
+            return views
 
         if category == "ram":
             specs = {s.canonical_id: s for s in self.session.scalars(
@@ -126,13 +140,17 @@ class CompatibilityEngine:
                 select(GPUSpecs).where(GPUSpecs.canonical_id.in_(canonical_ids))
             )} if canonical_ids else {}
             ext = {e.product_id: e for e in self.session.scalars(select(GPUTitleExtraction).where(GPUTitleExtraction.product_id.in_(ids)))}
-            return [
-                _merge(specs.get(p.canonical_id), ext.get(p.id), {
+            views = []
+            for p in products:
+                v = _merge(specs.get(p.canonical_id), ext.get(p.id), {
                     "length_mm": "length_mm", "tdp": "tdp", "recommended_psu": "recommended_psu",
                     "chipset": "chipset",
                 })
-                for p in products
-            ]
+                # No listed TDP: use the chip's reference board power (matching/gpu_power.py).
+                if not v.tdp:
+                    v.tdp = gpu_board_power(p.canonical_id)
+                views.append(v)
+            return views
 
         if category == "psu":
             specs = {s.canonical_id: s for s in self.session.scalars(
@@ -273,6 +291,33 @@ class CompatibilityEngine:
             message=f"Unverified: {' and '.join(parts)}, so {pair} fit could not be checked.",
         )
 
+    @staticmethod
+    def _estimated_max_memory(rule, item_b) -> bool:
+        """The board's maximum memory is a platform estimate, not its own figure."""
+        return (rule.field_b == "max_memory_gb"
+                and getattr(item_b, "max_memory_source", None) == "platform_estimate")
+
+    @staticmethod
+    def _max_memory_estimate_note(ram, board, over: bool) -> CompatibilityWarning:
+        board_name = getattr(board, "product_name", None) or "the selected motherboard"
+        limit = board.max_memory_gb
+        if over:
+            ram_name = getattr(ram, "product_name", None) or "the selected RAM"
+            return CompatibilityWarning(
+                level="unverified",
+                message=f"Unverified: {ram_name} is {float(ram.capacity_gb):g}GB, more than the {limit}GB "
+                        f"platform estimate for {board_name}, which has no published maximum memory, "
+                        f"so RAM/motherboard capacity could not be checked.",
+            )
+        slots = (f"{board.memory_slots} slots" if board.memory_slots
+                 else f"{MIN_DESKTOP_DIMM_SLOTS} slots (assumed - its slot count isn't listed)")
+        platform = " ".join(x for x in (base_chipset(board.chipset), board.memory_type) if x)
+        return CompatibilityWarning(
+            level="estimate",
+            message=f"Memory limit estimate: {board_name} has no published maximum memory, so "
+                    f"{limit}GB was used - a platform estimate for a {platform} board with {slots}.",
+        )
+
     def _eval_rule(self, rule, val_a, val_b) -> CompatibilityWarning | None:
         if val_a is None or val_b is None:
             return None  # not enough data to check yet - not an error, just unknown
@@ -304,6 +349,7 @@ class CompatibilityEngine:
 
         selections = self._group_selections(product_ids)
         warnings: list[CompatibilityWarning] = []
+        memory_notes: list[CompatibilityWarning] = []  # shown with the other estimates
         compatible = True
 
         for rule in RULES:
@@ -318,6 +364,16 @@ class CompatibilityEngine:
                     val_a, val_b = self._get(item_a, rule.field_a), self._get(item_b, rule.field_b)
                     unknown_a = self._unknown(rule, val_a)
                     unknown_b = self._unknown(rule, val_b)
+                    if (rule.field_b == "memory_slots" and unknown_b and not unknown_a
+                            and float(val_a) <= MIN_DESKTOP_DIMM_SLOTS):
+                        continue  # every desktop board has at least 2 DIMM slots
+                    if self._estimated_max_memory(rule, item_b) and not unknown_a:
+                        # A platform estimate is a floor, not the board's own limit: RAM
+                        # within it fits; RAM above it is unknown, never an error.
+                        over = float(val_a) > float(val_b)
+                        (warnings if over else memory_notes).append(
+                            self._max_memory_estimate_note(item_a, item_b, over))
+                        continue
                     if (rule.op == "contains_in" and unknown_b and not unknown_a
                             and str(val_a).strip().upper() in CURRENT_SOCKETS):
                         # Unknown cooler sockets with a current CPU socket: almost every
@@ -397,6 +453,8 @@ class CompatibilityEngine:
                             f"{self._get(view, 'max_power')} W (twice its {self._get(view, 'tdp')} W TDP) was used.",
                 ))
 
+        warnings.extend(memory_notes)
+
         return compatible, warnings, estimated_wattage
 
     def filter_candidates(self, target_slot: str, current_product_ids: list[int], candidates: list[Product]) -> list[Product]:
@@ -428,6 +486,9 @@ class CompatibilityEngine:
 
                 this_val = self._get(resolved, this_field)
                 for other_item in other_group:
+                    board = resolved if rule.slot_b == target_slot else other_item
+                    if self._estimated_max_memory(rule, board):
+                        continue  # an estimate may understate the board - never filter on it
                     other_val = self._get(other_item, other_field)
                     warning = self._eval_rule(rule, this_val if rule.slot_a == target_slot else other_val,
                                                other_val if rule.slot_a == target_slot else this_val)
