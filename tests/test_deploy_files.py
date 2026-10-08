@@ -61,8 +61,10 @@ def test_caddy_caps_request_bodies():
     assert "reverse_proxy api:8000" in caddyfile
 
 
-def test_deploy_runs_the_full_suite_with_e2e_required_then_migrates():
+def test_deploy_runs_tests_then_migrates():
     deploy = (ROOT / "scripts" / "deploy.sh").read_text(encoding="utf-8")
+    # Fast tests by default; FULL=1 runs the browser tests too, with skips as failures.
+    assert "--ignore=tests/test_frontend_e2e.py" in deploy
     assert "REQUIRE_E2E=1 python -m pytest" in deploy
     assert "up -d --wait postgres" in deploy
     migrate = deploy.index("run --rm --no-deps api alembic upgrade head")

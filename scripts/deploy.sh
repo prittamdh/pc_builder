@@ -3,9 +3,10 @@
 #
 #   scripts/deploy.sh            # deploy HEAD
 #   scripts/deploy.sh main       # deploy a branch, tag or commit
+#   FULL=1 scripts/deploy.sh     # also run the browser tests (frontend changes)
 #
-# Steps: run the whole test suite with REQUIRE_E2E=1 (a skipped browser test is a failure,
-# not a pass); ship the committed tree (git archive, so uncommitted edits never reach
+# Steps: run the fast tests (FULL=1: the whole suite with REQUIRE_E2E=1, where a skipped
+# browser test is a failure, not a pass); ship the committed tree (git archive, so uncommitted edits never reach
 # production and the VM needs no GitHub access); build the image on the VM; run
 # `alembic upgrade head`; restart; smoke-test /health through Caddy. The previous code
 # stays in /srv/pcbuilder/app.prev for a rollback.
@@ -23,9 +24,16 @@ cd "$(git rev-parse --show-toplevel)"
 COMMIT="$(git rev-parse --short "$REF")"
 echo "==> deploying $REF ($COMMIT) to $HOST"
 
-if [[ "${SKIP_TESTS:-0}" != "1" ]]; then
-  echo "==> test suite (REQUIRE_E2E=1)"
+if [[ "${SKIP_TESTS:-0}" == "1" ]]; then
+  :
+elif [[ "${FULL:-0}" == "1" ]]; then
+  echo "==> full test suite (REQUIRE_E2E=1)"
   REQUIRE_E2E=1 python -m pytest -q -p no:randomly
+else
+  # Owner, 2026-10-08: the full suite (~11 min, mostly browser tests) is too slow for
+  # data and matching fixes. Default to the fast tests; FULL=1 for frontend changes.
+  echo "==> fast tests (no browser tests; FULL=1 runs everything)"
+  python -m pytest -q -p no:randomly --ignore=tests/test_frontend_e2e.py --ignore=tests/test_extension_e2e.py
 fi
 
 echo "==> shipping code"
