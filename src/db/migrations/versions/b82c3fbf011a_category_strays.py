@@ -2,8 +2,9 @@
 
 SSDs, a motherboard, a mouse, a PSU tester and CCTV supplies filed under Power Supply;
 a monitor, coolers, LCD screens and a racing wheel under Cabinet; a pen drive, a case
-fan and loop fittings under CPU Cooler; a Ryzen CPU under Motherboard; DDR5 RAM and an
-SSD enclosure under Storage. 28 listings.
+fan and loop fittings under CPU Cooler; a Ryzen CPU under Motherboard; DDR5 RAM, an
+SSD enclosure and pen drives under Storage. 32 listings. Removable media has no build
+slot, so pen drives go to Accessories, not Storage.
 
 The classifier now files these titles the same way (category_named_by_title), so a
 re-scrape keeps them where they are put here.
@@ -40,8 +41,11 @@ MOVES = [
     (16971, 'Cabinet', 'Accessories'),
     (16454, 'CPU Cooler', 'Accessories'), (21394, 'CPU Cooler', 'Accessories'),
     (16516, 'CPU Cooler', 'Accessories'), (16517, 'CPU Cooler', 'Accessories'),
+    (21464, 'CPU Cooler', 'Accessories'),
     (15442, 'Motherboard', 'CPU'),
     (19692, 'Storage', 'RAM'), (17771, 'Storage', 'Accessories'),
+    (21251, 'Storage', 'Accessories'), (21252, 'Storage', 'Accessories'),
+    (21253, 'Storage', 'Accessories'),
 ]
 
 # The old category's title extraction is marked so re-keys (status 'ok' only) skip it.

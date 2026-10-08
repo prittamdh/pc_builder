@@ -41,6 +41,10 @@ STRAYS = [
     ("Storage", "Crucial Pro OC 32GB (16GBx2) DDR5 CL36 6000MHz RAM (White)", "RAM"),
     # Moved out of GPU by f1b4d6e2a830; without a rule the next scrape put it back.
     ("GPU", "AMD Radeon FirePro S400 Synchronization Module", "Accessories"),
+    ("Storage", "Kingston DataTraveler Exodia S USB 128GB Pen Drive DTXS/128GB", "Accessories"),
+    ("Storage", "Kingston DataTraveler Exodia S USB 256GB Pen Drive DTXS/256GB", "Accessories"),
+    ("Storage", "Kingston DataTraveler Exodia S USB 64GB Pen Drive DTXS/64GB", "Accessories"),
+    ("CPU Cooler", "[Repacked] Cooler Master R4-S2S-124K-GP 120mm Silent Case Fan", "Accessories"),
     ("Storage", "[RePacked] ORICO Transparent -Free USB3.1 Type-C Gen2 10Gbps to m.2 SSD Enclosure for Intel 660p NVMe m-Key SSD up to 2T", "Accessories"),
 ]
 
