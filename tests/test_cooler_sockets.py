@@ -22,6 +22,7 @@ from matching.cooler_sockets import normalize_sockets, socket_supported
     ("LGA2066 and LGA2011-v3", "LGA2011,LGA2066"),
     ("AM3+, FM2+", "AM3+,FM2+"),
     ("LGA4677", "LGA4677"),
+    ("LGA1366, LGA1200", "LGA1200,LGA1366"),
 ])
 def test_normalize(raw, norm):
     assert normalize_sockets(raw) == norm
@@ -50,3 +51,17 @@ def test_newer_sockets_share_older_mounting():
     # Not the other way round, and not across vendors.
     assert socket_supported("LGA1700", "LGA1851") is False
     assert socket_supported("AM4", "AM5") is False
+
+
+def test_looked_up_socket_lists_are_in_canonical_form():
+    # The migration's hand-checked lists must already be in CPU spellings, and carry
+    # both an Intel and an AMD socket unless the cooler is made for one platform only.
+    import importlib.util, pathlib
+    path = next(pathlib.Path(__file__).parents[1].glob("src/db/migrations/versions/b8d3f1a6c924_*.py"))
+    spec = importlib.util.spec_from_file_location("m", path)
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    one_platform = {"cooler:arctic:alpine_23_co", "cooler:noctua:nh-d9_tr5-sp6"}
+    for cid, (sockets, _src) in m.SOCKETS.items():
+        assert normalize_sockets(sockets) == sockets, cid
+        if cid not in one_platform:
+            assert "LGA" in sockets and "AM" in sockets, cid

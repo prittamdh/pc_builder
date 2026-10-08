@@ -177,6 +177,9 @@ class CoolerSpecs(Base, _SpecsMetadataMixin):
     radiator_size_mm: Mapped[int | None] = mapped_column(Integer)
     fan_size_mm: Mapped[int | None] = mapped_column(Integer)
     supported_sockets: Mapped[str | None] = mapped_column(String(255))
+    # Where supported_sockets came from, e.g. "lookup 2026-10-08: <sources>" for values
+    # checked by hand against maker/retailer spec sheets, so later real data can replace it.
+    sockets_source: Mapped[str | None] = mapped_column(String(255))
     tdp_rating: Mapped[int | None] = mapped_column(Integer)
     # Air coolers only: what must fit under the cabinet's max_cooler_height_mm.
     height_mm: Mapped[int | None] = mapped_column(Integer)
